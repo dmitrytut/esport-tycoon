@@ -1,0 +1,22 @@
+{
+  "id": "streamer",
+  "name": "Streamer",
+  "description": "Live until sunrise every night. Brings in money and fans, sleeps four hours, practices worse for it.",
+  "polarity": "mixed",
+  "rarity": "common",
+  "modifiers": {
+    "energyDrain": 1.4,
+    "incomeMultiplier": 1.6,
+    "growthMultiplier": 0.85
+  },
+  "reactsTo": {
+    "shout": -0.2,
+    "support": 0.3,
+    "timeout": 0.0
+  },
+  "eventWeightBoost": {
+    "fame": 2.0,
+    "press": 1.5,
+    "health": 1.3
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "cat-on-keyboard",
+  "category": "life",
+  "weight": 8,
+  "cooldownWeeks": 40,
+  "triggers": {
+    "weekType": [
+      "match",
+      "tournament"
+    ]
+  },
+  "text": "Decider map, four minutes on the clock. A cat strolls through {player}'s room and sits down on the keyboard. {player} does not move the cat, because \"he'll get bored and leave on his own\".",
+  "choices": [
+    {
+      "label": "Go move the cat yourself",
+      "detail": "You burst into the room in the middle of the stream. Three hundred thousand people now know what your boxers look like.",
+      "effects": {
+        "fanbase": 0.15,
+        "respect": -10
+      }
+    },
+    {
+      "label": "Let it happen",
+      "detail": "{player} plays one-handed. You will probably lose. But if you win, it is the meme of the season.",
+      "effects": {
+        "riskLoss": 0.35,
+        "fanbase": 0.25
+      }
+    }
+  ]
+}

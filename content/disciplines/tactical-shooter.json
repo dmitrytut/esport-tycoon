@@ -1,0 +1,34 @@
+{
+  "id": "tactical-shooter",
+  "name": "Tactical Shooter",
+  "rosterSize": 5,
+  "statWeights": {
+    "mechanical": 3,
+    "cognitive": 1,
+    "collective": 2,
+    "composure": 3
+  },
+  "metaVolatility": 0.2,
+  "contest": {
+    "format": "bo3",
+    "unit": "round",
+    "momentumMeans": "tempo control inside the round",
+    "tally": "rounds",
+    "columns": [
+      "Kills",
+      "Deaths",
+      "Assists",
+      "Economy"
+    ],
+    "participants": 2
+  },
+  "economy": {
+    "prizeScale": 1.0,
+    "viewerScale": 0.8,
+    "salaryScale": 1.0
+  },
+  "strongRegions": [
+    "western-europe",
+    "cis"
+  ]
+}

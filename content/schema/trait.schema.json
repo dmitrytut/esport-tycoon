@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Черта характера",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "polarity",
+    "description"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "английское название черты, видно пользователю (docs/adr/0007)"
+    },
+    "description": {
+      "type": "string",
+      "description": "английское описание черты, видно пользователю (docs/adr/0007)",
+      "minLength": 20
+    },
+    "polarity": {
+      "enum": [
+        "positive",
+        "negative",
+        "mixed"
+      ]
+    },
+    "rarity": {
+      "enum": [
+        "common",
+        "uncommon",
+        "rare"
+      ],
+      "default": "common"
+    },
+    "modifiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "statMultiplier": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "energyDrain": {
+          "type": "number"
+        },
+        "moraleDrift": {
+          "type": "number"
+        },
+        "incomeMultiplier": {
+          "type": "number"
+        },
+        "growthMultiplier": {
+          "type": "number"
+        }
+      }
+    },
+    "reactsTo": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "как черта отвечает на вмешательства в матче",
+      "properties": {
+        "shout": {
+          "type": "number"
+        },
+        "support": {
+          "type": "number"
+        },
+        "timeout": {
+          "type": "number"
+        }
+      }
+    },
+    "eventWeightBoost": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    }
+  }
+}

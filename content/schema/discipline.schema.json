@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Дисциплина",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "rosterSize",
+    "statWeights",
+    "contest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "английское название дисциплины, видно пользователю (docs/adr/0007)"
+    },
+    "rosterSize": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "statWeights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mechanical",
+        "cognitive",
+        "collective",
+        "composure"
+      ],
+      "properties": {
+        "mechanical": {
+          "type": "number"
+        },
+        "cognitive": {
+          "type": "number"
+        },
+        "collective": {
+          "type": "number"
+        },
+        "composure": {
+          "type": "number"
+        }
+      }
+    },
+    "metaVolatility": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "как часто и сильно патчи сдвигают веса"
+    },
+    "contest": {
+      "type": "object",
+      "required": [
+        "format",
+        "momentumMeans",
+        "tally",
+        "columns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "enum": [
+            "bo1",
+            "bo3",
+            "bo5",
+            "points-table"
+          ]
+        },
+        "unit": {
+          "enum": [
+            "round",
+            "phase",
+            "map",
+            "half"
+          ]
+        },
+        "momentumMeans": {
+          "type": "string",
+          "description": "что означает полоса в этой дисциплине; текст английский, его видит пользователь (docs/adr/0007)"
+        },
+        "tally": {
+          "enum": [
+            "rounds",
+            "objectives",
+            "placement-points",
+            "goals"
+          ]
+        },
+        "columns": {
+          "type": "array",
+          "description": "заголовки колонок таблицы игроков, английские (docs/adr/0007)",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "participants": {
+          "type": "integer",
+          "minimum": 2,
+          "default": 2
+        }
+      }
+    },
+    "economy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prizeScale": {
+          "type": "number"
+        },
+        "viewerScale": {
+          "type": "number"
+        },
+        "salaryScale": {
+          "type": "number"
+        }
+      }
+    },
+    "strongRegions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Событие",
+  "type": "object",
+  "required": [
+    "id",
+    "category",
+    "weight",
+    "text",
+    "choices"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "category": {
+      "enum": [
+        "life",
+        "health",
+        "roster",
+        "press",
+        "sponsors",
+        "logistics",
+        "rivals",
+        "family",
+        "tech",
+        "fame",
+        "meta"
+      ]
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "cooldownWeeks": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 26
+    },
+    "triggers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "energyBelow": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "moraleBelow": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "requiresTrait": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "act": {
+          "type": "array",
+          "items": {
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        "weekType": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "quiet",
+              "normal",
+              "match",
+              "tournament"
+            ]
+          }
+        },
+        "region": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "text": {
+      "type": "string",
+      "description": "английский текст события, подстановки {player}/{team}/{org}/{rival}, см. docs/adr/0007",
+      "minLength": 40
+    },
+    "choices": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "effects"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "английский текст кнопки выбора (docs/adr/0007)",
+            "minLength": 3
+          },
+          "detail": {
+            "type": "string",
+            "description": "английское описание последствия (docs/adr/0007)"
+          },
+          "effects": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "energy": {
+                "type": "integer"
+              },
+              "morale": {
+                "type": "integer"
+              },
+              "form": {
+                "type": "integer"
+              },
+              "money": {
+                "type": "integer"
+              },
+              "fanbase": {
+                "type": "number"
+              },
+              "reputation": {
+                "type": "integer"
+              },
+              "respect": {
+                "type": "integer"
+              },
+              "statDelta": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              },
+              "riskLoss": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "addTrait": {
+                "type": "string"
+              },
+              "removeTrait": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Регион",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "languages",
+    "modifiers"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "английское название региона: его видит пользователь, см. docs/adr/0007"
+    },
+    "languages": {
+      "type": "array",
+      "description": "на чём говорят персонажи региона — механика химии состава, не язык интерфейса",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "timezoneOffset": {
+      "type": "integer",
+      "minimum": -12,
+      "maximum": 14
+    },
+    "modifiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "salaryScale": {
+          "type": "number"
+        },
+        "talentDensity": {
+          "type": "number"
+        },
+        "growthScale": {
+          "type": "number"
+        },
+        "burnoutScale": {
+          "type": "number"
+        },
+        "sponsorWealth": {
+          "type": "number"
+        },
+        "prestigeScale": {
+          "type": "number"
+        },
+        "visaRisk": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "audienceScale": {
+          "type": "number"
+        }
+      }
+    },
+    "namePools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

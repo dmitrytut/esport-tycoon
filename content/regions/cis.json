@@ -1,0 +1,22 @@
+{
+  "id": "cis",
+  "name": "CIS",
+  "languages": [
+    "ru"
+  ],
+  "timezoneOffset": 3,
+  "modifiers": {
+    "salaryScale": 0.7,
+    "talentDensity": 1.3,
+    "growthScale": 1.0,
+    "burnoutScale": 1.0,
+    "sponsorWealth": 0.6,
+    "prestigeScale": 0.9,
+    "visaRisk": 0.35,
+    "audienceScale": 1.0
+  },
+  "namePools": [
+    "ru-male",
+    "ru-nick"
+  ]
+}

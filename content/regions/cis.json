@@ -1,8 +1,12 @@
 {
   "id": "cis",
   "name": "CIS",
-  "languages": [
-    "ru"
+  "language": "ru",
+  "secondLanguages": [
+    {
+      "language": "en",
+      "chance": 0.35
+    }
   ],
   "timezoneOffset": 3,
   "modifiers": {

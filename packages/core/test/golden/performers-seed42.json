@@ -1,0 +1,3072 @@
+{
+ "note": "Снимок 100 сгенерированных исполнителей при сиде 42 (specs/0001). Ловит непреднамеренный сдвиг генератора: имена, статы, скрытые поля, языки. Обновлять только осознанно, отдельным коммитом golden: с объяснением.",
+ "seed": 42,
+ "levels": "уровень чередуется 1..5 по индексу",
+ "performers": {
+  "cis": [
+   {
+    "id": "cis-idwyww",
+    "name": "Timur",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 25,
+    "stats": {
+     "mechanical": 7.1,
+     "cognitive": 8.4,
+     "collective": 9,
+     "composure": 5.2,
+     "adaptability": 8.4,
+     "presence": 7.7
+    },
+    "state": {
+     "energy": 95,
+     "morale": 68,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer",
+     "captain"
+    ],
+    "peakAge": 23,
+    "potential": 15,
+    "seed": 1111764416
+   },
+   {
+    "id": "cis-dn1r34",
+    "name": "Artem",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 23,
+    "stats": {
+     "mechanical": 10.9,
+     "cognitive": 9.6,
+     "collective": 7.7,
+     "composure": 7.1,
+     "adaptability": 7.7,
+     "presence": 10.9
+    },
+    "state": {
+     "energy": 83,
+     "morale": 82,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain"
+    ],
+    "peakAge": 21,
+    "potential": 16.9,
+    "seed": 824773216
+   },
+   {
+    "id": "cis-l3f5al",
+    "name": "Artem",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 27,
+    "stats": {
+     "mechanical": 13.4,
+     "cognitive": 10.9,
+     "collective": 10.2,
+     "composure": 11.5,
+     "adaptability": 14,
+     "presence": 11.5
+    },
+    "state": {
+     "energy": 86,
+     "morale": 55,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 21,
+    "potential": 20,
+    "seed": 1275535245
+   },
+   {
+    "id": "cis-1wzilrx",
+    "name": "Danila",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 15.2,
+     "cognitive": 14,
+     "collective": 16.5,
+     "composure": 14.6,
+     "adaptability": 15.9,
+     "presence": 15.9
+    },
+    "state": {
+     "energy": 100,
+     "morale": 62,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain",
+     "tilter"
+    ],
+    "peakAge": 24,
+    "potential": 20,
+    "seed": 4171354557
+   },
+   {
+    "id": "cis-47kv81",
+    "name": "Egor",
+    "handle": "tapok",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 17.7,
+     "cognitive": 17.1,
+     "collective": 18.4,
+     "composure": 18.4,
+     "adaptability": 14,
+     "presence": 17.1
+    },
+    "state": {
+     "energy": 94,
+     "morale": 68,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 20,
+    "potential": 19.4,
+    "seed": 254595601
+   },
+   {
+    "id": "cis-15wn49h",
+    "name": "Artem",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 9,
+     "cognitive": 6.5,
+     "collective": 4.6,
+     "composure": 4.6,
+     "adaptability": 6.5,
+     "presence": 5.2
+    },
+    "state": {
+     "energy": 82,
+     "morale": 74,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain"
+    ],
+    "peakAge": 21,
+    "potential": 10,
+    "seed": 2533939541
+   },
+   {
+    "id": "cis-1xwtssx",
+    "name": "Artem",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 7.7,
+     "cognitive": 9,
+     "collective": 11.5,
+     "composure": 10.2,
+     "adaptability": 10.9,
+     "presence": 12.1
+    },
+    "state": {
+     "energy": 98,
+     "morale": 89,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 23,
+    "potential": 16.1,
+    "seed": 4227304209
+   },
+   {
+    "id": "cis-t4q0my",
+    "name": "Timur",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 24,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 11.5,
+     "collective": 11.5,
+     "composure": 13.4,
+     "adaptability": 11.5,
+     "presence": 11.5
+    },
+    "state": {
+     "energy": 93,
+     "morale": 65,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 20,
+    "potential": 17.4,
+    "seed": 1761451450
+   },
+   {
+    "id": "cis-1ob4d5s",
+    "name": "Timur",
+    "handle": "tapok",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 15.9,
+     "cognitive": 14,
+     "collective": 14,
+     "composure": 13.4,
+     "adaptability": 17.1,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 98,
+     "morale": 58,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain",
+     "tilter"
+    ],
+    "peakAge": 21,
+    "potential": 20,
+    "seed": 3646650016
+   },
+   {
+    "id": "cis-128fi4l",
+    "name": "Egor",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 19,
+     "cognitive": 16.5,
+     "collective": 17.1,
+     "composure": 16.5,
+     "adaptability": 15.2,
+     "presence": 19
+    },
+    "state": {
+     "energy": 79,
+     "morale": 59,
+     "form": 0
+    },
+    "traits": [
+     "tilter"
+    ],
+    "peakAge": 21,
+    "potential": 20,
+    "seed": 2311874949
+   },
+   {
+    "id": "cis-yhurbu",
+    "name": "Danila",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 9.6,
+     "cognitive": 8.4,
+     "collective": 6.5,
+     "composure": 5.9,
+     "adaptability": 9,
+     "presence": 7.7
+    },
+    "state": {
+     "energy": 98,
+     "morale": 63,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain"
+    ],
+    "peakAge": 23,
+    "potential": 12.6,
+    "seed": 2085838554
+   },
+   {
+    "id": "cis-jzu146",
+    "name": "Egor",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 9.6,
+     "cognitive": 8.4,
+     "collective": 7.7,
+     "composure": 8.4,
+     "adaptability": 9.6,
+     "presence": 7.7
+    },
+    "state": {
+     "energy": 78,
+     "morale": 83,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter",
+     "captain"
+    ],
+    "peakAge": 20,
+    "potential": 13.6,
+    "seed": 1209045030
+   },
+   {
+    "id": "cis-1bpurwz",
+    "name": "Danila",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 10.9,
+     "cognitive": 13.4,
+     "collective": 12.7,
+     "composure": 13.4,
+     "adaptability": 14,
+     "presence": 12.7
+    },
+    "state": {
+     "energy": 90,
+     "morale": 73,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 19,
+    "potential": 15,
+    "seed": 2885336531
+   },
+   {
+    "id": "cis-bzq6rz",
+    "name": "Nikita",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 14,
+     "cognitive": 17.1,
+     "collective": 12.1,
+     "composure": 15.2,
+     "adaptability": 14.6,
+     "presence": 15.2
+    },
+    "state": {
+     "energy": 76,
+     "morale": 56,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 22,
+    "potential": 20,
+    "seed": 725136335
+   },
+   {
+    "id": "cis-13xzlvo",
+    "name": "Egor",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 20,
+     "cognitive": 19.6,
+     "collective": 17.1,
+     "composure": 17.1,
+     "adaptability": 18.4,
+     "presence": 19.6
+    },
+    "state": {
+     "energy": 92,
+     "morale": 81,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer",
+     "night-owl"
+    ],
+    "peakAge": 20,
+    "potential": 20,
+    "seed": 2415269508
+   },
+   {
+    "id": "cis-1c4i1aq",
+    "name": "Timur",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 27,
+    "stats": {
+     "mechanical": 4.6,
+     "cognitive": 10.2,
+     "collective": 8.4,
+     "composure": 8.4,
+     "adaptability": 6.5,
+     "presence": 9
+    },
+    "state": {
+     "energy": 85,
+     "morale": 59,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 21,
+    "potential": 13.2,
+    "seed": 2909936402
+   },
+   {
+    "id": "cis-6r6mjs",
+    "name": "Artem",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 9.6,
+     "cognitive": 10.9,
+     "collective": 9.6,
+     "composure": 10.2,
+     "adaptability": 10.2,
+     "presence": 7.1
+    },
+    "state": {
+     "energy": 78,
+     "morale": 59,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 22,
+    "potential": 13.9,
+    "seed": 408455848
+   },
+   {
+    "id": "cis-kipya9",
+    "name": "Egor",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 10.9,
+     "cognitive": 10.9,
+     "collective": 10.2,
+     "composure": 11.5,
+     "adaptability": 14.6,
+     "presence": 10.9
+    },
+    "state": {
+     "energy": 72,
+     "morale": 58,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer",
+     "captain"
+    ],
+    "peakAge": 22,
+    "potential": 17.6,
+    "seed": 1240767441
+   },
+   {
+    "id": "cis-ax7s1d",
+    "name": "Timur",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 16.5,
+     "cognitive": 12.7,
+     "collective": 14.6,
+     "composure": 12.7,
+     "adaptability": 14.6,
+     "presence": 12.7
+    },
+    "state": {
+     "energy": 80,
+     "morale": 75,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl",
+     "streamer"
+    ],
+    "peakAge": 21,
+    "potential": 19.5,
+    "seed": 660452017
+   },
+   {
+    "id": "cis-16j67b0",
+    "name": "Timur",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 15.2,
+     "cognitive": 16.5,
+     "collective": 18.4,
+     "composure": 16.5,
+     "adaptability": 15.9,
+     "presence": 16.5
+    },
+    "state": {
+     "energy": 86,
+     "morale": 76,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "captain"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 2571781500
+   },
+   {
+    "id": "cis-syorrb",
+    "name": "Egor",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 4.6,
+     "cognitive": 6.5,
+     "collective": 8.4,
+     "composure": 4,
+     "adaptability": 7.1,
+     "presence": 9.6
+    },
+    "state": {
+     "energy": 96,
+     "morale": 78,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "captain",
+     "tilter"
+    ],
+    "peakAge": 19,
+    "potential": 15.6,
+    "seed": 1751315591
+   },
+   {
+    "id": "cis-1127s9q",
+    "name": "Danila",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 10.2,
+     "collective": 7.7,
+     "composure": 8.4,
+     "adaptability": 10.9,
+     "presence": 9
+    },
+    "state": {
+     "energy": 74,
+     "morale": 68,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain",
+     "tilter"
+    ],
+    "peakAge": 20,
+    "potential": 15.5,
+    "seed": 2240970974
+   },
+   {
+    "id": "cis-9et714",
+    "name": "Timur",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 27,
+    "stats": {
+     "mechanical": 14,
+     "cognitive": 9,
+     "collective": 10.9,
+     "composure": 12.7,
+     "adaptability": 12.1,
+     "presence": 11.5
+    },
+    "state": {
+     "energy": 94,
+     "morale": 67,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 22,
+    "potential": 15,
+    "seed": 569072344
+   },
+   {
+    "id": "cis-w8ktax",
+    "name": "Danila",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 21,
+    "stats": {
+     "mechanical": 15.9,
+     "cognitive": 15.9,
+     "collective": 14,
+     "composure": 14.6,
+     "adaptability": 14.6,
+     "presence": 15.9
+    },
+    "state": {
+     "energy": 73,
+     "morale": 70,
+     "form": 0
+    },
+    "traits": [
+     "captain",
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 1949325657
+   },
+   {
+    "id": "cis-5k0mmx",
+    "name": "Timur",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 18.4,
+     "cognitive": 20,
+     "collective": 15.2,
+     "composure": 19,
+     "adaptability": 17.7,
+     "presence": 18.4
+    },
+    "state": {
+     "energy": 100,
+     "morale": 80,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 335952537
+   },
+   {
+    "id": "cis-127089u",
+    "name": "Danila",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 8.4,
+     "cognitive": 7.1,
+     "collective": 7.1,
+     "composure": 9.6,
+     "adaptability": 7.7,
+     "presence": 6.5
+    },
+    "state": {
+     "energy": 70,
+     "morale": 61,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl",
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 10.6,
+    "seed": 2309482722
+   },
+   {
+    "id": "cis-uhoocr",
+    "name": "Danila",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 21,
+    "stats": {
+     "mechanical": 9.6,
+     "cognitive": 10.2,
+     "collective": 10.9,
+     "composure": 10.9,
+     "adaptability": 10.2,
+     "presence": 9.6
+    },
+    "state": {
+     "energy": 77,
+     "morale": 57,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "captain"
+    ],
+    "peakAge": 23,
+    "potential": 13.9,
+    "seed": 1843690059
+   },
+   {
+    "id": "cis-1t2nm60",
+    "name": "Danila",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 11.5,
+     "collective": 10.2,
+     "composure": 13.4,
+     "adaptability": 14,
+     "presence": 10.2
+    },
+    "state": {
+     "energy": 71,
+     "morale": 74,
+     "form": 0
+    },
+    "traits": [
+     "captain"
+    ],
+    "peakAge": 20,
+    "potential": 20,
+    "seed": 3934762488
+   },
+   {
+    "id": "cis-4cn4ap",
+    "name": "Artem",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 15.2,
+     "cognitive": 14.6,
+     "collective": 17.7,
+     "composure": 12.7,
+     "adaptability": 17.7,
+     "presence": 15.2
+    },
+    "state": {
+     "energy": 90,
+     "morale": 81,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 23,
+    "potential": 19.7,
+    "seed": 263098753
+   },
+   {
+    "id": "cis-r8p25m",
+    "name": "Danila",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 17.1,
+     "cognitive": 17.7,
+     "collective": 15.2,
+     "composure": 18.4,
+     "adaptability": 17.7,
+     "presence": 16.5
+    },
+    "state": {
+     "energy": 92,
+     "morale": 70,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "captain",
+     "tilter"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 1647192874
+   },
+   {
+    "id": "cis-1kixwu7",
+    "name": "Nikita",
+    "handle": "tapok",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 7.1,
+     "cognitive": 8.4,
+     "collective": 8.4,
+     "composure": 5.2,
+     "adaptability": 8.4,
+     "presence": 7.7
+    },
+    "state": {
+     "energy": 78,
+     "morale": 60,
+     "form": 0
+    },
+    "traits": [
+     "tilter"
+    ],
+    "peakAge": 24,
+    "potential": 9.4,
+    "seed": 3417921151
+   },
+   {
+    "id": "cis-b8slks",
+    "name": "Egor",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 7.1,
+     "cognitive": 7.7,
+     "collective": 10.2,
+     "composure": 9.6,
+     "adaptability": 8.4,
+     "presence": 9.6
+    },
+    "state": {
+     "energy": 99,
+     "morale": 58,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "captain"
+    ],
+    "peakAge": 19,
+    "potential": 12.2,
+    "seed": 679899196
+   },
+   {
+    "id": "cis-d9g3yz",
+    "name": "Artem",
+    "handle": "tapok",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 21,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 14,
+     "collective": 14,
+     "composure": 11.5,
+     "adaptability": 12.7,
+     "presence": 12.1
+    },
+    "state": {
+     "energy": 71,
+     "morale": 83,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 22,
+    "potential": 16,
+    "seed": 801928475
+   },
+   {
+    "id": "cis-1r8khvt",
+    "name": "Timur",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 13.4,
+     "cognitive": 14,
+     "collective": 17.7,
+     "composure": 14.6,
+     "adaptability": 14,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 89,
+     "morale": 61,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl"
+    ],
+    "peakAge": 21,
+    "potential": 19.7,
+    "seed": 3823762313
+   },
+   {
+    "id": "cis-1lpk994",
+    "name": "Timur",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 16.5,
+     "cognitive": 19,
+     "collective": 16.5,
+     "composure": 17.7,
+     "adaptability": 16.5,
+     "presence": 17.1
+    },
+    "state": {
+     "energy": 75,
+     "morale": 76,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 20,
+    "potential": 20,
+    "seed": 3489507544
+   },
+   {
+    "id": "cis-ieogxe",
+    "name": "Egor",
+    "handle": "tapok",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 5.9,
+     "cognitive": 9,
+     "collective": 7.7,
+     "composure": 6.5,
+     "adaptability": 5.9,
+     "presence": 9
+    },
+    "state": {
+     "energy": 97,
+     "morale": 82,
+     "form": 0
+    },
+    "traits": [
+     "night-owl"
+    ],
+    "peakAge": 24,
+    "potential": 15,
+    "seed": 1113047474
+   },
+   {
+    "id": "cis-abx0xj",
+    "name": "Artem",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 10.2,
+     "cognitive": 10.2,
+     "collective": 9.6,
+     "composure": 9,
+     "adaptability": 9.6,
+     "presence": 9
+    },
+    "state": {
+     "energy": 78,
+     "morale": 66,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain",
+     "tilter"
+    ],
+    "peakAge": 20,
+    "potential": 11.2,
+    "seed": 624678391
+   },
+   {
+    "id": "cis-18uloas",
+    "name": "Egor",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 14,
+     "collective": 13.4,
+     "composure": 12.7,
+     "adaptability": 13.4,
+     "presence": 10.9
+    },
+    "state": {
+     "energy": 82,
+     "morale": 64,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "captain",
+     "streamer"
+    ],
+    "peakAge": 24,
+    "potential": 20,
+    "seed": 2711911492
+   },
+   {
+    "id": "cis-1dv5psd",
+    "name": "Nikita",
+    "handle": "tapok",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 27,
+    "stats": {
+     "mechanical": 16.5,
+     "cognitive": 14.6,
+     "collective": 15.2,
+     "composure": 15.2,
+     "adaptability": 15.9,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 73,
+     "morale": 89,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 22,
+    "potential": 19.5,
+    "seed": 3015177421
+   },
+   {
+    "id": "cis-1dbgp12",
+    "name": "Artem",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 19.6,
+     "cognitive": 15.9,
+     "collective": 18.4,
+     "composure": 14.6,
+     "adaptability": 18.4,
+     "presence": 18.4
+    },
+    "state": {
+     "energy": 92,
+     "morale": 70,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 21,
+    "potential": 20,
+    "seed": 2982097334
+   },
+   {
+    "id": "cis-5ni9li",
+    "name": "Egor",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 5.2,
+     "cognitive": 5.9,
+     "collective": 9,
+     "composure": 7.1,
+     "adaptability": 10.2,
+     "presence": 5.2
+    },
+    "state": {
+     "energy": 78,
+     "morale": 80,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 20,
+    "potential": 16.2,
+    "seed": 341814294
+   },
+   {
+    "id": "cis-bnuxil",
+    "name": "Egor",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 24,
+    "stats": {
+     "mechanical": 10.2,
+     "cognitive": 10.9,
+     "collective": 7.1,
+     "composure": 9,
+     "adaptability": 11.5,
+     "presence": 11.5
+    },
+    "state": {
+     "energy": 73,
+     "morale": 88,
+     "form": 0
+    },
+    "traits": [
+     "tilter"
+    ],
+    "peakAge": 20,
+    "potential": 13.5,
+    "seed": 705202221
+   },
+   {
+    "id": "cis-9vxo1r",
+    "name": "Danila",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru",
+     "en"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 10.2,
+     "cognitive": 15.2,
+     "collective": 9.6,
+     "composure": 11.5,
+     "adaptability": 10.9,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 84,
+     "morale": 61,
+     "form": 0
+    },
+    "traits": [
+     "captain",
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 20,
+    "potential": 20,
+    "seed": 597834495
+   },
+   {
+    "id": "cis-105vxvg",
+    "name": "Timur",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 15.2,
+     "collective": 15.9,
+     "composure": 14,
+     "adaptability": 13.4,
+     "presence": 15.9
+    },
+    "state": {
+     "energy": 77,
+     "morale": 74,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 21,
+    "potential": 17.9,
+    "seed": 2186670652
+   },
+   {
+    "id": "cis-vv5jx0",
+    "name": "Egor",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 19,
+     "collective": 16.5,
+     "composure": 18.4,
+     "adaptability": 15.2,
+     "presence": 17.1
+    },
+    "state": {
+     "energy": 100,
+     "morale": 63,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 19,
+    "potential": 20,
+    "seed": 1926778644
+   },
+   {
+    "id": "cis-18p52tg",
+    "name": "Danila",
+    "handle": "sok0l",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 4,
+     "cognitive": 6.5,
+     "collective": 7.1,
+     "composure": 5.2,
+     "adaptability": 7.1,
+     "presence": 7.7
+    },
+    "state": {
+     "energy": 70,
+     "morale": 71,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain"
+    ],
+    "peakAge": 19,
+    "potential": 11.7,
+    "seed": 2702739076
+   },
+   {
+    "id": "cis-jmqus8",
+    "name": "Artem",
+    "handle": "nol1k",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 8.4,
+     "cognitive": 10.2,
+     "collective": 10.2,
+     "composure": 10.2,
+     "adaptability": 7.7,
+     "presence": 10.2
+    },
+    "state": {
+     "energy": 89,
+     "morale": 60,
+     "form": 0
+    },
+    "traits": [
+     "tilter"
+    ],
+    "peakAge": 20,
+    "potential": 12.2,
+    "seed": 1187061848
+   },
+   {
+    "id": "cis-ls3bom",
+    "name": "Egor",
+    "handle": "kabanchik",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 24,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 11.5,
+     "collective": 11.5,
+     "composure": 11.5,
+     "adaptability": 14.6,
+     "presence": 14
+    },
+    "state": {
+     "energy": 97,
+     "morale": 55,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 19,
+    "potential": 20,
+    "seed": 1316974054
+   },
+   {
+    "id": "cis-iof5tx",
+    "name": "Danila",
+    "handle": "zvuuk",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 25,
+    "stats": {
+     "mechanical": 15.2,
+     "cognitive": 15.9,
+     "collective": 14.6,
+     "composure": 15.9,
+     "adaptability": 14,
+     "presence": 12.7
+    },
+    "state": {
+     "energy": 74,
+     "morale": 61,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 21,
+    "potential": 17.9,
+    "seed": 1129409349
+   },
+   {
+    "id": "cis-xadv5c",
+    "name": "Egor",
+    "handle": "tapok",
+    "originId": "cis",
+    "languages": [
+     "ru"
+    ],
+    "age": 27,
+    "stats": {
+     "mechanical": 17.7,
+     "cognitive": 16.5,
+     "collective": 15.2,
+     "composure": 15.2,
+     "adaptability": 14.6,
+     "presence": 15.9
+    },
+    "state": {
+     "energy": 78,
+     "morale": 66,
+     "form": 0
+    },
+    "traits": [
+     "captain",
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 19,
+    "potential": 20,
+    "seed": 2012826864
+   }
+  ],
+  "western-europe": [
+   {
+    "id": "western-europe-hrs41s",
+    "name": "Mateo",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "fr",
+     "sv"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 5.3,
+     "cognitive": 7.1,
+     "collective": 4.6,
+     "composure": 5.9,
+     "adaptability": 5.9,
+     "presence": 5.9
+    },
+    "state": {
+     "energy": 81,
+     "morale": 86,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer"
+    ],
+    "peakAge": 19,
+    "potential": 8.1,
+    "seed": 1074586240
+   },
+   {
+    "id": "western-europe-omjh0i",
+    "name": "Jonas",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 9.6,
+     "cognitive": 9.6,
+     "collective": 9.6,
+     "composure": 7.1,
+     "adaptability": 7.8,
+     "presence": 7.1
+    },
+    "state": {
+     "energy": 84,
+     "morale": 79,
+     "form": 0
+    },
+    "traits": [
+     "captain"
+    ],
+    "peakAge": 22,
+    "potential": 10.6,
+    "seed": 1489048290
+   },
+   {
+    "id": "western-europe-1pcqdsc",
+    "name": "Oliver",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de"
+    ],
+    "age": 25,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 12.1,
+     "collective": 9,
+     "composure": 10.3,
+     "adaptability": 11.5,
+     "presence": 13.4
+    },
+    "state": {
+     "energy": 88,
+     "morale": 78,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 22,
+    "potential": 15.4,
+    "seed": 3709823052
+   },
+   {
+    "id": "western-europe-1lzvxs",
+    "name": "Oliver",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 19,
+    "stats": {
+     "mechanical": 14,
+     "cognitive": 13.4,
+     "collective": 14.6,
+     "composure": 14.6,
+     "adaptability": 14.6,
+     "presence": 12.8
+    },
+    "state": {
+     "energy": 91,
+     "morale": 83,
+     "form": 0
+    },
+    "traits": [
+     "tilter"
+    ],
+    "peakAge": 21,
+    "potential": 19.6,
+    "seed": 97412464
+   },
+   {
+    "id": "western-europe-19harm0",
+    "name": "Lucas",
+    "handle": "crumpet",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 16.5,
+     "cognitive": 16.5,
+     "collective": 16.5,
+     "composure": 17.1,
+     "adaptability": 15.9,
+     "presence": 13.4
+    },
+    "state": {
+     "energy": 86,
+     "morale": 68,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 24,
+    "potential": 19.1,
+    "seed": 2750033736
+   },
+   {
+    "id": "western-europe-1vut989",
+    "name": "Lucas",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 23,
+    "stats": {
+     "mechanical": 7.1,
+     "cognitive": 6.5,
+     "collective": 9,
+     "composure": 7.8,
+     "adaptability": 6.5,
+     "presence": 7.1
+    },
+    "state": {
+     "energy": 77,
+     "morale": 73,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 21,
+    "potential": 12,
+    "seed": 4102987257
+   },
+   {
+    "id": "western-europe-mdcb",
+    "name": "Oliver",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 19,
+    "stats": {
+     "mechanical": 10.9,
+     "cognitive": 6.5,
+     "collective": 8.4,
+     "composure": 7.1,
+     "adaptability": 8.4,
+     "presence": 12.1
+    },
+    "state": {
+     "energy": 75,
+     "morale": 88,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 20,
+    "potential": 16.1,
+    "seed": 1043723
+   },
+   {
+    "id": "western-europe-1tztuhi",
+    "name": "Lucas",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 10.3,
+     "cognitive": 10.3,
+     "collective": 9.6,
+     "composure": 10.9,
+     "adaptability": 11.5,
+     "presence": 9.6
+    },
+    "state": {
+     "energy": 82,
+     "morale": 88,
+     "form": 0
+    },
+    "traits": [
+     "night-owl"
+    ],
+    "peakAge": 19,
+    "potential": 15.5,
+    "seed": 3990480534
+   },
+   {
+    "id": "western-europe-1v3p1b0",
+    "name": "Mateo",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 13.4,
+     "cognitive": 14.6,
+     "collective": 15.9,
+     "composure": 17.1,
+     "adaptability": 14.6,
+     "presence": 12.8
+    },
+    "state": {
+     "energy": 77,
+     "morale": 81,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 19,
+    "potential": 20,
+    "seed": 4057440732
+   },
+   {
+    "id": "western-europe-hd2yfl",
+    "name": "Oliver",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 25,
+    "stats": {
+     "mechanical": 16.5,
+     "cognitive": 14,
+     "collective": 18.4,
+     "composure": 17.1,
+     "adaptability": 17.8,
+     "presence": 19
+    },
+    "state": {
+     "energy": 95,
+     "morale": 64,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 24,
+    "potential": 20,
+    "seed": 1049897937
+   },
+   {
+    "id": "western-europe-1e6bsx2",
+    "name": "Oliver",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 21,
+    "stats": {
+     "mechanical": 7.1,
+     "cognitive": 9,
+     "collective": 9,
+     "composure": 4.6,
+     "adaptability": 7.1,
+     "presence": 5.9
+    },
+    "state": {
+     "energy": 81,
+     "morale": 63,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 14,
+    "seed": 3033937190
+   },
+   {
+    "id": "western-europe-13ke3bm",
+    "name": "Oliver",
+    "handle": "crumpet",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 24,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 7.8,
+     "collective": 9,
+     "composure": 10.9,
+     "adaptability": 8.4,
+     "presence": 8.4
+    },
+    "state": {
+     "energy": 71,
+     "morale": 66,
+     "form": 0
+    },
+    "traits": [
+     "captain",
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 13.5,
+    "seed": 2392430674
+   },
+   {
+    "id": "western-europe-27ymmf",
+    "name": "Oliver",
+    "handle": "crumpet",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "sv"
+    ],
+    "age": 23,
+    "stats": {
+     "mechanical": 10.3,
+     "cognitive": 12.1,
+     "collective": 14.6,
+     "composure": 13.4,
+     "adaptability": 9,
+     "presence": 10.9
+    },
+    "state": {
+     "energy": 100,
+     "morale": 77,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 24,
+    "potential": 20,
+    "seed": 134305287
+   },
+   {
+    "id": "western-europe-1wtm6sm",
+    "name": "Finn",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 15.9,
+     "cognitive": 12.8,
+     "collective": 12.8,
+     "composure": 12.1,
+     "adaptability": 14.6,
+     "presence": 14
+    },
+    "state": {
+     "energy": 84,
+     "morale": 70,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 19,
+    "potential": 17.9,
+    "seed": 4161444070
+   },
+   {
+    "id": "western-europe-1cou2de",
+    "name": "Mateo",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "fr"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 16.5,
+     "collective": 14,
+     "composure": 17.1,
+     "adaptability": 16.5,
+     "presence": 14
+    },
+    "state": {
+     "energy": 78,
+     "morale": 58,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 2944089986
+   },
+   {
+    "id": "western-europe-r6x7br",
+    "name": "Lucas",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 8.4,
+     "cognitive": 8.4,
+     "collective": 7.8,
+     "composure": 7.1,
+     "adaptability": 6.5,
+     "presence": 6.5
+    },
+    "state": {
+     "energy": 87,
+     "morale": 59,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 21,
+    "potential": 9.4,
+    "seed": 1644213591
+   },
+   {
+    "id": "western-europe-1vljsqo",
+    "name": "Finn",
+    "handle": "crumpet",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 7.1,
+     "cognitive": 8.4,
+     "collective": 10.3,
+     "composure": 7.1,
+     "adaptability": 7.1,
+     "presence": 9
+    },
+    "state": {
+     "energy": 74,
+     "morale": 66,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter",
+     "captain"
+    ],
+    "peakAge": 23,
+    "potential": 16.3,
+    "seed": 4087429440
+   },
+   {
+    "id": "western-europe-160u352",
+    "name": "Oliver",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 9.6,
+     "cognitive": 10.9,
+     "collective": 10.9,
+     "composure": 10.9,
+     "adaptability": 12.1,
+     "presence": 13.4
+    },
+    "state": {
+     "energy": 93,
+     "morale": 76,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer"
+    ],
+    "peakAge": 24,
+    "potential": 17.4,
+    "seed": 2540983142
+   },
+   {
+    "id": "western-europe-1xid9dz",
+    "name": "Oliver",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 13.4,
+     "collective": 15.9,
+     "composure": 12.8,
+     "adaptability": 12.1,
+     "presence": 12.8
+    },
+    "state": {
+     "energy": 92,
+     "morale": 65,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 20,
+    "potential": 19.9,
+    "seed": 4203017927
+   },
+   {
+    "id": "western-europe-1ez1zpn",
+    "name": "Jonas",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de"
+    ],
+    "age": 23,
+    "stats": {
+     "mechanical": 15.9,
+     "cognitive": 16.5,
+     "collective": 17.8,
+     "composure": 15.9,
+     "adaptability": 14,
+     "presence": 19
+    },
+    "state": {
+     "energy": 83,
+     "morale": 56,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 24,
+    "potential": 20,
+    "seed": 3082188299
+   },
+   {
+    "id": "western-europe-1u19m1x",
+    "name": "Finn",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "da"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 4.6,
+     "cognitive": 5.3,
+     "collective": 3.4,
+     "composure": 9.6,
+     "adaptability": 7.1,
+     "presence": 8.4
+    },
+    "state": {
+     "energy": 90,
+     "morale": 87,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl"
+    ],
+    "peakAge": 23,
+    "potential": 10.6,
+    "seed": 3992895717
+   },
+   {
+    "id": "western-europe-1fus4qt",
+    "name": "Oliver",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 9,
+     "cognitive": 7.1,
+     "collective": 7.8,
+     "composure": 8.4,
+     "adaptability": 8.4,
+     "presence": 7.1
+    },
+    "state": {
+     "energy": 71,
+     "morale": 79,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 15,
+    "seed": 3135475973
+   },
+   {
+    "id": "western-europe-1bag7qw",
+    "name": "Lucas",
+    "handle": "crumpet",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de"
+    ],
+    "age": 23,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 12.1,
+     "collective": 11.5,
+     "composure": 11.5,
+     "adaptability": 8.4,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 86,
+     "morale": 57,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 22,
+    "potential": 17.6,
+    "seed": 2859462968
+   },
+   {
+    "id": "western-europe-1487zv3",
+    "name": "Finn",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 15.3,
+     "cognitive": 13.4,
+     "collective": 14.6,
+     "composure": 14,
+     "adaptability": 14,
+     "presence": 12.1
+    },
+    "state": {
+     "energy": 83,
+     "morale": 85,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 23,
+    "potential": 19.3,
+    "seed": 2432457039
+   },
+   {
+    "id": "western-europe-4dnees",
+    "name": "Lucas",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 19,
+     "cognitive": 18.4,
+     "collective": 17.8,
+     "composure": 17.1,
+     "adaptability": 14,
+     "presence": 18.4
+    },
+    "state": {
+     "energy": 96,
+     "morale": 84,
+     "form": 0
+    },
+    "traits": [
+     "night-owl"
+    ],
+    "peakAge": 19,
+    "potential": 20,
+    "seed": 264791476
+   },
+   {
+    "id": "western-europe-j3lcfb",
+    "name": "Lucas",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 7.8,
+     "cognitive": 6.5,
+     "collective": 4,
+     "composure": 6.5,
+     "adaptability": 6.5,
+     "presence": 4
+    },
+    "state": {
+     "energy": 79,
+     "morale": 90,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "captain"
+    ],
+    "peakAge": 20,
+    "potential": 10.8,
+    "seed": 1154892071
+   },
+   {
+    "id": "western-europe-1vhv3k",
+    "name": "Mateo",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "da"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 9,
+     "cognitive": 10.9,
+     "collective": 10.3,
+     "composure": 8.4,
+     "adaptability": 9.6,
+     "presence": 10.3
+    },
+    "state": {
+     "energy": 72,
+     "morale": 78,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 22,
+    "potential": 16.9,
+    "seed": 113367728
+   },
+   {
+    "id": "western-europe-18g6ykc",
+    "name": "Lucas",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 23,
+    "stats": {
+     "mechanical": 10.9,
+     "cognitive": 9.6,
+     "collective": 14,
+     "composure": 14,
+     "adaptability": 12.1,
+     "presence": 11.5
+    },
+    "state": {
+     "energy": 79,
+     "morale": 61,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter"
+    ],
+    "peakAge": 19,
+    "potential": 15,
+    "seed": 2687710332
+   },
+   {
+    "id": "western-europe-1bvkw8u",
+    "name": "Jonas",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 14,
+     "cognitive": 14.6,
+     "collective": 11.5,
+     "composure": 15.9,
+     "adaptability": 15.3,
+     "presence": 12.1
+    },
+    "state": {
+     "energy": 82,
+     "morale": 56,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 2894953278
+   },
+   {
+    "id": "western-europe-1308kl",
+    "name": "Finn",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 16.5,
+     "cognitive": 16.5,
+     "collective": 15.9,
+     "composure": 15.3,
+     "adaptability": 19,
+     "presence": 16.5
+    },
+    "state": {
+     "energy": 88,
+     "morale": 79,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer",
+     "captain"
+    ],
+    "peakAge": 24,
+    "potential": 20,
+    "seed": 65516133
+   },
+   {
+    "id": "western-europe-1x7nncj",
+    "name": "Mateo",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 7.1,
+     "cognitive": 7.1,
+     "collective": 7.1,
+     "composure": 7.1,
+     "adaptability": 6.5,
+     "presence": 5.9
+    },
+    "state": {
+     "energy": 96,
+     "morale": 73,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 21,
+    "potential": 8.1,
+    "seed": 4185026803
+   },
+   {
+    "id": "western-europe-e5yiz0",
+    "name": "Mateo",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "fr"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 10.3,
+     "collective": 10.9,
+     "composure": 8.4,
+     "adaptability": 8.4,
+     "presence": 7.1
+    },
+    "state": {
+     "energy": 75,
+     "morale": 61,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 21,
+    "potential": 15.5,
+    "seed": 856535436
+   },
+   {
+    "id": "western-europe-p81rpp",
+    "name": "Mateo",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 14,
+     "collective": 12.1,
+     "composure": 14,
+     "adaptability": 10.3,
+     "presence": 8.4
+    },
+    "state": {
+     "energy": 70,
+     "morale": 82,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "captain"
+    ],
+    "peakAge": 22,
+    "potential": 17.6,
+    "seed": 1525173901
+   },
+   {
+    "id": "western-europe-1k7d7zh",
+    "name": "Jonas",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 13.4,
+     "cognitive": 12.1,
+     "collective": 11.5,
+     "composure": 15.3,
+     "adaptability": 12.1,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 74,
+     "morale": 60,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 3398480045
+   },
+   {
+    "id": "western-europe-14xcm7z",
+    "name": "Oliver",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 26,
+    "stats": {
+     "mechanical": 17.1,
+     "cognitive": 17.1,
+     "collective": 18.4,
+     "composure": 17.8,
+     "adaptability": 16.5,
+     "presence": 15.9
+    },
+    "state": {
+     "energy": 84,
+     "morale": 58,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "captain",
+     "tilter"
+    ],
+    "peakAge": 20,
+    "potential": 20,
+    "seed": 2474663039
+   },
+   {
+    "id": "western-europe-8yllzr",
+    "name": "Jonas",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de",
+     "sv"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 6.5,
+     "cognitive": 5.3,
+     "collective": 8.4,
+     "composure": 6.5,
+     "adaptability": 7.1,
+     "presence": 7.8
+    },
+    "state": {
+     "energy": 70,
+     "morale": 66,
+     "form": 0
+    },
+    "traits": [
+     "streamer"
+    ],
+    "peakAge": 22,
+    "potential": 13.4,
+    "seed": 541844631
+   },
+   {
+    "id": "western-europe-ubgk4s",
+    "name": "Lucas",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 22,
+    "stats": {
+     "mechanical": 7.8,
+     "cognitive": 10.9,
+     "collective": 9,
+     "composure": 12.1,
+     "adaptability": 9.6,
+     "presence": 10.3
+    },
+    "state": {
+     "energy": 100,
+     "morale": 66,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 21,
+    "potential": 15.1,
+    "seed": 1833233644
+   },
+   {
+    "id": "western-europe-v90l54",
+    "name": "Lucas",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "fr"
+    ],
+    "age": 21,
+    "stats": {
+     "mechanical": 11.5,
+     "cognitive": 12.1,
+     "collective": 11.5,
+     "composure": 12.1,
+     "adaptability": 10.9,
+     "presence": 11.5
+    },
+    "state": {
+     "energy": 79,
+     "morale": 75,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 22,
+    "potential": 14.1,
+    "seed": 1889595400
+   },
+   {
+    "id": "western-europe-b941jx",
+    "name": "Oliver",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "de"
+    ],
+    "age": 28,
+    "stats": {
+     "mechanical": 14,
+     "cognitive": 13.4,
+     "collective": 14.6,
+     "composure": 14.6,
+     "adaptability": 12.8,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 76,
+     "morale": 80,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 20,
+    "potential": 17.6,
+    "seed": 680433117
+   },
+   {
+    "id": "western-europe-vavveo",
+    "name": "Oliver",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "fr"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 17.1,
+     "cognitive": 16.5,
+     "collective": 15.3,
+     "composure": 15.9,
+     "adaptability": 14.6,
+     "presence": 17.1
+    },
+    "state": {
+     "energy": 77,
+     "morale": 59,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "captain",
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 20,
+    "seed": 1892734656
+   },
+   {
+    "id": "western-europe-3bfmcl",
+    "name": "Oliver",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 16,
+    "stats": {
+     "mechanical": 7.8,
+     "cognitive": 5.9,
+     "collective": 5.9,
+     "composure": 6.5,
+     "adaptability": 5.9,
+     "presence": 8.4
+    },
+    "state": {
+     "energy": 98,
+     "morale": 56,
+     "form": 0
+    },
+    "traits": [
+     "captain"
+    ],
+    "peakAge": 19,
+    "potential": 13.4,
+    "seed": 200603109
+   },
+   {
+    "id": "western-europe-ulejos",
+    "name": "Mateo",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 24,
+    "stats": {
+     "mechanical": 9.6,
+     "cognitive": 7.1,
+     "collective": 9,
+     "composure": 8.4,
+     "adaptability": 10.3,
+     "presence": 5.9
+    },
+    "state": {
+     "energy": 99,
+     "morale": 67,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 13.3,
+    "seed": 1849935916
+   },
+   {
+    "id": "western-europe-1xpzdbw",
+    "name": "Jonas",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 19,
+    "stats": {
+     "mechanical": 10.9,
+     "cognitive": 12.8,
+     "collective": 11.5,
+     "composure": 12.1,
+     "adaptability": 11.5,
+     "presence": 12.8
+    },
+    "state": {
+     "energy": 89,
+     "morale": 59,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "captain",
+     "streamer"
+    ],
+    "peakAge": 19,
+    "potential": 17.8,
+    "seed": 4215806780
+   },
+   {
+    "id": "western-europe-x3yxig",
+    "name": "Jonas",
+    "handle": "crumpet",
+    "originId": "western-europe",
+    "languages": [
+     "en",
+     "fr"
+    ],
+    "age": 19,
+    "stats": {
+     "mechanical": 14,
+     "cognitive": 14.6,
+     "collective": 14.6,
+     "composure": 13.4,
+     "adaptability": 12.8,
+     "presence": 15.9
+    },
+    "state": {
+     "energy": 73,
+     "morale": 78,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "captain",
+     "streamer"
+    ],
+    "peakAge": 23,
+    "potential": 19.9,
+    "seed": 2002052392
+   },
+   {
+    "id": "western-europe-1413jow",
+    "name": "Finn",
+    "handle": "drizzle",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 18,
+    "stats": {
+     "mechanical": 18.4,
+     "cognitive": 19.6,
+     "collective": 17.1,
+     "composure": 15.3,
+     "adaptability": 17.1,
+     "presence": 19
+    },
+    "state": {
+     "energy": 83,
+     "morale": 56,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "captain",
+     "streamer"
+    ],
+    "peakAge": 19,
+    "potential": 20,
+    "seed": 2420492144
+   },
+   {
+    "id": "western-europe-ndnkz3",
+    "name": "Jonas",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 27,
+    "stats": {
+     "mechanical": 7.8,
+     "cognitive": 5.9,
+     "collective": 7.1,
+     "composure": 7.8,
+     "adaptability": 7.1,
+     "presence": 5.3
+    },
+    "state": {
+     "energy": 82,
+     "morale": 82,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 21,
+    "potential": 11.8,
+    "seed": 1413657327
+   },
+   {
+    "id": "western-europe-176yxb6",
+    "name": "Lucas",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 17,
+    "stats": {
+     "mechanical": 12.1,
+     "cognitive": 10.3,
+     "collective": 9,
+     "composure": 10.3,
+     "adaptability": 7.8,
+     "presence": 7.1
+    },
+    "state": {
+     "energy": 95,
+     "morale": 67,
+     "form": 0
+    },
+    "traits": [
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 22,
+    "potential": 15.1,
+    "seed": 2611752738
+   },
+   {
+    "id": "western-europe-1417192",
+    "name": "Mateo",
+    "handle": "plinth",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 12.8,
+     "cognitive": 12.1,
+     "collective": 14.6,
+     "composure": 9.6,
+     "adaptability": 11.5,
+     "presence": 11.5
+    },
+    "state": {
+     "energy": 91,
+     "morale": 77,
+     "form": 0
+    },
+    "traits": [
+     "streamer",
+     "night-owl",
+     "tilter"
+    ],
+    "peakAge": 24,
+    "potential": 19.6,
+    "seed": 2420654870
+   },
+   {
+    "id": "western-europe-1hozwe",
+    "name": "Jonas",
+    "handle": "pylon",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 19,
+    "stats": {
+     "mechanical": 14.6,
+     "cognitive": 15.3,
+     "collective": 14,
+     "composure": 12.1,
+     "adaptability": 14.6,
+     "presence": 14.6
+    },
+    "state": {
+     "energy": 85,
+     "morale": 67,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "night-owl"
+    ],
+    "peakAge": 23,
+    "potential": 18.3,
+    "seed": 90185918
+   },
+   {
+    "id": "western-europe-1pjkg5i",
+    "name": "Jonas",
+    "handle": "wiper",
+    "originId": "western-europe",
+    "languages": [
+     "en"
+    ],
+    "age": 20,
+    "stats": {
+     "mechanical": 17.8,
+     "cognitive": 18.4,
+     "collective": 15.9,
+     "composure": 18.4,
+     "adaptability": 15.3,
+     "presence": 16.5
+    },
+    "state": {
+     "energy": 95,
+     "morale": 88,
+     "form": 0
+    },
+    "traits": [
+     "tilter",
+     "streamer"
+    ],
+    "peakAge": 20,
+    "potential": 20,
+    "seed": 3721303494
+   }
+  ]
+ }
+}

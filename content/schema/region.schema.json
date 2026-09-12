@@ -5,7 +5,7 @@
   "required": [
     "id",
     "name",
-    "languages",
+    "language",
     "modifiers"
   ],
   "additionalProperties": false,
@@ -18,12 +18,32 @@
       "type": "string",
       "description": "английское название региона: его видит пользователь, см. docs/adr/0007"
     },
-    "languages": {
+    "language": {
+      "type": "string",
+      "description": "язык региона по умолчанию: на нём говорят все, кто здесь сгенерирован. Механика химии состава, не язык интерфейса — см. specs/0006",
+      "pattern": "^[a-z]{2}$"
+    },
+    "secondLanguages": {
       "type": "array",
-      "description": "на чём говорят персонажи региона — механика химии состава, не язык интерфейса",
-      "minItems": 1,
+      "description": "дополнительные языки и вероятность владения при генерации, см. specs/0006",
       "items": {
-        "type": "string"
+        "type": "object",
+        "required": [
+          "language",
+          "chance"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "language": {
+            "type": "string",
+            "pattern": "^[a-z]{2}$"
+          },
+          "chance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
       }
     },
     "timezoneOffset": {

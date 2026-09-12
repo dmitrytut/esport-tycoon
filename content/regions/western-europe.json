@@ -1,0 +1,38 @@
+{
+  "id": "western-europe",
+  "name": "Western Europe",
+  "language": "en",
+  "secondLanguages": [
+    {
+      "language": "de",
+      "chance": 0.25
+    },
+    {
+      "language": "fr",
+      "chance": 0.2
+    },
+    {
+      "language": "sv",
+      "chance": 0.15
+    },
+    {
+      "language": "da",
+      "chance": 0.1
+    }
+  ],
+  "timezoneOffset": 1,
+  "modifiers": {
+    "salaryScale": 1.35,
+    "talentDensity": 1.0,
+    "growthScale": 0.95,
+    "burnoutScale": 0.85,
+    "sponsorWealth": 1.3,
+    "prestigeScale": 1.4,
+    "visaRisk": 0.05,
+    "audienceScale": 1.15
+  },
+  "namePools": [
+    "en-male",
+    "en-nick"
+  ]
+}

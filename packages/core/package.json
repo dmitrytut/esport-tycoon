@@ -1,0 +1,10 @@
+{
+  "name": "@et/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Домен-нейтральное ядро: чистая логика без ввода-вывода (ADR 0001, ADR 0008)",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

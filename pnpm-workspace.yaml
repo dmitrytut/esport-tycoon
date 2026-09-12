@@ -1,0 +1,8 @@
+packages:
+  - packages/*
+  - tools/*
+
+# pnpm 11+ запрещает скрипты сборки зависимостей по умолчанию (strictDepBuilds).
+# esbuild распаковывает платформенный бинарь — без него не работают vite и vitest.
+allowBuilds:
+  esbuild: true

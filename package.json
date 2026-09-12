@@ -1,0 +1,24 @@
+{
+  "name": "esport-tycoon",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "validate:content": "node tools/validate-content/src/index.ts",
+    "verify": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run validate:content",
+    "hooks:install": "git config core.hooksPath .githooks"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.4",
+    "eslint": "^10.10.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0"
+  }
+}

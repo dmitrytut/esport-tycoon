@@ -1,0 +1,13 @@
+{
+  "name": "@et/validate-content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Схемы плюс ссылочная целостность content/ (ADR 0003)",
+  "bin": {
+    "validate-content": "./src/index.ts"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1"
+  }
+}

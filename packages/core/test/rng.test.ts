@@ -1,0 +1,152 @@
+import { describe, expect, it } from "vitest";
+import { createRng, restoreRng } from "../src/rng.ts";
+
+const draw = (seed: number | string, count: number): number[] => {
+  const rng = createRng(seed);
+  return Array.from({ length: count }, () => rng.nextUint32());
+};
+
+describe("детерминизм (ADR 0002)", () => {
+  it("один сид даёт бит-в-бит одну последовательность", () => {
+    expect(draw(42, 200)).toEqual(draw(42, 200));
+  });
+
+  it("разные сиды расходятся", () => {
+    expect(draw(42, 50)).not.toEqual(draw(43, 50));
+  });
+
+  it("строковый сид хэшируется устойчиво", () => {
+    expect(draw("season-1", 50)).toEqual(draw("season-1", 50));
+    expect(draw("season-1", 50)).not.toEqual(draw("season-2", 50));
+  });
+
+  it("состояние сериализуется: продолжение совпадает с непрерывным прогоном", () => {
+    const continuous = createRng(7);
+    const sequence = Array.from({ length: 40 }, () => continuous.nextUint32());
+
+    const interrupted = createRng(7);
+    const head = Array.from({ length: 20 }, () => interrupted.nextUint32());
+    const resumed = restoreRng(7, interrupted.state());
+    const tail = Array.from({ length: 20 }, () => resumed.nextUint32());
+
+    expect([...head, ...tail]).toEqual(sequence);
+  });
+});
+
+describe("потоки (ADR 0002, п.3)", () => {
+  it("поток зависит от имени, а не от того, сколько взяли у родителя", () => {
+    const early = createRng(42).stream("contest").nextUint32();
+
+    const parent = createRng(42);
+    for (let i = 0; i < 1000; i++) parent.nextUint32();
+    expect(parent.stream("contest").nextUint32()).toBe(early);
+  });
+
+  it("разные имена дают разные потоки", () => {
+    const root = createRng(42);
+    const a = Array.from({ length: 20 }, () => root.stream("contest").nextUint32());
+    const b = Array.from({ length: 20 }, () => root.stream("incidents").nextUint32());
+    expect(a).not.toEqual(b);
+  });
+
+  it("вложенные потоки тоже стабильны", () => {
+    const path = (): number => createRng(42).stream("week").stream("incidents").nextUint32();
+    expect(path()).toBe(path());
+  });
+});
+
+describe("границы", () => {
+  it("int не выходит за диапазон и покрывает оба конца", () => {
+    const rng = createRng(1);
+    const seen = new Set<number>();
+    for (let i = 0; i < 5000; i++) {
+      const value = rng.int(1, 6);
+      expect(value).toBeGreaterThanOrEqual(1);
+      expect(value).toBeLessThanOrEqual(6);
+      seen.add(value);
+    }
+    expect(seen.size).toBe(6);
+  });
+
+  it("int(x, x) возвращает x и не тратит лишнего", () => {
+    expect(createRng(1).int(5, 5)).toBe(5);
+  });
+
+  it("int отвергает перевёрнутый и нецелый диапазон", () => {
+    const rng = createRng(1);
+    expect(() => rng.int(6, 1)).toThrow(RangeError);
+    expect(() => rng.int(0.5, 3)).toThrow(RangeError);
+  });
+
+  it("float лежит в [0, 1)", () => {
+    const rng = createRng(3);
+    for (let i = 0; i < 5000; i++) {
+      const value = rng.float();
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(1);
+    }
+  });
+
+  it("int распределён без явного перекоса", () => {
+    const rng = createRng(9);
+    const buckets = new Array<number>(10).fill(0);
+    const draws = 100_000;
+    for (let i = 0; i < draws; i++) {
+      const index = rng.int(0, 9);
+      buckets[index] = (buckets[index] ?? 0) + 1;
+    }
+    const expected = draws / 10;
+    for (const count of buckets) {
+      expect(Math.abs(count - expected) / expected).toBeLessThan(0.05);
+    }
+  });
+
+  it("chance(0) и chance(1) не тратят случайность", () => {
+    const rng = createRng(5);
+    expect(rng.chance(0)).toBe(false);
+    expect(rng.chance(1)).toBe(true);
+    expect(rng.state()).toEqual(createRng(5).state());
+  });
+});
+
+describe("выборки", () => {
+  it("pick берёт только элементы списка и доходит до каждого", () => {
+    const rng = createRng(11);
+    const items = ["a", "b", "c"] as const;
+    const seen = new Set<string>();
+    for (let i = 0; i < 500; i++) seen.add(rng.pick(items));
+    expect([...seen].sort()).toEqual(["a", "b", "c"]);
+  });
+
+  it("pick из пустого списка — ошибка, а не undefined", () => {
+    expect(() => createRng(1).pick([])).toThrow(RangeError);
+  });
+
+  it("shuffle не меняет исходный массив и сохраняет состав", () => {
+    const source = [1, 2, 3, 4, 5];
+    const shuffled = createRng(13).shuffle(source);
+    expect(source).toEqual([1, 2, 3, 4, 5]);
+    expect([...shuffled].sort((a, b) => a - b)).toEqual(source);
+  });
+
+  it("weightedIndex никогда не возвращает нулевой вес", () => {
+    const rng = createRng(17);
+    for (let i = 0; i < 2000; i++) {
+      expect(rng.weightedIndex([0, 5, 0, 1])).not.toBe(0);
+      expect(rng.weightedIndex([0, 5, 0, 1])).not.toBe(2);
+    }
+  });
+
+  it("weightedIndex соблюдает пропорции", () => {
+    const rng = createRng(19);
+    let first = 0;
+    const draws = 20_000;
+    for (let i = 0; i < draws; i++) if (rng.weightedIndex([3, 1]) === 0) first++;
+    expect(Math.abs(first / draws - 0.75)).toBeLessThan(0.01);
+  });
+
+  it("нулевая сумма весов — ошибка", () => {
+    expect(() => createRng(1).weightedIndex([0, 0])).toThrow(RangeError);
+    expect(() => createRng(1).weightedIndex([])).toThrow(RangeError);
+  });
+});

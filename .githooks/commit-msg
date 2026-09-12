@@ -1,0 +1,24 @@
+#!/bin/sh
+# Коммит, меняющий golden или baseline, обязан объяснять сдвиг (tests/README.md).
+set -e
+
+message_file="$1"
+subject=$(head -n 1 "$message_file")
+body_lines=$(sed '1d' "$message_file" | grep -cv '^[[:space:]]*\(#.*\)\?$' || true)
+
+touches_golden=$(git diff --cached --name-only --diff-filter=ACMD \
+  | grep -E '^(packages/.*/test/golden/|tests/golden/|sim/baseline/)' || true)
+
+if [ -n "$touches_golden" ]; then
+  case "$subject" in
+    golden:*|baseline:*) ;;
+    *)
+      echo "Отказ: коммит меняет golden/baseline, но тема не начинается с golden: или baseline:" >&2
+      exit 1
+      ;;
+  esac
+  if [ "$body_lines" -eq 0 ]; then
+    echo "Отказ: обновление golden/baseline без объяснения. Опиши в теле коммита, что именно в правилах сдвинуло цифры." >&2
+    exit 1
+  fi
+fi

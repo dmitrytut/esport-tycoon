@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Пул имён",
+  "description": "Список имён, фамилий или ников одного региона и вида. Имя файла = id пула, на который ссылается регион",
+  "type": "object",
+  "required": ["id", "kind", "values"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "kind": {
+      "enum": ["given", "family", "nick"]
+    },
+    "values": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 2
+      }
+    }
+  }
+}

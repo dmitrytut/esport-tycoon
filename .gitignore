@@ -3,3 +3,6 @@ dist/
 coverage/
 *.tsbuildinfo
 .DS_Store
+
+# Параллельные сессии Claude Code создают worktree здесь (claude --worktree <name>).
+.claude/worktrees/

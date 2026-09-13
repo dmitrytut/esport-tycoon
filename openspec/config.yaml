@@ -21,6 +21,14 @@ rules:
       A change that intentionally alters no behaviour (tooling, infrastructure, docs)
       must set "skip_specs: true" in its .openspec.yaml. Otherwise `openspec validate`
       fails the gate with "Change must have at least one delta".
+    - >-
+      References to decisions point upward only. A requirement may carry the number of
+      the ADR it exists because of; an ADR never references a requirement. ADRs are
+      frozen once accepted, spec requirements change on every archive.
+    - >-
+      A proposal that contradicts an accepted ADR is not written. Stop, say which ADR
+      blocks it, and let a human replace that ADR in its own pull request first.
+      Never work around a decision by wording the requirement differently.
 
 operations:
   apply:

@@ -4,21 +4,21 @@ paths:
   - "specs/**"
 ---
 
-# Спеки
+# Specs
 
-- **Два PR на задачу.** Первый — только `openspec/changes/<slug>/`, код не пишется, пока
-  он не смержен. Второй — реализация вместе с результатом `openspec archive`.
-  Причина и полная петля — `docs/adr/0009`.
-- **`openspec/specs/` руками не правится.** Живая спека меняется только командой
-  `openspec archive <slug> -y`, запускаемой в ветке реализации.
-- **Предложение объявляет затрагиваемые пути** разделом «Затрагивает» — по нему считается
-  допуск к параллельной работе.
-- **Изменение без дельты** (тулинг, инфраструктура, документация) ставит
-  `skip_specs: true` в своём `.openspec.yaml` при заведении, иначе гейт краснеет.
-- **Ссылки на решения — только снизу вверх.** Требование может нести номер ADR,
-  ADR на требования не ссылается: он не переписывается, а спека меняется на каждом архиве.
-- **Упёрся в ADR — стоп.** Предложение, противоречащее принятому решению, не пишется:
-  сначала ADR заменяется отдельным PR, потом работа продолжается.
-- `.claude/commands/opsx/*` и `specs/TEMPLATE.md` руками не правятся: первые генерируются
-  (`openspec update --force`), второй больше не используется. Свой шаг воркфлоу
-  добавляется через `openspec/config.yaml`.
+- **Two PRs per task.** The first is only `openspec/changes/<slug>/`, no code is written until
+  it's merged. The second is the implementation together with the `openspec archive` result.
+  Reason and the full loop — `docs/adr/0009`.
+- **`openspec/specs/` is not edited by hand.** The live spec changes only via the
+  `openspec archive <slug> -y` command, run on the implementation branch.
+- **A proposal declares the paths it affects** in an "Affects" section — the admission
+  check for parallel work is computed from it.
+- **A change with no delta** (tooling, infrastructure, documentation) sets
+  `skip_specs: true` in its `.openspec.yaml` when created, otherwise the gate turns red.
+- **References to decisions go bottom-up only.** A requirement may carry an ADR number,
+  an ADR does not reference requirements: it is not rewritten, while the spec changes on every archive.
+- **Ran into an ADR — stop.** A proposal that contradicts an accepted decision is not written:
+  the ADR gets replaced by a separate PR first, then work continues.
+- `.claude/commands/opsx/*` and `specs/TEMPLATE.md` are not edited by hand: the former are generated
+  (`openspec update --force`), the latter is no longer used. A custom workflow step
+  is added via `openspec/config.yaml`.

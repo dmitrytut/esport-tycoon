@@ -1,23 +1,23 @@
 # ESport Tycoon
 
-Менеджер киберспортивной организации: пиксель-арт, мобилка, комедийная подача на
-честной механике. Стадия — дизайн-документы и спеки.
+Esports organization manager: pixel art, mobile-first, comedic take on honest mechanics.
+Stage — design documents and specs.
 
-Игра выходит **на английском**: интерфейс и диалоги. Мультиязычность планируется,
-но механизм выбирается вместе с движком — `docs/adr/0007`. Документация проекта ведётся
-по-русски: она для разработчиков, а не для пользователя.
+The game ships **in English**: interface and dialogue. Multi-language support is planned,
+but the mechanism is chosen alongside the engine — `docs/adr/0007`. Project documentation is
+written in Russian: it's for developers, not for the player.
 
-## Куда смотреть
+## Where to look
 
-| Хочу | Файл |
+| I want to | File |
 |---|---|
-| Понять, что за игра | `docs/vision.md` |
-| Найти нужный документ | `docs/INDEX.md` |
-| Узнать, почему сделано так | `docs/adr/` |
-| Понять, что строим сейчас | `specs/` |
-| Термины | `docs/glossary.md` |
+| Understand what the game is | `docs/vision.md` |
+| Find the right document | `docs/INDEX.md` |
+| Learn why it's done this way | `docs/adr/` |
+| Understand what we're building now | `specs/` |
+| Terminology | `docs/glossary.md` |
 
-## Работа с агентами
+## Working with agents
 
-Проект рассчитан на разработку через Claude Code. Правила — в `CLAUDE.md`,
-частые операции — в `.claude/commands/`.
+The project is built for development through Claude Code. Rules are in `CLAUDE.md`,
+frequent operations are in `.claude/commands/`.

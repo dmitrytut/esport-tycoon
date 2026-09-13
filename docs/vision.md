@@ -1,20 +1,26 @@
-# Зачем эта игра
+# Why this game
 
-<!-- источник: концепция v0.1, раздел 1 «Что это за игра» -->
+<!-- source: concept v0.1, section 1 "What kind of game this is" -->
 
-Менеджер киберспортивной организации. Пиксель-арт. Комедийная подача на честной менеджерской механике — абсурд живёт в текстах событий, а решения игрок принимает всерьёз.
+An esports organization manager. Pixel art. A comedic take on honest management mechanics —
+absurdity lives in the event text, while the player makes decisions in earnest.
 
-Референсы по механике: Football Manager (глубина, петля «найти → развить → продать»), Game Dev Tycoon (рост от гаража до корпорации, песочница без сюжета).
-Референс по тону: ситуационная комедия про людей, которых ты любишь, несмотря на то что они идиоты.
+Mechanical references: Football Manager (depth, the "find → develop → sell" loop), Game Dev
+Tycoon (growth from garage to corporation, a sandbox with no plot).
+Tonal reference: a sitcom about people you love despite the fact that they're idiots.
 
-**Фантазм, который продаём:** ты работаешь с 17–22-летними людьми, которые нестабильны, живут в интернете и выгорают за три года. Ты не тренер и не разработчик — ты человек, который держит вместе хрупкую систему из тиммейтов, спонсоров, публики и меты.
+**The fantasy we're selling:** you work with 17–22-year-olds who are unstable, live online,
+and burn out in three years. You're not a coach and not a developer — you're the person
+holding together a fragile system of teammates, sponsors, the public, and the meta.
 
-**Ключевое отличие от FM:** в FM случайные события — приправа, основное блюдо цифры. Здесь события — полноценная половина контента. Игрок заходит в том числе для того, чтобы узнать, что учудили его подопечные.
+**The key difference from FM:** in FM, random events are seasoning, the main dish is
+numbers. Here events are a full half of the content. The player logs in partly to find out
+what their charges got up to this time.
 
-`[РЕШЕНО]` Платформа: мобилка в приоритете, ПК как расширенная версия. База механик одна.
-`[РЕШЕНО]` Песочница без сюжетной кампании.
-`[РЕШЕНО]` Мир глобальный: регионы с характером.
-`[РЕШЕНО]` Язык интерфейса и диалогов — английский. Второй язык планируется, но механизм
-локализации выбираем вместе с движком (`adr/0007`).
+`[DECIDED]` Platform: mobile first, PC as the extended version. One base set of mechanics.
+`[DECIDED]` A sandbox with no story campaign.
+`[DECIDED]` A global world: regions with character.
+`[DECIDED]` Interface and dialogue language — English. A second language is planned, but the
+localization mechanism is chosen alongside the engine (`adr/0007`).
 
 ---

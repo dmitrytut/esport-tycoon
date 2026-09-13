@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Событие",
+  "title": "Event",
   "type": "object",
   "required": [
     "id",
@@ -91,7 +91,7 @@
     },
     "text": {
       "type": "string",
-      "description": "английский текст события, подстановки {player}/{team}/{org}/{rival}, см. docs/adr/0007",
+      "description": "English event text, substitutions {player}/{team}/{org}/{rival}, see docs/adr/0007",
       "minLength": 40
     },
     "choices": {
@@ -108,12 +108,12 @@
         "properties": {
           "label": {
             "type": "string",
-            "description": "английский текст кнопки выбора (docs/adr/0007)",
+            "description": "English choice button text (docs/adr/0007)",
             "minLength": 3
           },
           "detail": {
             "type": "string",
-            "description": "английское описание последствия (docs/adr/0007)"
+            "description": "English description of the consequence (docs/adr/0007)"
           },
           "effects": {
             "type": "object",

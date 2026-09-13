@@ -1,14 +1,13 @@
 #!/usr/bin/env node
-// Хук PreToolUse: запрещает агенту править golden и baseline.
+// PreToolUse hook: forbids the agent from editing golden and baseline.
 //
-// Правило из tests/README.md: «Если агент обновляет golden-файл, чтобы тест прошёл, —
-// это дефект процесса, а не починка». До этого хука правило держалось только на
-// pre-commit, то есть срабатывало уже после того, как агент увидел зелёный тест
-// и отчитался о готовности. Теперь действие блокируется в момент попытки.
+// Rule from tests/README.md: "If an agent updates a golden file to make a test pass —
+// that's a process defect, not a fix." Before this hook, the rule only held at
+// pre-commit, meaning it fired only after the agent had already seen a green test
+// and reported it as done. Now the action is blocked at the moment it's attempted.
 //
-// Намеренный сдвиг остаётся возможным: golden перегенерируется отдельным коммитом
-// с префиксом golden:/baseline: и объяснением механизма (.githooks/commit-msg).
-
+// A deliberate shift is still possible: golden is regenerated in a separate commit
+// with a golden:/baseline: prefix and an explanation of the mechanism (.githooks/commit-msg).
 const PROTECTED = /(^|\/)(tests?\/golden|sim\/baseline)\//;
 
 let raw = "";
@@ -18,7 +17,7 @@ let input;
 try {
   input = JSON.parse(raw || "{}");
 } catch {
-  process.exit(0); // Не смогли разобрать вход — не наше дело блокировать.
+  process.exit(0); // Couldn't parse the input — not our job to block.
 }
 
 const target = input.tool_input?.file_path ?? input.tool_input?.notebook_path ?? "";
@@ -30,10 +29,10 @@ process.stdout.write(
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
       permissionDecisionReason:
-        `Файл ${target} — зафиксированный снимок симуляции, вручную он не правится. ` +
-        "Красный golden значит «симуляция поехала»: чини код, а не снимок. " +
-        "Если сдвиг намеренный — перегенерируй файл и закоммить отдельно с префиксом " +
-        "golden: или baseline: и объяснением, что именно в правилах сдвинуло цифры (tests/README.md).",
+        `File ${target} is a committed simulation snapshot; it is not edited by hand. ` +
+        'A red golden means "the simulation drifted": fix the code, not the snapshot. ' +
+        "If the shift is intentional — regenerate the file and commit it separately with a " +
+        "golden: or baseline: prefix and an explanation of what exactly in the rules shifted the numbers (tests/README.md).",
     },
   }),
 );

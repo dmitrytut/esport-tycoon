@@ -1,5 +1,5 @@
 #!/bin/sh
-# Коммит, меняющий golden или baseline, обязан объяснять сдвиг (tests/README.md).
+# A commit that changes golden or baseline must explain the shift (tests/README.md).
 set -e
 
 message_file="$1"
@@ -13,12 +13,12 @@ if [ -n "$touches_golden" ]; then
   case "$subject" in
     golden:*|baseline:*) ;;
     *)
-      echo "Отказ: коммит меняет golden/baseline, но тема не начинается с golden: или baseline:" >&2
+      echo "Rejected: commit changes golden/baseline, but the subject does not start with golden: or baseline:" >&2
       exit 1
       ;;
   esac
   if [ "$body_lines" -eq 0 ]; then
-    echo "Отказ: обновление golden/baseline без объяснения. Опиши в теле коммита, что именно в правилах сдвинуло цифры." >&2
+    echo "Rejected: golden/baseline update with no explanation. Describe in the commit body exactly what in the rules shifted the numbers." >&2
     exit 1
   fi
 fi

@@ -193,6 +193,8 @@ importers:
 
   packages/core: {}
 
+  tools/check-language: {}
+
   tools/validate-content:
     dependencies:
       ajv:

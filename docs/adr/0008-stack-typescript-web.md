@@ -1,75 +1,79 @@
-# ADR 0008: стек — TypeScript-ядро, Pixi-сцена, веб-оболочка в нативной обёртке
+# ADR 0008: stack — TypeScript core, Pixi scene, web shell in a native wrapper
 
-**Статус:** принят
-**Дата:** 2026-09-11
-**Заменяет:** `adr/0000` (движок не выбран)
+**Status:** accepted
+**Date:** 2026-09-11
+**Supersedes:** `adr/0000` (engine not chosen)
 
-## Контекст
+## Context
 
-`adr/0000` перечислил критерии и три варианта, но решение не принял. К моменту решения
-добавились два входных факта:
+`adr/0000` listed criteria and three options but did not make a decision. By the time of
+this decision, two new input facts had appeared:
 
-1. Релизная платформа — **только телефоны, iOS и Android**. Старые устройства не
-   рассматриваем. ПК — позже и опционально.
-2. Интерфейс — **живая сцена с панелями поверх** (`design/ui.md`), а не менеджерский лист.
-   Это поднимает требования к рендеру: ~90% DOM превратились в ~60% DOM плюс сцена.
+1. Release platform is **phones only, iOS and Android**. Older devices are out of scope.
+   PC is later and optional.
+2. The interface is **a live scene with panels on top** (`design/ui.md`), not a manager
+   sheet. This raises rendering requirements: ~90% DOM turned into ~60% DOM plus a scene.
 
-## Решение
+## Decision
 
-| Слой | Выбор |
+| Layer | Choice |
 |---|---|
-| Ядро симуляции | TypeScript, чистая логика без ввода-вывода, ноль рантайм-зависимостей |
-| Сцена | PixiJS 8 (WebGL), спрайт-атласы, целочисленный масштаб |
-| Панели и таблицы | DOM + CSS |
-| Сборка | Vite |
-| Мобильная упаковка | Capacitor (iOS, Android) |
-| Прогон симуляции | Node, консольный процесс без графики |
-| Тесты | Vitest: unit, golden, sim |
+| Simulation core | TypeScript, pure logic with no I/O, zero runtime dependencies |
+| Scene | PixiJS 8 (WebGL), sprite atlases, integer scaling |
+| Panels and tables | DOM + CSS |
+| Build | Vite |
+| Mobile packaging | Capacitor (iOS, Android) |
+| Simulation run | Node, headless process without graphics |
+| Tests | Vitest: unit, golden, sim |
 
-## Почему так
+## Why
 
-- **Headless-прогон.** `specs/0002` требует 10 000 сезонов. Ядро на TypeScript гоняется
-  обычным процессом Node за минуты. В интерпретаторе GDScript это десятки минут, и харнесс
-  перестанут запускать.
-- **Guardrails исполняются машиной.** `adr/0001` (нет доменных слов в ядре) и `adr/0002`
-  (рандом только через RNG) проверяются линтером и типами, а не на вкус. Для соло-разработки
-  с агентами это решающий довод: правило, которое нельзя запустить командой, не соблюдается.
-- **Прецедент ровно этого жанра.** Game Dev Tycoon на ПК — HTML, CSS и JavaScript без
-  игрового движка, вместе с анимированной сценой и всплывающими иконками. Сцена на веб-стеке
-  не гипотеза.
-- **Замер, а не вера.** Спайк сцены (12–48 анимированных спрайтов Pixi + DOM-таблица поверх,
-  WebGL, dpr 3) даёт ≥ 55 fps на целевых iOS и Android. Это снимало единственный настоящий
-  риск варианта.
+- **Headless run.** `specs/0002` requires 10,000 seasons. A TypeScript core runs as a
+  plain Node process in minutes. In the GDScript interpreter that's tens of minutes, and
+  the harness would stop running it.
+- **Guardrails are enforced by machine.** `adr/0001` (no domain words in the core) and
+  `adr/0002` (random only through the RNG) are checked by the linter and the type system,
+  not by taste. For solo development with agents this is the deciding argument: a rule
+  that can't be run as a command isn't followed.
+- **Precedent for exactly this genre.** Game Dev Tycoon on PC is HTML, CSS, and
+  JavaScript with no game engine, together with an animated scene and popup icons. A
+  scene on the web stack is not a hypothesis.
+- **Measured, not assumed.** A scene spike (12–48 animated Pixi sprites + a DOM table on
+  top, WebGL, dpr 3) gives ≥ 55 fps on the target iOS and Android devices. This removed
+  the only real risk of this option.
 
-## Отвергнутые варианты
+## Rejected options
 
-- **Godot 4 + C#.** Экспорт C# на iOS у Godot 4 до сих пор помечен экспериментальным
-  (официальная документация и статья о состоянии C#). Для единственной релизной платформы
-  неприемлемо.
-- **Godot 4 + GDScript.** Мобильный экспорт лучший, но headless-прогон медленный, а статики
-  для машинных guardrails почти нет.
-- **Unity.** Наименьший риск на устройстве, но тяжёлый редактор, шумные диффы сцен и худшая
-  эргономика агентной разработки. Избыточен для игры без физики и 3D.
-- **Flutter.** Преимущество нативных списков обесценилось после решения про сцену, а
-  спрайтовая часть слабее Pixi.
-- **Гибрид TS-ядро + Godot-оболочка.** Мостик между средами — третий проект в сопровождении.
+- **Godot 4 + C#.** Godot 4's C# export to iOS is still marked experimental (official
+  documentation and an article on the state of C#). Unacceptable for the single release
+  platform.
+- **Godot 4 + GDScript.** Best mobile export, but the headless run is slow, and there's
+  almost no static typing for machine-enforced guardrails.
+- **Unity.** Lowest on-device risk, but a heavy editor, noisy scene diffs, and worse
+  ergonomics for agent-driven development. Overkill for a game with no physics and no 3D.
+- **Flutter.** The advantage of native lists lost its value once the scene decision was
+  made, and the sprite side is weaker than Pixi.
+- **Hybrid TS core + Godot shell.** A bridge between environments is a third project to
+  maintain.
 
-## Следствия
+## Consequences
 
-- Ядро не знает ни про Pixi, ни про DOM, ни про Capacitor: смена оболочки не переписывает игру.
-- Детерминизм требует дисциплины по числам: запрещены `Math.random`, системное время и
-  платформо-зависимые функции (`Math.sin`, `Math.pow`, `Math.exp`, `Math.log`) в ядре.
-  Проверяется линтером.
-- Локализация — не штатная возможность движка, а библиотека. Выбирается вместе с первым
-  экраном UI, до этого текст живёт инлайном в `content/` (`adr/0007`).
-- Валидатор контента и инструменты пишутся на TypeScript, а не на Python: один тулчейн.
-- Чекпоинт остаётся: сцена акта 3 (15+ персонажей) замеряется на устройстве повторно, до
-  того как в неё вложится арт.
-- Версии инструментов держим на последних мажорах, кроме одного исключения: **TypeScript
-  закреплён диапазоном `~6.0.x`**, хотя вышел 7.0. Причина — `typescript-eslint@8.70`
-  объявляет `peerDependencies: typescript >=4.8.4 <6.1.0`, то есть на TS 7 (и уже на 6.1)
-  отключается ровно тот линтер, который исполняет `adr/0001` и `adr/0002`. Гейт важнее
-  версии компилятора, поэтому диапазон тильдовый, а не каретка: `^6` уехал бы за границу
-  поддержки молча. Поднимаем до 7, когда `typescript-eslint` выпустит поддержку TS 7.
-- Рантайм — Node 24 LTS (`engines`, CI, `@types/node` одной линии). Расхождение версии
-  типов и рантайма даёт ложно-зелёный `typecheck`.
+- The core knows nothing about Pixi, DOM, or Capacitor: swapping the shell doesn't
+  rewrite the game.
+- Determinism requires discipline around numbers: `Math.random`, system time, and
+  platform-dependent functions (`Math.sin`, `Math.pow`, `Math.exp`, `Math.log`) are
+  forbidden in the core. Checked by the linter.
+- Localization is not a built-in engine feature but a library. It's chosen together with
+  the first UI screen; until then text lives inline in `content/` (`adr/0007`).
+- The content validator and tools are written in TypeScript, not Python: one toolchain.
+- Checkpoint remains: the act-3 scene (15+ characters) is re-measured on-device before
+  art is invested in it.
+- Tool versions are kept on the latest majors, with one exception: **TypeScript is
+  pinned to the range `~6.0.x`**, even though 7.0 has been released. The reason is that
+  `typescript-eslint@8.70` declares `peerDependencies: typescript >=4.8.4 <6.1.0`, meaning
+  on TS 7 (and already on 6.1) exactly the linter that enforces `adr/0001` and `adr/0002`
+  turns itself off. The gate matters more than the compiler version, so the range is a
+  tilde, not a caret: `^6` would silently drift past the supported bound. We move to 7
+  once `typescript-eslint` ships support for TS 7.
+- Runtime is Node 24 LTS (`engines`, CI, `@types/node` on the same line). A mismatch
+  between the type version and the runtime version produces a false-green `typecheck`.

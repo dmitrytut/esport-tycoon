@@ -1,27 +1,30 @@
-# ADR 0002: полный детерминизм по сиду
+# ADR 0002: full determinism by seed
 
-**Статус:** принят
+**Status:** accepted
 
-## Контекст
+## Context
 
-Игра — симуляция с большим количеством случайности: исходы матчей, срывы игроков,
-выпадение событий, генерация игроков. Такой код имеет неприятное свойство: регрессия
-в балансе не видна ни глазами, ни обычными юнит-тестами. При агентной разработке, где
-изменения вносятся часто и в разных местах, это фатально.
+The game is a simulation with a large amount of randomness: match outcomes, player
+breakdowns, event rolls, player generation. Code like this has an unpleasant property:
+a balance regression is not visible either to the eye or to ordinary unit tests. In
+agent-driven development, where changes are made often and in different places, this
+is fatal.
 
-## Решение
+## Decision
 
-1. Единственный источник случайности — модуль RNG, принимающий сид. Системные функции
-   случайных чисел запрещены во всём коде, кроме этого модуля.
-2. RNG передаётся явно (инжектируется), а не берётся из глобального состояния.
-3. Каждая подсистема получает свой поток от корневого сида, чтобы изменение в одной
-   не сдвигало последовательность в другой.
-4. Сохранение игры содержит сид и состояние потоков: загрузка воспроизводит продолжение.
-5. Один и тот же сид плюс одна и та же последовательность решений пользователя дают
-   бит-в-бит одинаковый сезон.
+1. The single source of randomness is the RNG module, which accepts a seed. System
+   random number functions are forbidden everywhere in the code except this module.
+2. The RNG is passed explicitly (injected), not taken from global state.
+3. Each subsystem receives its own stream derived from the root seed, so a change in
+   one does not shift the sequence in another.
+4. The save game contains the seed and the stream state: loading reproduces the
+   continuation.
+5. The same seed plus the same sequence of user decisions produce a bit-for-bit
+   identical season.
 
-## Следствия
+## Consequences
 
-- Возможен sim-harness (`specs/0002`) и golden-тесты на исходы.
-- Возможен отчёт «что изменилось в балансе после этого коммита».
-- Цена: нельзя лениво звать случайность откуда угодно. Это осознанная плата.
+- A sim-harness (`specs/0002`) and golden tests on outcomes become possible.
+- A report of "what changed in the balance after this commit" becomes possible.
+- Cost: randomness cannot be called lazily from anywhere. This is a deliberate
+  tradeoff.

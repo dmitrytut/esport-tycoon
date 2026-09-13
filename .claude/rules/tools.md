@@ -3,12 +3,12 @@ paths:
   - "tools/**/*.ts"
 ---
 
-# Инструменты
+# Tools
 
-- **Один тулчейн.** Инструменты пишутся на TypeScript и запускаются через `pnpm`,
-  не на Python. Причина — `docs/adr/0008`.
-- **Домен-нейтральность сюда не распространяется.** `tools/` — не ядро, киберспортивные
-  слова здесь допустимы.
-- **Утверждения типа разрешены** на границе разбора внешних данных (`unknown` → тип
-  после валидации схемой). Внутри ядра они запрещены — это осознанная разница,
+- **One toolchain.** Tools are written in TypeScript and run via `pnpm`,
+  not in Python. Reason — `docs/adr/0008`.
+- **Domain-neutrality doesn't extend here.** `tools/` is not the core, esports
+  words are allowed here.
+- **Type assertions are allowed** at the boundary where external data is parsed (`unknown` → type
+  after schema validation). Inside the core they are forbidden — this is a deliberate difference,
   `docs/adr/0010`.

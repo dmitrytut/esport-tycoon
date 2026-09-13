@@ -1,11 +1,12 @@
 schema: spec-driven
 
 context: |
-  Language: Russian.
-  All planning artifacts (proposal, design, tasks, spec deltas) are written in Russian.
-  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
-  Exception (ADR 0007): any string the player will see — UI labels, event text,
-  dialogue, names — stays in English even when quoted inside a Russian artifact.
+  Language: English. Every artifact in this repository is written in English —
+  proposals, designs, tasks, spec deltas, code, comments, tests (ADR 0011).
+  The only Russian left in the repository is docs/design/ (the intent layer),
+  content/names/ru-*.json (region data) and the retired specs/ directory.
+  Conversation with the author, issues, pull request bodies and commit messages
+  stay in Russian; files do not.
 
   Process (ADR 0009): work is split across two pull requests. The first contains only
   openspec/changes/<slug>/ and is reviewed and merged before any code is written.
@@ -14,7 +15,7 @@ context: |
 rules:
   proposal:
     - >-
-      Include a "Затрагивает" section listing the repository paths the change will
+      Include an "Affects" section listing the repository paths the change will
       touch (globs allowed). The admission check compares these paths across active
       changes to decide what may run in parallel.
     - >-

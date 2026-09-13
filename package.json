@@ -14,7 +14,8 @@
     "test": "vitest run",
     "validate:content": "node tools/validate-content/src/index.ts",
     "validate:spec": "openspec validate --all",
-    "verify": "pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec",
+    "check:language": "node tools/check-language/src/index.ts",
+    "verify": "pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec && pnpm run check:language",
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {

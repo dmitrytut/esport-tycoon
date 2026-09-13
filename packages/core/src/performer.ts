@@ -1,9 +1,9 @@
 /**
- * Исполнитель: статы, скрытые поля, плавающее состояние, возрастная кривая.
- * Спека: `specs/0001-player-model.md`. Имена домен-нейтральные (`adr/0001`).
+ * Performer: stats, hidden fields, floating state, age curve.
+ * Spec: `specs/0001-player-model.md`. Names are domain-neutral (`adr/0001`).
  *
- * Числовая дисциплина: только `+ - * /`, `Math.min/max/floor/round`. Ни одной
- * платформо-зависимой функции — иначе бит-в-бит воспроизводимость (`adr/0002`) теряется.
+ * Numeric discipline: only `+ - * /`, `Math.min/max/floor/round`. Not a single
+ * platform-dependent function — otherwise bit-for-bit reproducibility (`adr/0002`) is lost.
  */
 
 export const STAT_KEYS = [
@@ -18,11 +18,11 @@ export const STAT_KEYS = [
 export type StatKey = (typeof STAT_KEYS)[number];
 export type Stats = Readonly<Record<StatKey, number>>;
 
-/** Шкала статов: 1–20 (решение в `specs/0001`). */
+/** Stat scale: 1–20 (decided in `specs/0001`). */
 export const STAT_MIN = 1;
 export const STAT_MAX = 20;
 
-/** Плавающее состояние. Форма — доля от шкалы статов, отсюда ±3. */
+/** Floating state. Form is a fraction of the stat scale, hence ±3. */
 export const ENERGY_MIN = 0;
 export const ENERGY_MAX = 100;
 export const MORALE_MIN = 0;
@@ -37,7 +37,7 @@ export interface PerformerState {
 }
 
 export interface Performer {
-  /** Устойчивый идентификатор внутри прогона. */
+  /** Stable identifier within a run. */
   readonly id: string;
   readonly name: string;
   readonly handle: string;
@@ -47,11 +47,11 @@ export interface Performer {
   readonly stats: Stats;
   readonly state: PerformerState;
   readonly traits: readonly string[];
-  /** Скрытое: возраст пика. До него механика растёт, после падает. */
+  /** Hidden: peak age. Mechanical skill grows before it, falls after. */
   readonly peakAge: number;
-  /** Скрытое: потолок роста по шкале статов. */
+  /** Hidden: growth ceiling on the stat scale. */
   readonly potential: number;
-  /** Собственный сид: от него зависит ошибка оценки, а не момент вызова. */
+  /** Own seed: it drives the observation error, not the moment of the call. */
   readonly seed: number;
 }
 
@@ -59,12 +59,12 @@ export const clamp = (value: number, min: number, max: number): number =>
   value < min ? min : value > max ? max : value;
 
 /**
- * Собирает запись по всем статам явным литералом. Цикл по `STAT_KEYS` требовал бы
- * начинать с `{} as Record<StatKey, …>` — непроверенного утверждения, что запись уже
- * полная. Здесь полноту проверяет компилятор: новый стат ломает сборку (`adr/0010`).
+ * Builds a record for all stats with an explicit literal. A loop over `STAT_KEYS` would
+ * require starting from `{} as Record<StatKey, …>` — an unchecked assertion that the record
+ * is already complete. Here the compiler checks completeness: a new stat breaks the build (`adr/0010`).
  *
- * Порядок вычисления — порядок полей литерала, он совпадает с `STAT_KEYS`. Это важно
- * там, где `make` тянет случайность: сдвиг порядка поехал бы в golden-снимке.
+ * Evaluation order is the field order of the literal, matching `STAT_KEYS`. This matters
+ * wherever `make` pulls randomness: shifting the order would drift the golden snapshot.
  */
 export function statsFrom<T>(make: (key: StatKey) => T): Readonly<Record<StatKey, T>> {
   return {
@@ -77,10 +77,10 @@ export function statsFrom<T>(make: (key: StatKey) => T): Readonly<Record<StatKey
   };
 }
 
-/** Приводит статы к шкале и режет мусор от накопленных дробей. */
+/** Brings stats onto the scale and trims garbage from accumulated fractions. */
 export function normalizeStats(stats: Stats): Stats {
-  // Одна десятая — минимальный шаг: рост за неделю мельче, чем целый пункт,
-  // но бесконечный хвост дробей ломает сравнение снимков.
+  // One tenth is the minimal step: growth over a week is smaller than a whole point,
+  // but an infinite tail of fractions breaks snapshot comparison.
   return statsFrom((key) => Math.round(clamp(stats[key], STAT_MIN, STAT_MAX) * 10) / 10);
 }
 
@@ -93,8 +93,8 @@ export function normalizeState(state: PerformerState): PerformerState {
 }
 
 /**
- * Единственный способ изменить состояние (`specs/0001`, п.4): никакой «естественной»
- * регенерации вне явного вызова.
+ * The only way to change state (`specs/0001`, item 4): no "natural"
+ * regeneration outside of an explicit call.
  */
 export function applyStateChange(performer: Performer, delta: Partial<PerformerState>): Performer {
   return {
@@ -107,7 +107,7 @@ export function applyStateChange(performer: Performer, delta: Partial<PerformerS
   };
 }
 
-/** Явное изменение статов: события, тренировки, штрафы. Границы соблюдаются всегда. */
+/** Explicit stat change: events, training, penalties. Bounds are always respected. */
 export function applyStatChange(performer: Performer, delta: Partial<Stats>): Performer {
   return {
     ...performer,
@@ -116,18 +116,18 @@ export function applyStatChange(performer: Performer, delta: Partial<Stats>): Pe
 }
 
 /**
- * Год карьеры (`specs/0001`, п.1).
+ * Career year (`specs/0001`, item 1).
  *
- * До пика механика растёт, после — падает тем быстрее, чем дальше от пика: за десять лет
- * карьеры спад обязан перевесить ранний рост, иначе ветеран не отличается от молодого и
- * переход в тренеры (`design/player.md`, 5.4) теряет смысл.
+ * Mechanical skill grows before the peak, and after it falls faster the further from the peak: over ten
+ * years of career the decline must outweigh the early growth, otherwise a veteran is indistinguishable
+ * from a rookie and the transition to coaching (`design/player.md`, 5.4) loses its point.
  *
- * Голова растёт всю карьеру и не упирается в потолок насмерть: опыт копится даже у того,
- * кто близок к своему максимуму. Поэтому у когнитивного роста есть минимум.
+ * Cognitive skill grows through the whole career and does not hard-cap at the ceiling: experience
+ * accumulates even for someone close to their max. Hence cognitive growth has a floor.
  */
 export function advanceYear(performer: Performer): Performer {
   const { stats, peakAge, potential, age } = performer;
-  // 0.55 у самых необучаемых, 1.5 у самых способных.
+  // 0.55 for the least trainable, 1.5 for the most capable.
   const learnScale = 0.5 + stats.adaptability / STAT_MAX;
   const headroom = (key: StatKey): number =>
     clamp((potential - stats[key]) / (STAT_MAX - STAT_MIN), 0, 1);
@@ -147,14 +147,14 @@ export function advanceYear(performer: Performer): Performer {
       cognitive: stats.cognitive + cognitiveDelta,
       collective: stats.collective + 0.3 * learnScale * headroom("collective"),
       composure: stats.composure + 0.25 * learnScale * headroom("composure"),
-      // Обучаемость и Харизма — свойства характера, годами почти не двигаются.
+      // Adaptability and Presence are character traits, they barely move over the years.
       adaptability: stats.adaptability,
       presence: stats.presence + 0.1 * learnScale * headroom("presence"),
     }),
   };
 }
 
-/** Снимок для сохранения: включает скрытые поля, иначе загрузка даст другого человека. */
+/** Snapshot for saving: includes hidden fields, otherwise loading would give a different person. */
 export interface PerformerSnapshot {
   readonly id: string;
   readonly name: string;

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Пул имён",
-  "description": "Список имён, фамилий или ников одного региона и вида. Имя файла = id пула, на который ссылается регион",
+  "title": "Name pool",
+  "description": "A list of given names, family names, or nicknames for one region and kind. The file name = the pool's id, referenced by the region",
   "type": "object",
   "required": ["id", "kind", "values"],
   "additionalProperties": false,

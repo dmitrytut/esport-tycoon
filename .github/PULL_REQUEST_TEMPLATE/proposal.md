@@ -1,25 +1,25 @@
 <!--
-PR-1: предложение. Только openspec/changes/<slug>/, без кода.
-Вторая точка ревью — PR-2 с реализацией. Петля: docs/adr/0009.
+PR-1: proposal. Only openspec/changes/<slug>/, no code.
+Second review point is PR-2 with the implementation. Loop: docs/adr/0009.
 -->
 
-Предложение для #NNN.
+Proposal for #NNN.
 
-## Что это меняет в поведении
+## What this changes in behavior
 
-<!-- Одним абзацем: что система начнёт делать иначе. Не как, а что. -->
+<!-- In one paragraph: what the system will start doing differently. Not how, but what. -->
 
-## Затрагивает
+## Affects
 
-<!-- Пути, которые тронет реализация. Их сверяет проверка допуска. -->
+<!-- Paths the implementation will touch. Checked by the admission check. -->
 
 ---
 
-### Проверить на ревью
+### Check on review
 
-- [ ] решаемая задача та же, что в issue, рамки не расползлись
-- [ ] у каждого требования есть сценарий, а не только заголовок
-- [ ] открытые вопросы закрыты — ни одного «уточним при реализации»
-- [ ] не противоречит `docs/design/*`; если противоречит — правится предложение, не дизайн
-- [ ] пути в «Затрагивает» не пересекаются с открытыми PR
-- [ ] `pnpm verify` зелёный (для изменения без дельты — `skip_specs: true` в `.openspec.yaml`)
+- [ ] the task being solved is the same as in the issue, scope hasn't crept
+- [ ] every requirement has a scenario, not just a heading
+- [ ] open questions are closed — not a single "we'll clarify during implementation"
+- [ ] doesn't contradict `docs/design/*`; if it does, the proposal is fixed, not the design
+- [ ] paths in "Affects" don't overlap with open PRs
+- [ ] `pnpm verify` is green (for a change with no delta — `skip_specs: true` in `.openspec.yaml`)

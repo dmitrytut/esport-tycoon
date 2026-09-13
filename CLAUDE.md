@@ -1,134 +1,138 @@
 # CLAUDE.md
 
-Инструкции для агентов, работающих в этом репозитории. Читается автоматически.
-Держать под 200 строк: этот файл сам тратит контекст.
+Instructions for agents working in this repository. Read automatically.
+Keep it under 200 lines: this file itself spends context.
 
-## Что это за проект
+## What this project is
 
-**ESport Tycoon** (репозиторий `esport-tycoon`). Менеджер киберспортивной организации. Мобилка в приоритете, ПК следом. Пиксель-арт.
-Комедийная подача на честной менеджерской механике: юмор в текстах, решения игрок
-принимает всерьёз.
+**ESport Tycoon** (repository `esport-tycoon`). An esports organization manager. Mobile first, PC follows. Pixel art.
+Comedic delivery on top of honest management mechanics: humor in the text, decisions the player
+takes seriously.
 
-Игрок собирает состав, развивает людей, водит их по турнирам и растёт от подвала до
-организации с тремя отделами. Референсы: Football Manager (глубина), Game Dev Tycoon
-(рост и песочница).
+The player builds a roster, develops people, takes them through tournaments, and grows from
+the basement to an organization with three departments. References: Football Manager (depth),
+Game Dev Tycoon (growth and sandbox).
 
-Полный дизайн — в `docs/`. **Начинай с `docs/INDEX.md`**: там таблица «задача → какие
-файлы читать». Не читай весь `docs/` целиком.
+The full design is in `docs/`. **Start with `docs/INDEX.md`**: it has a table «task → which
+files to read». Don't read all of `docs/` in full.
 
-## Статус
+## Status
 
-Стадия: дизайн и спеки плюс скелет кода. Стек выбран — `docs/adr/0008`: TypeScript-ядро,
-сцена на PixiJS, панели на DOM, мобильная упаковка Capacitor, релиз на iOS и Android.
+Stage: design and specs plus a code skeleton. Stack chosen — `docs/adr/0008`: TypeScript core,
+scene on PixiJS, panels on DOM, mobile packaging via Capacitor, release on iOS and Android.
 
-Что уже есть в коде: `packages/core` — RNG и детерминизм, модель исполнителя по `specs/0001`
-(статы 1–20, возрастная кривая, туман информации, генератор по региону и уровню),
-`tools/validate-content`, guardrails в `eslint.config.mjs`, единый гейт `pnpm verify`.
-Следующие спеки: 0003 (неделя), 0006 (языки и химия — генерация языков уже сделана,
-химия пар нет).
+What already exists in code: `packages/core` — RNG and determinism, performer model per `specs/0001`
+(stats 1–20, age curve, information fog, generator by region and level),
+`tools/validate-content`, guardrails in `eslint.config.mjs`, the single gate `pnpm verify`.
+Next specs: 0003 (week), 0006 (languages and chemistry — language generation is already
+done, pair chemistry is not).
 
-## Жёсткие правила
+## Hard rules
 
-1. **Никакой механики без спеки.** Работа идёт двумя PR: сначала `/opsx:propose <slug>` —
-   предложение и дельта спеки без кода, ревью, мерж; только потом `/opsx:apply` — код
-   и `openspec archive` в той же ветке. Не «додумывай» дизайн. Порядок слоёв, допуск
-   к работе и правила параллельной работы — `docs/adr/0009`.
-2. **`packages/core` домен-нейтрален.** Ни одного киберспортивного слова: никаких `Player`,
-   `Match`, `Frag`, `Tournament`. Только `Performer`, `Contest`, `Collective`, `Season`.
-   Причина — `docs/adr/0001`. Проверяется правилом `et/no-domain-words`, а не на вкус.
-3. **Весь рандом через инжектированный сид.** Никаких вызовов системного генератора
-   случайных чисел вне единственного модуля RNG. Причина — `docs/adr/0002`.
-   Нарушение делает симуляцию непроверяемой.
-4. **Контент — это данные.** События, черты, дисциплины, регионы, имена живут в
-   `content/` как файлы по схеме из `content/schema/`. Добавление контента не меняет код.
-   Причина — `docs/adr/0003`.
-5. **Никаких реальных киберспортсменов, команд и тайтлов.** Персонажи собирательные.
-   Причина и границы — `docs/adr/0005`. Это не стилистика, а юридический риск.
-6. **Не переписывай абстракции ядра «как правильно».** Если абстракция кажется лишней,
-   сначала найди ADR, который её объясняет. Второй предметный домен — `docs/adr/0004`.
-7. **Тексты игры — английские.** Всё, что видит пользователь (интерфейс, события,
-   диалоги, названия), пишется по-английски. Русский — язык разработки: доки, спеки,
-   ADR, комментарии. Причина — `docs/adr/0007`.
-8. **Стиль не обсуждается, он настроен.** Форматирование, порядок импортов и типовая
-   дисциплина — `prettier` и правила линтера, `pnpm format` чинит. В `packages/*/src`
-   запрещены утверждения типа (`as`, кроме `as const`) и анонимные объектные типы
-   в экспортируемых сигнатурах: переписывай так, чтобы тип выводился. Прозой остались
-   брендированные идентификаторы, состояния суммой типов и правило «тип и константа
-   живут рядом с кодом, который держит их инвариант». Причина — `docs/adr/0010`.
+1. **No mechanic without a spec.** Work goes through two PRs: first `/opsx:propose <slug>` —
+   a proposal and spec delta with no code, review, merge; only then `/opsx:apply` — the code
+   and `openspec archive` on the same branch. Don't "wing" the design. Layer order, admission
+   check for work, and rules for parallel work — `docs/adr/0009`.
+2. **`packages/core` is domain-neutral.** Not a single esports word: no `Player`,
+   `Match`, `Frag`, `Tournament`. Only `Performer`, `Contest`, `Collective`, `Season`.
+   Reason — `docs/adr/0001`. Checked by the `et/no-domain-words` rule, not by taste.
+3. **All randomness goes through an injected seed.** No calls to a system random number
+   generator outside the single RNG module. Reason — `docs/adr/0002`.
+   A violation makes the simulation unverifiable.
+4. **Content is data.** Events, traits, disciplines, regions, names live in
+   `content/` as files following the schema in `content/schema/`. Adding content does not change code.
+   Reason — `docs/adr/0003`.
+5. **No real esports players, teams, or titles.** Characters are composite/fictional.
+   Reason and boundaries — `docs/adr/0005`. This isn't a style choice, it's a legal risk.
+6. **Don't rewrite core abstractions to make them "right".** If an abstraction seems
+   unnecessary, first find the ADR that explains it. A second domain subject — `docs/adr/0004`.
+7. **Everything is English.** Files in this repository — code, comments, tests, ADRs,
+   specs, harness, schemas — are written in English, and so is every string the player
+   sees. Russian is left in `docs/design/**` (the intent layer), `content/names/ru-*.json`
+   and the retired `specs/`. Issues, pull request bodies, commit messages and the
+   conversation with the author stay Russian: a file is English, a message to a human is
+   not. Enforced by `pnpm check:language`. Reason — `docs/adr/0011`, `docs/adr/0007`.
+8. **Style isn't up for debate, it's configured.** Formatting, import order, and typing
+   discipline — `prettier` and linter rules, `pnpm format` fixes it. In `packages/*/src`
+   type assertions (`as`, except `as const`) and anonymous object types in exported
+   signatures are forbidden: rewrite so the type is inferred. What remains prose:
+   branded identifiers, states as tagged unions, and the rule "the type and the constant
+   live next to the code that holds their invariant". Reason — `docs/adr/0010`.
 
-## Язык и тон текстов в игре
+## Language and tone of in-game text
 
-**Язык — английский**, см. `docs/adr/0007`. Русский в этом файле и в `docs/` —
-для разработчиков, не для пользователя. Локализации пока нет; механизм (библиотека, не
-самодельный) выбирается вместе с первым экраном интерфейса, до этого не изобретаем.
+**Language is English**, see `docs/adr/0007` and `docs/adr/0011`. Russian survives only in
+`docs/design/*`, where the intent is formulated, and that layer is for developers, not for
+the user. There's no localization yet; the mechanism (a library, not
+homegrown) is chosen together with the first UI screen, before that we don't invent one.
 
-Тон: живой английский, без корпоративного канцелярита. Абсурд допустим в событиях,
-но цифры и последствия всегда честные. Провал должен читаться смешнее успеха.
-Подробно — `docs/design/tone.md`.
+Tone: lively English, no corporate boilerplate. Absurdity is allowed in events,
+but numbers and consequences are always honest. Failure should read funnier than success.
+Details — `docs/design/tone.md`.
 
-## Правила работы с документами
+## Rules for working with documents
 
-- `docs/design/*` — **замысел**: зачем игра такая. Меняется только по явной просьбе.
-- `openspec/specs/*` — **поведение**: что система делает сейчас. Пишется не руками,
-  а командой `openspec archive` по дельте, в ветке реализации.
-- `openspec/changes/<slug>/` — **единица работы**: одна задача, два PR, один автор.
-  Непустой каталог на `master` — реестр принятых, но не доведённых изменений.
-- `docs/adr/*` — **решения и причины**. Новое решение = новый ADR, старые не переписываем,
-  отменённые помечаются `Статус: закрыт, заменён adr/NNNN`. ADR отвечает «почему так,
-  а не иначе», и в нём нет процедуры: шаги воркфлоу живут в `openspec/config.yaml`,
-  команды — в таблице ниже, стиль — в конфигах. Ориентир по размеру — 40–60 строк.
-  Целиком ADR читается только когда правило кажется неверным; в обычной работе хватает
-  номера в сообщении линтера или выжимки из `.claude/rules/*.md`.
-- Ссылки между слоями идут снизу вверх: требование может нести номер ADR, ADR на
-  требования не ссылается — он заморожен, а спека меняется на каждом архиве.
-  Работа упёрлась в принятый ADR — стоп: сначала ADR заменяется отдельным PR.
-- `specs/*` — старый формат. `0001` реализована и до первого архива остаётся единственной
-  записью о поведении модели исполнителя; `0002–0006` — заготовки. Новые не заводим
+- `docs/design/*` — **intent**: why the game is the way it is. Changes only on explicit request.
+- `openspec/specs/*` — **behavior**: what the system does right now. Not written by hand,
+  but by the `openspec archive` command from a delta, on the implementation branch.
+- `openspec/changes/<slug>/` — **unit of work**: one task, two PRs, one author.
+  A non-empty directory on `master` is a registry of accepted but not-yet-completed changes.
+- `docs/adr/*` — **decisions and reasons**. A new decision = a new ADR, old ones are not rewritten,
+  revoked ones are marked `Status: closed, superseded by adr/NNNN`. An ADR answers "why this way
+  and not another", and it contains no procedure: workflow steps live in `openspec/config.yaml`,
+  commands are in the table below, style is in the configs. Size guideline — 40–60 lines.
+  Read the whole ADR only when a rule seems wrong; in ordinary work the number in the
+  linter message or the summary in `.claude/rules/*.md` is enough.
+- Links between layers go bottom-up: a requirement may carry an ADR number, an ADR does not
+  reference requirements — it is frozen, while the spec changes on every archive.
+  Work runs into an accepted ADR — stop: the ADR gets replaced by a separate PR first.
+- `specs/*` — the old format. `0001` is implemented and, until the first archive, remains the
+  single record of the performer model's behavior; `0002–0006` are stubs. We don't start new ones
   (`docs/adr/0009`).
-- Заметил расхождение между дизайном и кодом — не молчи и не «исправляй» дизайн под код.
-  Скажи прямо, что расходится.
+- Noticed a discrepancy between design and code — don't stay silent and don't "fix" the design
+  to match the code. Say plainly what diverges.
 
-## Что делать, когда неясно
+## What to do when it's unclear
 
-Спрашивай. Худший вариант в этом проекте — угаданная механика, расползшаяся по коду.
-Второй худший — молчаливое расширение рамок спеки.
+Ask. The worst outcome in this project is a guessed mechanic that spreads through the code.
+The second worst is silently expanding the scope of a spec.
 
-## Команды
+## Commands
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `pnpm verify` | единый гейт: типы, форматирование, линтер, тесты, контент, спеки. Гоняется перед любым «готово» |
-| `pnpm format` | `prettier --write .`: чинит форматирование |
+| `pnpm verify` | the single gate: types, formatting, linter, tests, content, specs. Run before any "done" |
+| `pnpm format` | `prettier --write .`: fixes formatting |
 | `pnpm test` | vitest: unit, golden |
-| `pnpm lint` | guardrails ADR 0001 и 0002 плюс типовая дисциплина ADR 0010 |
+| `pnpm lint` | guardrails for ADR 0001 and 0002 plus typing discipline from ADR 0010 |
 | `pnpm typecheck` | `tsc --noEmit`, strict |
-| `pnpm validate:content` | схемы и ссылочная целостность `content/` |
-| `pnpm run hooks:install` | включить локальные git-хуки (один раз на машину) |
-| `/opsx:propose <slug>` | завести изменение: предложение, дельта спеки, задачи |
-| `/opsx:apply` | реализовать задачи изменения |
-| `/opsx:archive <slug>` | в ветке реализации: вмержить дельту в `openspec/specs` |
-| `openspec list --json` | активные изменения: что сейчас в полёте |
-| `openspec show <slug> --json --deltas-only` | какие требования трогает изменение |
-| `pnpm validate:spec` | проверить артефакты спек (`openspec validate --all`) |
-| `claude --worktree <slug>` | параллельная сессия в отдельном checkout |
+| `pnpm validate:content` | schemas and referential integrity of `content/` |
+| `pnpm run hooks:install` | enable local git hooks (once per machine) |
+| `/opsx:propose <slug>` | start a change: proposal, spec delta, tasks |
+| `/opsx:apply` | implement the change's tasks |
+| `/opsx:archive <slug>` | on the implementation branch: merge the delta into `openspec/specs` |
+| `openspec list --json` | active changes: what's currently in flight |
+| `openspec show <slug> --json --deltas-only` | which requirements a change touches |
+| `pnpm validate:spec` | verify spec artifacts (`openspec validate --all`) |
+| `claude --worktree <slug>` | parallel session in a separate checkout |
 
-`openspec` закреплён в `devDependencies`, поэтому `pnpm install` — единственное, что
-нужно для гейта и CI. Глобальная установка не обязательна и нужна только для удобного
-вызова голой командой; внутри репозитория всё равно выигрывает версия из лок-файла —
-хук `SessionStart` ставит `node_modules/.bin` в начало `PATH`.
+`openspec` is pinned in `devDependencies`, so `pnpm install` is the only thing needed
+for the gate and CI. A global install isn't required and is only useful for calling
+the bare command conveniently; inside the repo the lockfile version always wins anyway —
+the `SessionStart` hook puts `node_modules/.bin` at the front of `PATH`.
 
-`.claude/commands/opsx/*.md` — сгенерированные файлы, руками не правятся: `openspec
-update --force` перезапишет. Свой шаг воркфлоу добавляется через `openspec/config.yaml`
-(`rules`, `operations.guidance`) — через него же задано «не начинать реализацию до мержа
-PR-1» и «архивировать командой, не переносить папку вручную». Обновление:
-`pnpm up @fission-ai/openspec`, затем `openspec update --force`, затем посмотреть
+`.claude/commands/opsx/*.md` — generated files, not edited by hand: `openspec
+update --force` will overwrite them. A custom workflow step is added via `openspec/config.yaml`
+(`rules`, `operations.guidance`) — it's also what sets "don't start implementation before
+PR-1 is merged" and "archive via the command, don't move the folder by hand." Update:
+`pnpm up @fission-ai/openspec`, then `openspec update --force`, then check
 `git diff .claude/commands/opsx`.
 
-Установлены шесть воркфлоу: `propose`, `apply`, `archive`, `explore`, `sync`, `update`.
-Упомянутые внутри них `/opsx:continue` и `/opsx:new` не установлены — вместо них
-`openspec status --change <slug> --json` и `openspec new change <slug>`.
+Six workflows are installed: `propose`, `apply`, `archive`, `explore`, `sync`, `update`.
+The `/opsx:continue` and `/opsx:new` mentioned inside them are not installed — use
+`openspec status --change <slug> --json` and `openspec new change <slug>` instead.
 
-Правила про golden: обновление golden или baseline — отдельный коммит с префиксом
-`golden:`/`baseline:` и объяснением, что в правилах сдвинуло цифры. Смешанный коммит
-«код + golden» отклоняется хуком. Красный golden значит «симуляция поехала», а не
-«поправь файл».
+Rules about golden: updating golden or baseline is a separate commit with a
+`golden:`/`baseline:` prefix and an explanation of what rule change shifted the numbers.
+A mixed "code + golden" commit is rejected by the hook. A red golden means "the simulation
+drifted," not "fix the file."

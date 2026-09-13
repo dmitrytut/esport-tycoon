@@ -1,31 +1,36 @@
-# ADR 0005: никаких реальных игроков, команд и тайтлов
+# ADR 0005: no real players, teams, or titles
 
-**Статус:** принят
+**Status:** accepted
 
-## Контекст
+## Context
 
-Игра про киберспорт, и соблазн взять реальные имена очень велик: узнаваемость сразу
-даёт эмоцию. Переименование (реальный ник → похожий) закрывает только часть проблемы.
+The game is about esports, and the temptation to use real names is very strong:
+recognizability immediately delivers emotion. Renaming (a real handle → a similar one)
+closes only part of the problem.
 
-Три разные вещи:
-- **имя или ник** — переименование помогает;
-- **узнаваемость образа** — переименование не помогает. Снайпер 17 лет из команды с
-  похожим лого, порвавший всех в конкретном году, узнаётся и под другим именем;
-- **товарные знаки** команд, турниров и самих игр — требуют полной замены.
+Three different things:
+- **name or handle** — renaming helps;
+- **recognizability of the image** — renaming does not help. A 17-year-old sniper from
+  a team with a similar logo, who tore everyone apart in a specific year, is
+  recognizable even under a different name;
+- **trademarks** of teams, tournaments, and the games themselves — require full
+  replacement.
 
-Это не юридическое заключение. Юрист по правам на образ нужен до того, как звёзды
-попадут в билд.
+This is not a legal opinion. A right-of-publicity lawyer is needed before stars make
+it into the build.
 
-## Решение
+## Decision
 
-1. Никаких реальных имён, ников, лого, названий команд, турниров и тайтлов.
-2. Звёзды **собирательные**: черта от одного прототипа, история от другого,
-   происхождение от третьего. Персонаж ощущается как настоящая звезда, но не указывает
-   ни на кого конкретного.
-3. Дисциплины — архетипы, не конкретные игры: «тактический шутер», а не название.
-4. Если персонаж или организация в контенте узнаётся однозначно — это дефект, а не фича.
+1. No real names, handles, logos, team names, tournaments, or titles.
+2. Stars are **composite**: a trait from one prototype, a backstory from another, an
+   origin from a third. A character feels like a real star, but does not point to
+   anyone specific.
+3. Disciplines are archetypes, not specific games: "tactical shooter," not a title.
+4. If a character or organization in the content is unambiguously recognizable — that
+   is a defect, not a feature.
 
-## Побочная выгода
+## Side benefit
 
-Игра не устаревает через два года, когда прототип уйдёт в тренеры. И персонажу можно
-дать свою личность и гэги, не оглядываясь на реального человека.
+The game does not go stale in two years when a prototype retires into coaching. And a
+character can be given their own personality and gags without looking over their
+shoulder at a real person.

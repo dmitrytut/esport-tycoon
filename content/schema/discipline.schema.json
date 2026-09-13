@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Дисциплина",
+  "title": "Discipline",
   "type": "object",
   "required": [
     "id",
@@ -17,7 +17,7 @@
     },
     "name": {
       "type": "string",
-      "description": "английское название дисциплины, видно пользователю (docs/adr/0007)"
+      "description": "English discipline name, shown to the player (docs/adr/0007)"
     },
     "rosterSize": {
       "type": "integer",
@@ -52,7 +52,7 @@
       "type": "number",
       "minimum": 0,
       "maximum": 1,
-      "description": "как часто и сильно патчи сдвигают веса"
+      "description": "how often and how strongly patches shift the weights"
     },
     "contest": {
       "type": "object",
@@ -82,7 +82,7 @@
         },
         "momentumMeans": {
           "type": "string",
-          "description": "что означает полоса в этой дисциплине; текст английский, его видит пользователь (docs/adr/0007)"
+          "description": "what the bar means in this discipline; the text is English, shown to the player (docs/adr/0007)"
         },
         "tally": {
           "enum": [
@@ -94,7 +94,7 @@
         },
         "columns": {
           "type": "array",
-          "description": "заголовки колонок таблицы игроков, английские (docs/adr/0007)",
+          "description": "player table column headers, in English (docs/adr/0007)",
           "minItems": 2,
           "items": {
             "type": "string"

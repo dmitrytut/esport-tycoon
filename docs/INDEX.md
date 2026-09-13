@@ -1,61 +1,63 @@
-# Карта документов
+# Document map
 
-Таблица «задача → что читать». Смысл файла — чтобы не приходилось грузить весь `docs/`.
+A table "task → what to read." The point of this file is to avoid having to load all of
+`docs/`.
 
-Эта карта нужна человеку и задачам, не привязанным к пути. Правила, привязанные к пути,
-живут в `.claude/rules/*.md` с полем `paths` и грузятся сами, когда агент открыл
-подходящий файл: они дают короткую выжимку и номер ADR, а не пересказ решения.
+This map is for humans and for tasks that aren't tied to a path. Rules tied to a path live
+in `.claude/rules/*.md` with a `paths` field and load themselves when an agent opens a
+matching file: they give a short digest and an ADR number, not a retelling of the decision.
 
-## По типу задачи
+## By task type
 
-| Задача | Читать | Не нужно |
+| Task | Read | Not needed |
 |---|---|---|
-| Добавить событие или пачку событий | `design/tone.md`, `design/events-catalog.md`, `content/schema/event.schema.json` | остальное |
-| Тронуть модель игрока (статы, черты, состояние) | `design/player.md`, затем `openspec/specs/`; пока пусто — `specs/0001-player-model.md` (реализована) | матч, мир |
-| Работать над матчем | `design/match.md`, `design/disciplines.md`, `specs/0004-match-engine.md` (заготовка) | мир, экономика |
-| Работать над недельным циклом | `design/week.md`, `design/loops.md`, `specs/0003-week-loop.md` (заготовка) | матч |
-| Балансировать экономику | `design/week.md` (раздел мероприятий), `design/failure.md`, `specs/0002-sim-harness.md` (заготовка) | тон, онбординг |
-| Добавить дисциплину | `design/disciplines.md`, `content/schema/discipline.schema.json`, `adr/0001` | — |
-| Добавить регион | `design/world.md`, `content/schema/region.schema.json` | — |
-| Писать любой текст, который увидит пользователь | `design/tone.md`, `adr/0007` | код, движок |
-| Тронуть код ядра (`packages/core/src/`) | `adr/0001`, `adr/0002`, `adr/0004`, `adr/0010` | дизайн-доки |
-| Онбординг и первая сессия | `design/onboarding.md`, `design/tone.md` | — |
-| Трогать интерфейс: сцену, панели, экран матча | `design/ui.md`, `design/match.md` (слои), `design/week.md` | ядро, контент |
-| Понять, чего пока нет | `design/roadmap.md`, `open-questions.md` | — |
-| Начать любую работу над механикой | `adr/0009` (петля спек), затем `openspec/specs/` по теме; слой наполняется с первого архива | — |
+| Add an event or a batch of events | `design/tone.md`, `design/events-catalog.md`, `content/schema/event.schema.json` | the rest |
+| Touch the performer model (stats, traits, state) | `design/player.md`, then `openspec/specs/`; still empty — `specs/0001-player-model.md` (implemented) | contest, world |
+| Work on the contest | `design/match.md`, `design/disciplines.md`, `specs/0004-match-engine.md` (stub) | world, economy |
+| Work on the weekly cycle | `design/week.md`, `design/loops.md`, `specs/0003-week-loop.md` (stub) | contest |
+| Balance the economy | `design/week.md` (activities section), `design/failure.md`, `specs/0002-sim-harness.md` (stub) | tone, onboarding |
+| Add a discipline | `design/disciplines.md`, `content/schema/discipline.schema.json`, `adr/0001` | — |
+| Add a region | `design/world.md`, `content/schema/region.schema.json` | — |
+| Write any text the player will see | `design/tone.md`, `adr/0007` | code, engine |
+| Touch core code (`packages/core/src/`) | `adr/0001`, `adr/0002`, `adr/0004`, `adr/0010` | design docs |
+| Onboarding and the first session | `design/onboarding.md`, `design/tone.md` | — |
+| Touch the interface: the scene, panels, contest screen | `design/ui.md`, `design/match.md` (layers), `design/week.md` | core, content |
+| Understand what's not there yet | `design/roadmap.md`, `open-questions.md` | — |
+| Start any work on a mechanic | `adr/0009` (spec loop), then `openspec/specs/` on the topic; the layer fills in from the first archive | — |
 
-## Все документы
+## All documents
 
-**Верхний уровень**
-- `vision.md` — зачем игра, фантазм, чем отличается от FM
-- `glossary.md` — термины: одно слово = одно понятие
-- `open-questions.md` — что ещё не решено
+**Top level**
+- `vision.md` — why the game, the fantasy, how it differs from FM
+- `glossary.md` — terms: one word = one concept
+- `open-questions.md` — what's still undecided
 
-**Спеки** (вне `docs/`)
-- `openspec/specs/*` — живое поведение системы: что она делает сейчас. Обновляется
-  командой `openspec archive` в ветке реализации, руками не правится
-- `openspec/changes/<slug>/` — изменения в работе: предложение, дельта спеки, задачи.
-  На `master` — реестр принятых, но не доведённых изменений
-- `specs/NNNN-*.md` — старый формат. `0001` реализована и до первого архива остаётся
-  единственной записью о поведении модели исполнителя; `0002–0006` — заготовки.
-  Новые не заводим (`adr/0009`)
+**Specs** (outside `docs/`)
+- `openspec/specs/*` — the system's live behavior: what it does now. Updated
+  by the `openspec archive` command in the implementation branch, not edited by hand
+- `openspec/changes/<slug>/` — work in progress: proposal, spec delta, tasks.
+  On `master` — the registry of accepted but not yet completed changes
+- `specs/NNNN-*.md` — the old format. `0001` is implemented and remains the sole
+  record of the performer model's behavior until the first archive; `0002–0006` are
+  stubs. We don't start new ones (`adr/0009`)
 
-**Дизайн** (`design/`)
-- `loops.md` — петли недели, сезона, организации
-- `acts.md` — три акта: подвал → офис → организация
-- `disciplines.md` — три дисциплины, веса статов, как добавить четвёртую
-- `player.md` — шесть параметров, черты, состояние, возраст, звёзды
-- `week.md` — слоты, мероприятия, энергия, мораль, борьба с рутиной
-- `match.md` — движок матча, три слоя подачи, окна вмешательства
-- `ui.md` — сцена и панели: что рисуется сценой, что интерфейсом
-- `world.md` — регионы, визы, языки, мета и патчи
-- `failure.md` — три способа проиграть, сезонные цели
-- `onboarding.md` — первые пять минут
-- `tone.md` — юмор, два правила комедии
-- `roadmap.md` — отложенное: академия, база, трансферы, музыка, онлайн
-- `events-catalog.md` — как устроены события и как их писать
+**Design** (`design/`)
+- `loops.md` — the week, season, and organization loops
+- `acts.md` — three acts: basement → office → organization
+- `disciplines.md` — three disciplines, stat weights, how to add a fourth
+- `player.md` — six parameters, traits, state, age, stars
+- `week.md` — slots, activities, energy, morale, fighting the routine
+- `match.md` — the contest engine, three layers of coverage, intervention windows
+- `ui.md` — scene and panels: what the scene draws, what the interface draws
+- `world.md` — regions, visas, languages, meta and patches
+- `failure.md` — three ways to lose, season goals
+- `onboarding.md` — the first five minutes
+- `tone.md` — humor, two rules of comedy
+- `roadmap.md` — deferred: academy, home base, transfers, music, online
+- `events-catalog.md` — how events are structured and how to write them
 
-**Решения** (`adr/`) — читать перед изменением архитектуры. Отдельно отметим `0007`:
-интерфейс и диалоги на английском, локализация — после выбора движка. И `0010`:
-стиль задан конфигурацией, прозой остались только брендированные идентификаторы,
-сумма типов для состояний и язык комментариев.
+**Decisions** (`adr/`) — read before changing architecture. Worth calling out separately:
+`0007`: interface and dialogue in English, localization comes after the engine is chosen.
+`0010`: style is set by configuration, the only prose left is branded identifiers and
+tagged unions for state. `0011`: every file is English; Russian survives in `design/`,
+`content/names/ru-*.json` and the retired `specs/`, and in messages written to a human.

@@ -1,14 +1,15 @@
 # tools/
 
-Инструменты разработки. Не зависят от оболочки и рендера (`docs/adr/0008`), запускаются
-из консоли на Node.
+Development tools. Independent of the shell and renderer (`docs/adr/0008`), run from the
+console on Node.
 
-| Инструмент | Команда | Что делает | Статус |
+| Tool | Command | What it does | Status |
 |---|---|---|---|
-| `validate-content` | `pnpm validate:content` | схемы `content/` плюс ссылочная целостность: событие → черта и регион, черта → статы ядра и категории событий, дисциплина → регион, регион → пул имён | готов |
-| `lint_core` | `pnpm lint` | запрещённые доменные слова и недетерминированные вызовы в `packages/core`, см. `docs/adr/0001` и `0002` | готов, правила в `eslint.config.mjs` |
-| `sim_harness` | — | прогон N сезонов без графики по заданным сидам, см. `specs/0002` | не написан |
-| `balance_report` | — | сравнение метрик прогона с baseline, подсветка значимых сдвигов | не написан |
+| `validate-content` | `pnpm validate:content` | `content/` schemas plus referential integrity: event → trait and region, trait → core stats and event categories, discipline → region, region → name pool | ready |
+| `lint_core` | `pnpm lint` | forbidden domain words and nondeterministic calls in `packages/core`, see `docs/adr/0001` and `0002` | ready, rules in `eslint.config.mjs` |
+| `sim_harness` | — | a run of N seasons with no graphics for given seeds, see `specs/0002` | not written |
+| `balance_report` | — | comparison of a run's metrics against baseline, highlighting significant shifts | not written |
 
-Один гейт на всё: `pnpm verify` — типы, форматирование, линтер, тесты, контент, спеки.
-Его же гоняет CI и локальный pre-commit (включается один раз: `pnpm run hooks:install`).
+One gate for everything: `pnpm verify` — types, formatting, linter, tests, content, specs.
+The same gate is run by CI and the local pre-commit hook (enabled once: `pnpm run
+hooks:install`).

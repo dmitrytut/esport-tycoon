@@ -1,167 +1,178 @@
-# ADR 0009: петля спек — живое поведение отдельно от замысла
+# ADR 0009: the spec loop — live behavior kept separate from intent
 
-**Статус:** принят
-**Дата:** 2026-09-12
-**Связан с:** `adr/0007` (язык), `adr/0008` (стек)
+**Status:** accepted
+**Date:** 2026-09-12
+**Related:** `adr/0007` (language), `adr/0008` (stack)
+**Amended:** `adr/0011` — OpenSpec artifacts are now written in English, so the carve-out
+for player-facing strings inside a Russian artifact is gone. Everything else stands.
 
-## Контекст
+## Context
 
-Разработка переходит в режим нескольких параллельных агентских сессий: задача заводится
-в трекере, берётся в отдельном worktree, доводится до PR, мержится. В этом режиме
-всплывают отказы, которых при одном разработчике на одной ветке просто нет.
+Development is moving to a mode of several parallel agent sessions: a task is filed in
+the tracker, picked up in a separate worktree, brought to a PR, and merged. In this mode,
+failure modes surface that simply don't exist with one developer on one branch.
 
-1. **Коллизия номеров.** `specs/NNNN-name.md` требует «найди следующий свободный номер».
-   Две сессии выберут один и тот же.
-2. **Спека расходится с реальностью, и это ничем не ловится.** `specs/0001` носит статус
-   «сделана», но все шесть её критериев приёмки остались неотмеченными `- [ ]` — понять
-   машинно, выполнены они или нет, невозможно. В разделе «Вне рамок» там же написано
-   «Экономика, контракты, зарплаты (спека 0005)», а `specs/0005` — это система событий:
-   ссылка ведёт в пустоту. Обе ошибки безобидны ровно до тех пор, пока спеку читает тот,
-   кто её писал.
-3. **Нет записи о текущем поведении.** `docs/design/*` отвечает «зачем и каким это должно
-   быть». На вопрос «что происходит при `energy = 0` прямо сейчас» отвечает только код.
-   Агент, открывающий задачу в чистом worktree, не имеет ничего другого.
+1. **Number collisions.** `specs/NNNN-name.md` requires "find the next free number." Two
+   sessions will pick the same one.
+2. **A spec drifts from reality, and nothing catches it.** `specs/0001` carries the status
+   "done," but all six of its acceptance criteria remain unchecked `- [ ]` — there's no
+   way to tell machine-side whether they're met or not. Its "Out of scope" section says
+   "Economy, contracts, salaries (spec 0005)," while `specs/0005` is actually the events
+   system: the reference points nowhere. Both errors are harmless exactly as long as the
+   spec is read by whoever wrote it.
+3. **There's no record of current behavior.** `docs/design/*` answers "why, and what this
+   should be like." The question "what happens right now when `energy = 0`" is answered
+   only by the code. An agent opening a task in a clean worktree has nothing else to go
+   on.
 
-Первые два — механические. Третий — структурный: слоя «поведение» в репозитории нет.
+The first two are mechanical. The third is structural: there is no "behavior" layer in
+the repository.
 
-## Решение
+## Decision
 
-Четыре слоя, у каждого свой автор и свой срок жизни.
+Four layers, each with its own author and its own lifespan.
 
-| Слой | Где | Кто пишет | Когда меняется |
+| Layer | Where | Who writes it | When it changes |
 |---|---|---|---|
-| Замысел | `docs/design/*` | человек | редко, только по явной просьбе |
-| Решения | `docs/adr/*` | человек | новое решение — новый ADR, старые не переписываем |
-| Поведение | `openspec/specs/*` | `openspec archive` по дельте, не правкой руками | на каждом `archive` |
-| Единица работы | `openspec/changes/<slug>/` | агент | одна на задачу, два PR |
+| Intent | `docs/design/*` | human | rarely, only on explicit request |
+| Decisions | `docs/adr/*` | human | a new decision is a new ADR, old ones are never rewritten |
+| Behavior | `openspec/specs/*` | `openspec archive` from a delta, never edited by hand | on every `archive` |
+| Unit of work | `openspec/changes/<slug>/` | agent | one per task, two PRs |
 
-Слой поведения ведётся OpenSpec (MIT, TypeScript, ставится через npm — один тулчейн,
-`adr/0008`). Конфигурация — `openspec/config.yaml`: артефакты по-русски, структурные
-заголовки и ключевые слова RFC 2119 английские, и отдельной оговоркой — любая строка,
-которую увидит игрок, остаётся английской даже внутри русского артефакта (`adr/0007`).
+The behavior layer is managed by OpenSpec (MIT, TypeScript, installed via npm — one
+toolchain, `adr/0008`). Configuration lives in `openspec/config.yaml`: artifacts are in
+Russian, structural headings and RFC 2119 keywords are in English, and as a separate
+carve-out, any string the player will see stays in English even inside a Russian
+artifact (`adr/0007`).
 
-Мерж дельты в живую спеку делает команда `openspec archive`, а не ручная правка
-`openspec/specs/`. Результат проверяется дважды: `openspec validate --all` внутри
-`pnpm verify` и человеком — диффом спеки в PR-2.
+Merging a delta into the live spec is done by the `openspec archive` command, not by
+hand-editing `openspec/specs/`. The result is checked twice: `openspec validate --all`
+inside `pnpm verify`, and by a human diffing the spec in PR-2.
 
-### Петля
+### The loop
 
-Две точки ревью, два PR на задачу.
+Two review points, two PRs per task.
 
 ```
-задача в трекере #N
-  → /opsx:propose <slug>       предложение, дельта спеки, задачи; кода нет
-  → PR-1: только openspec/changes/<slug>/
-  → ревью замысла и дельты → мерж        ← первая точка, самая дешёвая
-  → допуск: можно ли запускать сейчас
+task in tracker #N
+  → /opsx:propose <slug>       proposal, spec delta, tasks; no code
+  → PR-1: openspec/changes/<slug>/ only
+  → intent and delta review → merge          ← first review point, the cheapest one
+  → admission check: can this run right now
   → claude --worktree <slug>
-  → /opsx:apply                код по tasks.md
-  → /opsx:archive <slug>       дельта вмерживается в openspec/specs здесь же
-  → PR-2: код + обновлённая спека + перенос папки в changes/archive/
-  → ревью диффа против требований → мерж ← вторая точка
+  → /opsx:apply                code per tasks.md
+  → /opsx:archive <slug>       delta is merged into openspec/specs right here
+  → PR-2: code + updated spec + folder moved to changes/archive/
+  → diff-against-requirements review → merge ← second review point
 ```
 
-Идентификатор изменения — слаг (`week-loop`) для папки, ветки и worktree; номер задачи
-`#N` для порядка и ссылок. Своего аллокатора номеров не заводим: трекер уже выдаёт
-уникальный монотонный идентификатор под глобальным локом, и он виден всем сессиям
-мгновенно, а не после мержа ветки. Дельты размечены `ADDED / MODIFIED / REMOVED`;
-`archive` вмерживает их в живую спеку и переносит папку изменения в
-`openspec/changes/archive/YYYY-MM-DD-<slug>/`.
+The change identifier is a slug (`week-loop`) for the folder, branch, and worktree; the
+task number `#N` is for ordering and references. We don't build our own number
+allocator: the tracker already hands out a unique, monotonic identifier under a global
+lock, and it's visible to every session instantly, not only after a branch merge. Deltas
+are marked `ADDED / MODIFIED / REMOVED`; `archive` merges them into the live spec and
+moves the change folder to `openspec/changes/archive/YYYY-MM-DD-<slug>/`.
 
-Предложение мержится до реализации не ради церемонии: пока `openspec/changes/<slug>/`
-не на `master`, его не видят ни соседние сессии, ни проверка допуска — решать вопрос
-о параллельном запуске не по чему.
+The proposal is merged before implementation not for ceremony's sake: until
+`openspec/changes/<slug>/` is on `master`, neither sibling sessions nor the admission
+check can see it — there's nothing to base a decision about running it in parallel on.
 
-### Допуск к работе
+### Admission check
 
-Решение «запускать сейчас или в очередь» принимается по двум условиям, оба машинные.
+The decision "run now or queue" is made against two conditions, both machine-checkable.
 
-1. **Предложение готово.** `openspec validate <slug>` проходит, `openspec status
-   --change <slug> --json` не показывает незаполненных артефактов, в тексте не осталось
-   незакрытых уточняющих вопросов.
-2. **Нет пересечений с изменениями в полёте.** `openspec list --json` даёт активные
-   изменения, `openspec show <slug> --json --deltas-only` — множество требований,
-   которые каждое из них трогает. Пересечение по требованиям или по объявленным путям
-   означает «в очередь за конфликтующим», а не «мержим и надеемся».
+1. **The proposal is ready.** `openspec validate <slug>` passes, `openspec status
+   --change <slug> --json` shows no unfilled artifacts, and the text has no open
+   clarifying questions left.
+2. **No overlap with in-flight changes.** `openspec list --json` gives the active
+   changes, `openspec show <slug> --json --deltas-only` gives the set of requirements
+   each one touches. An overlap in requirements or in declared paths means "queue behind
+   the conflicting one," not "merge and hope."
 
-Проверяющий допуск — детерминированный скрипт, а не агент: его решения либо
-воспроизводимы, либо бесполезны. До появления `tools/dispatch` оба условия проверяются
-руками.
+The admission checker is a deterministic script, not an agent: its decisions are either
+reproducible or useless. Until `tools/dispatch` exists, both conditions are checked by
+hand.
 
-### Правила параллельной работы
+### Rules for parallel work
 
-1. **Одно изменение — один автор.** Две сессии в одной папке `changes/<slug>/`
-   конфликтуют так же, как два человека в одном файле. Не делится — значит изменение
-   слишком крупное, его надо разрезать.
-2. **Изменение объявляет, какие пути трогает** — разделом «Затрагивает» в `proposal.md`,
-   это требование записано в `openspec/config.yaml` (`rules.proposal`). Пересечение
-   путей между открытыми PR — сигнал сериализовать работу, а не мержить и надеяться.
-3. **Конфликт в `openspec/specs/` — это фича.** Он означает, что два изменения разошлись
-   в том, как система должна себя вести. Разрешается как обычный git-конфликт, в пользу
-   того требования, которое отражает реальность.
-4. **`archive` делается в ветке реализации**, до мержа PR-2. Если два изменения тронули
-   одно требование, конфликт в `openspec/specs/` возникнет при ребейзе — а ребейз
-   неизбежен, ruleset требует свежую ветку. Поймать расхождение до мержа дешевле, чем
-   после.
-5. **Изменение без дельты объявляет это заранее.** Инфраструктура, тулинг, документация
-   не меняют поведения, и `openspec validate --all` внутри `pnpm verify` падает на таком
-   изменении с «Change must have at least one delta». Лечится не флагом архивирования,
-   а строкой `skip_specs: true` в `.openspec.yaml` изменения — её надо поставить при
-   заведении, иначе гейт покраснеет на первом же коммите. `archive --skip-specs` снимает
-   только шаг мержа и валидацию не отменяет.
-6. **Golden и baseline ветка не трогает.** Снимок имеет смысл только на слитом
-   результате, поэтому перегенерация — отдельный коммит на `master` с префиксом
-   `golden:`/`baseline:` (`tests/README.md`). В сессии правка этих путей заблокирована
-   хуком `PreToolUse`.
+1. **One change, one author.** Two sessions in the same `changes/<slug>/` folder
+   conflict the same way two people editing the same file do. If it can't be split, the
+   change is too large and needs to be cut down.
+2. **A change declares which paths it touches** — via the "Affects" section in
+   `proposal.md`, a requirement recorded in `openspec/config.yaml` (`rules.proposal`). An
+   overlap of paths between open PRs is a signal to serialize the work, not to merge and
+   hope.
+3. **A conflict in `openspec/specs/` is a feature.** It means two changes disagreed on
+   how the system should behave. It's resolved like an ordinary git conflict, in favor of
+   whichever requirement reflects reality.
+4. **`archive` happens on the implementation branch**, before PR-2 is merged. If two
+   changes touched the same requirement, the conflict in `openspec/specs/` will surface
+   at rebase time — and a rebase is unavoidable, since the ruleset requires a fresh
+   branch. Catching the divergence before the merge is cheaper than after.
+5. **A change with no delta declares that up front.** Infrastructure, tooling, and
+   documentation don't change behavior, and `openspec validate --all` inside
+   `pnpm verify` fails such a change with "Change must have at least one delta." This is
+   fixed not by an archive flag but by the `skip_specs: true` line in the change's
+   `.openspec.yaml` — it must be set when the change is filed, otherwise the gate turns
+   red on the very first commit. `archive --skip-specs` only skips the merge step; it
+   does not waive validation.
+6. **Golden and baseline are untouched by the branch.** A snapshot only makes sense
+   against the merged result, so regeneration is a separate commit on `master` with a
+   `golden:`/`baseline:` prefix (`tests/README.md`). Editing these paths within a session
+   is blocked by the `PreToolUse` hook.
 
-### Судьба `specs/`
+### What happens to `specs/`
 
-`specs/0001` реализована, `0002–0006` — заготовки. Массово не мигрируем: спека
-переводится в `openspec/changes/<slug>/` в тот момент, когда её берут в работу, и её
-поведение оседает в `openspec/specs/` при `archive`. Для уже сделанной `0001` это
-произойдёт при первом же изменении, которое тронет модель исполнителя.
+`specs/0001` is implemented, `0002–0006` are stubs. We are not bulk-migrating them: a
+spec is moved into `openspec/changes/<slug>/` at the moment it's picked up for work, and
+its behavior settles into `openspec/specs/` on `archive`. For the already-implemented
+`0001`, that will happen on the first change that touches the performer model.
 
-`specs/TEMPLATE.md` и команда `/spec` больше не используются — их место заняли
-`/opsx:propose` и шаблоны OpenSpec. Каталог `specs/` живёт, пока не разобрана последняя
-заготовка.
+`specs/TEMPLATE.md` and the `/spec` command are no longer used — their place has been
+taken by `/opsx:propose` and the OpenSpec templates. The `specs/` directory stays around
+until the last stub has been processed.
 
-## Отвергнутые варианты
+## Rejected options
 
-- **Оставить `specs/NNNN` и добавить ритуал «после мержа обнови дизайн».** Ритуал держится
-  на дисциплине одного человека. При N сессиях в сутки он не держится — нужен механизм,
-  который либо отработал, либо упал.
-- **github/spec-kit.** Тянет Python и `uv` — второй тулчейн против `adr/0008`. Своя
-  «конституция» становится третьим местом, где живут правила, рядом с `CLAUDE.md` и ADR.
-  Ветка на фичу есть, но обновления спеки после мержа нет, а именно это и требовалось.
-- **Написать мерж дельт самим.** Это инструмент, который надо сопровождать, ради задачи,
-  которую уже решает MIT-пакет на том же тулчейне.
-- **`openspec/specs/` вместо `docs/design/`.** Разные вещи. Замысел («провал должен
-  читаться смешнее успеха») не выражается требованиями с критериями приёмки, а поведение
-  не выражается прозой про фантазм. Слить их — потерять оба.
-- **`archive` на `master` после мержа** — рекомендация OpenSpec по умолчанию. При одной
-  сессии равноценна. При нескольких откладывает обнаружение расхождения на после мержа
-  и добавляет третий PR к задаче: прямой push в `master` закрыт ruleset'ом.
-- **Оркестратор-агент, раздающий задачи и сочиняющий спеки.** Спека здесь — решение
-  о том, будет ли интересно; автогенерация на потоке индустриализует ровно тот риск,
-  ради которого заведено правило «никакой механики без спеки». Машине остаётся допуск
-  и диспетч, человеку — что делать.
-- **Свой аллокатор номеров спек.** Номер задачи в трекере уже уникален, монотонен
-  и виден всем сессиям без мержа.
+- **Keep `specs/NNNN` and add a ritual "update the design after merging."** The ritual
+  rests on one person's discipline. With N sessions a day it doesn't hold — what's needed
+  is a mechanism that either ran or failed, not a ritual.
+- **github/spec-kit.** Drags in Python and `uv` — a second toolchain against `adr/0008`.
+  Its own "constitution" becomes a third place where rules live, next to `CLAUDE.md` and
+  the ADRs. There's a feature branch, but no spec update after merge, which is exactly
+  what was needed.
+- **Write our own delta-merge tool.** That's a tool we'd have to maintain, for a problem
+  already solved by an MIT-licensed package on the same toolchain.
+- **`openspec/specs/` instead of `docs/design/`.** These are different things. Intent
+  ("failure should read funnier than success") is not expressed as requirements with
+  acceptance criteria, and behavior is not expressed as prose about the fantasy. Merging
+  them loses both.
+- **`archive` on `master` after merge** — OpenSpec's default recommendation. Fine with a
+  single session. With several, it delays discovering a divergence until after the merge
+  and adds a third PR to the task: a direct push to `master` is blocked by the ruleset.
+- **An orchestrator agent that hands out tasks and writes specs.** A spec here is a
+  decision about whether something will be interesting; auto-generating them on a
+  conveyor belt industrializes exactly the risk that the "no mechanic without a spec"
+  rule exists to prevent. The machine keeps admission and dispatch, the human keeps what
+  to build.
+- **Our own spec-number allocator.** The tracker's task number is already unique,
+  monotonic, and visible to every session without a merge.
 
-## Следствия
+## Consequences
 
-- Живой слой двигается вместе с кодом: обновление `openspec/specs/` едет в том же PR,
-  что и реализация. Пропуск виден как папка в `openspec/changes/` с полностью
-  отмеченным `tasks.md` при уже смерженном коде.
-- `openspec/changes/` на `master` становится реестром принятых, но не доведённых
-  изменений. Это то, что читает проверка допуска.
-- Ревью разнесено по двум PR: в первом обсуждается замысел и дельта спеки, во втором —
-  только соответствие диффа уже принятым требованиям. Возражение против подхода стоит
-  одну реплику, а не триста строк кода.
-- Правила процесса, которые обязаны держаться всегда, вынесены в хуки: `PreToolUse`
-  защищает golden и baseline, `Stop` не даёт закончить ход при красном `pnpm verify`.
-  Спека и навык — советующий контроль, хук — детерминированный.
-- Цена: две точки ревью и два PR на задачу вместо одного. При одной сессии это чистая
-  церемония; окупается только тем, что делает параллельные сессии безопасными.
-- Цена: ещё один каталог в репозитории и обязанность держать границу между замыслом
-  и поведением. Размывание границы вернёт ровно ту проблему, ради которой всё делалось.
+- The live layer moves together with the code: updating `openspec/specs/` rides in the
+  same PR as the implementation. A skipped update shows up as a folder in
+  `openspec/changes/` with a fully checked `tasks.md` while the code is already merged.
+- `openspec/changes/` on `master` becomes a registry of accepted-but-not-yet-completed
+  changes. That's what the admission check reads.
+- Review is split across two PRs: the first discusses intent and the spec delta, the
+  second only whether the diff matches already-accepted requirements. An objection to the
+  approach costs one comment, not three hundred lines of code.
+- Process rules that must always hold are pushed into hooks: `PreToolUse` protects golden
+  and baseline, `Stop` refuses to end a turn while `pnpm verify` is red. The spec and the
+  skill are advisory control; the hook is deterministic.
+- Cost: two review points and two PRs per task instead of one. With a single session
+  this is pure ceremony; it pays for itself only by making parallel sessions safe.
+- Cost: one more directory in the repository and the obligation to keep the boundary
+  between intent and behavior. Letting that boundary blur brings back exactly the
+  problem this was all built to solve.

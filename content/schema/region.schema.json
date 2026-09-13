@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Регион",
+  "title": "Region",
   "type": "object",
   "required": [
     "id",
@@ -16,16 +16,16 @@
     },
     "name": {
       "type": "string",
-      "description": "английское название региона: его видит пользователь, см. docs/adr/0007"
+      "description": "English region name: shown to the player, see docs/adr/0007"
     },
     "language": {
       "type": "string",
-      "description": "язык региона по умолчанию: на нём говорят все, кто здесь сгенерирован. Механика химии состава, не язык интерфейса — см. specs/0006",
+      "description": "the region's default language: everyone generated here speaks it. A lineup chemistry mechanic, not the interface language — see specs/0006",
       "pattern": "^[a-z]{2}$"
     },
     "secondLanguages": {
       "type": "array",
-      "description": "дополнительные языки и вероятность владения при генерации, см. specs/0006",
+      "description": "additional languages and the chance of proficiency at generation time, see specs/0006",
       "items": {
         "type": "object",
         "required": [

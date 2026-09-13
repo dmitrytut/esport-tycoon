@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Черта характера",
+  "title": "Character trait",
   "type": "object",
   "required": [
     "id",
@@ -16,11 +16,11 @@
     },
     "name": {
       "type": "string",
-      "description": "английское название черты, видно пользователю (docs/adr/0007)"
+      "description": "English trait name, shown to the player (docs/adr/0007)"
     },
     "description": {
       "type": "string",
-      "description": "английское описание черты, видно пользователю (docs/adr/0007)",
+      "description": "English trait description, shown to the player (docs/adr/0007)",
       "minLength": 20
     },
     "polarity": {
@@ -65,7 +65,7 @@
     "reactsTo": {
       "type": "object",
       "additionalProperties": false,
-      "description": "как черта отвечает на вмешательства в матче",
+      "description": "how the trait responds to interventions during a contest",
       "properties": {
         "shout": {
           "type": "number"

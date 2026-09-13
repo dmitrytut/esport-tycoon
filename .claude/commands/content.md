@@ -1,16 +1,16 @@
 ---
-description: Сгенерировать пачку контента по схеме и провалидировать
+description: Generate a batch of content per the schema and validate it
 ---
 
-Задача: сгенерировать контент — $ARGUMENTS.
+Task: generate content — $ARGUMENTS.
 
-Порядок:
-1. Прочитай схему соответствующего типа в `content/schema/`.
-2. Прочитай `docs/design/tone.md` и, для событий, `docs/design/events-catalog.md`.
-3. Посмотри 2–3 существующих файла этого типа как образец.
-4. Сгенерируй. Каждая сущность — отдельный файл, имя файла = `id`. Все пользовательские
-   тексты — на английском (`docs/adr/0007`), доки при этом читаешь русские.
-5. Проверь себя по правилам: ни один выбор не должен быть очевидно правильным;
-   провал смешнее успеха; никаких реальных людей и тайтлов (`docs/adr/0005`).
-6. Запусти `pnpm validate:content` — он проверяет и схемы, и ссылочную целостность.
-7. Покрытие по категориям: не сваливай всё в одну. Скажи, какие категории покрыл.
+Order:
+1. Read the schema for the relevant type in `content/schema/`.
+2. Read `docs/design/tone.md` and, for events, `docs/design/events-catalog.md`.
+3. Look at 2–3 existing files of this type as a sample.
+4. Generate. Each entity is a separate file, file name = `id`. All user-facing
+   text is in English (`docs/adr/0007`), while the docs you read are in Russian.
+5. Check yourself against the rules: no choice should be obviously correct;
+   failure is funnier than success; no real people or titles (`docs/adr/0005`).
+6. Run `pnpm validate:content` — it checks both schemas and referential integrity.
+7. Coverage across categories: don't dump everything into one. Say which categories you covered.

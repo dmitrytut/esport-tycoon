@@ -3,8 +3,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["packages/**/test/**/*.test.ts", "tools/**/test/**/*.test.ts"],
-    // golden-файлы лежат в репозитории как обычный JSON и сравниваются явно
-    // (packages/core/test/golden/*), а не через автоснапшоты vitest:
-    // обновление golden — осознанное действие, см. tests/README.md
+    // golden files live in the repo as plain JSON and are compared explicitly
+    // (packages/core/test/golden/*), not via vitest's automatic snapshots:
+    // updating golden is a deliberate action, see tests/README.md
   },
 });

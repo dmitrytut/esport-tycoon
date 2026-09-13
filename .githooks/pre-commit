@@ -1,18 +1,18 @@
 #!/bin/sh
-# Локальный гейт. Включается один раз: pnpm run hooks:install
+# Local gate. Enabled once: pnpm run hooks:install
 set -e
 
 staged=$(git diff --cached --name-only --diff-filter=ACM)
 
-# Правило tests/README.md: golden и baseline обновляются осознанно, отдельным коммитом.
-# Смешанный коммит «код + golden» — самый частый способ спрятать регрессию баланса.
+# Rule from tests/README.md: golden and baseline are updated deliberately, in a separate commit.
+# A mixed "code + golden" commit is the most common way to hide a balance regression.
 golden=$(printf '%s\n' "$staged" | grep -E '^(packages/.*/test/golden/|tests/golden/|sim/baseline/)' || true)
 code=$(printf '%s\n' "$staged" | grep -E '^(packages|apps|tools)/.*\.(ts|tsx)$' | grep -v '/test/golden/' || true)
 
 if [ -n "$golden" ] && [ -n "$code" ]; then
-  echo "Отказ: в одном коммите и код, и golden-файлы." >&2
-  echo "Сначала закоммить код, потом golden отдельно, префиксом golden: и объяснением механизма сдвига." >&2
-  echo "Golden в индексе:" >&2
+  echo "Rejected: both code and golden files in the same commit." >&2
+  echo "Commit the code first, then golden separately, prefixed golden: with an explanation of what shifted the numbers." >&2
+  echo "Golden in the index:" >&2
   printf '  %s\n' "$golden" >&2
   exit 1
 fi

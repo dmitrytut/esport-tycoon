@@ -32,20 +32,20 @@ const params: GenerateParams = {
   ],
 };
 
-describe("генерация (specs/0001)", () => {
-  it("один сид и одни параметры дают идентичного исполнителя", () => {
+describe("generation (specs/0001)", () => {
+  it("one seed and the same params give an identical performer", () => {
     const first = generatePerformer(createRng(42), params);
     const second = generatePerformer(createRng(42), params);
     expect(serializePerformer(first)).toEqual(serializePerformer(second));
   });
 
-  it("разные сиды дают разных", () => {
+  it("different seeds give different performers", () => {
     const first = generatePerformer(createRng(42), params);
     const second = generatePerformer(createRng(43), params);
     expect(serializePerformer(first)).not.toEqual(serializePerformer(second));
   });
 
-  it("статы и состояние всегда в границах", () => {
+  it("stats and state are always within bounds", () => {
     const rng = createRng(7);
     for (let level = 1; level <= 5; level++) {
       for (let i = 0; i < 200; i++) {
@@ -62,7 +62,7 @@ describe("генерация (specs/0001)", () => {
     }
   });
 
-  it("уровень поднимает средний стат", () => {
+  it("level raises the average stat", () => {
     const meanFor = (level: number): number => {
       const rng = createRng(11);
       let total = 0;
@@ -77,7 +77,7 @@ describe("генерация (specs/0001)", () => {
     expect(meanFor(3)).toBeGreaterThan(meanFor(1));
   });
 
-  it("черт от одной до трёх и без повторов", () => {
+  it("one to three traits, no duplicates", () => {
     const rng = createRng(5);
     for (let i = 0; i < 300; i++) {
       const { traits } = generatePerformer(rng, params);
@@ -87,7 +87,7 @@ describe("генерация (specs/0001)", () => {
     }
   });
 
-  it("потенциал не ниже текущего лучшего стата", () => {
+  it("potential is never below the current best stat", () => {
     const rng = createRng(3);
     for (let i = 0; i < 300; i++) {
       const performer = generatePerformer(rng, params);
@@ -96,7 +96,7 @@ describe("генерация (specs/0001)", () => {
     }
   });
 
-  it("язык региона есть всегда, второй выпадает примерно по шансу (specs/0006)", () => {
+  it("the region's language is always present, the second one comes up roughly at its chance (specs/0006)", () => {
     const rng = createRng(42);
     let withEnglish = 0;
     const count = 1000;
@@ -109,8 +109,8 @@ describe("генерация (specs/0001)", () => {
   });
 });
 
-describe("возрастная кривая (specs/0001, п.1)", () => {
-  it("за 10 лет механика ветерана падает, голова растёт", () => {
+describe("age curve (specs/0001, item 1)", () => {
+  it("over 10 years a veteran's mechanical skill falls, cognitive skill grows", () => {
     const rng = createRng(21);
     let checked = 0;
     for (let i = 0; i < 50; i++) {
@@ -126,14 +126,14 @@ describe("возрастная кривая (specs/0001, п.1)", () => {
     expect(checked).toBe(50);
   });
 
-  it("до пика механика растёт", () => {
+  it("mechanical skill grows before the peak", () => {
     const rng = createRng(31);
     const rookie = generatePerformer(rng, { ...params, minAge: 16, maxAge: 16, level: 2 });
     const nextYear = advanceYear(rookie);
     expect(nextYear.stats.mechanical).toBeGreaterThan(rookie.stats.mechanical);
   });
 
-  it("годы не выводят статы за шкалу", () => {
+  it("years never push stats off the scale", () => {
     const rng = createRng(41);
     let performer = generatePerformer(rng, { ...params, level: 5 });
     for (let year = 0; year < 30; year++) {
@@ -145,14 +145,14 @@ describe("возрастная кривая (specs/0001, п.1)", () => {
     }
   });
 
-  it("обучаемость не двигается сама по себе", () => {
+  it("adaptability does not move on its own", () => {
     const performer = generatePerformer(createRng(9), params);
     expect(advanceYear(performer).stats.adaptability).toBe(performer.stats.adaptability);
   });
 });
 
-describe("состояние меняется только явно (specs/0001, п.4)", () => {
-  it("applyStateChange держит границы", () => {
+describe("state changes only explicitly (specs/0001, item 4)", () => {
+  it("applyStateChange keeps within bounds", () => {
     const performer = generatePerformer(createRng(13), params);
     const drained = applyStateChange(performer, { energy: -500, morale: -500, form: -50 });
     expect(drained.state).toEqual({ energy: 0, morale: 0, form: -3 });
@@ -161,12 +161,12 @@ describe("состояние меняется только явно (specs/0001,
     expect(overfed.state).toEqual({ energy: 100, morale: 100, form: 3 });
   });
 
-  it("пустое изменение не двигает состояние", () => {
+  it("an empty change does not move the state", () => {
     const performer = generatePerformer(createRng(17), params);
     expect(applyStateChange(performer, {}).state).toEqual(performer.state);
   });
 
-  it("исходный исполнитель не мутируется", () => {
+  it("the original performer is not mutated", () => {
     const performer = generatePerformer(createRng(19), params);
     const before = serializePerformer(performer);
     applyStateChange(performer, { energy: -30 });
@@ -175,7 +175,7 @@ describe("состояние меняется только явно (specs/0001,
     expect(serializePerformer(performer)).toEqual(before);
   });
 
-  it("applyStatChange не выпускает статы за шкалу", () => {
+  it("applyStatChange does not let stats off the scale", () => {
     const performer = generatePerformer(createRng(23), params);
     const buffed = applyStatChange(performer, { mechanical: 99 });
     const nerfed = applyStatChange(performer, { mechanical: -99 });
@@ -184,8 +184,8 @@ describe("состояние меняется только явно (specs/0001,
   });
 });
 
-describe("сериализация", () => {
-  it("скрытые поля переживают круг сохранения", () => {
+describe("serialization", () => {
+  it("hidden fields survive a save round trip", () => {
     const performer = generatePerformer(createRng(77), params);
     const restored = deserializePerformer(serializePerformer(performer));
     expect(restored).toEqual(performer);
@@ -194,13 +194,13 @@ describe("сериализация", () => {
     expect(restored.seed).toBe(performer.seed);
   });
 
-  it("снимок переживает JSON без потери точности", () => {
+  it("a snapshot survives JSON without loss of precision", () => {
     const performer = generatePerformer(createRng(79), params);
     const snapshot = serializePerformer(performer);
     expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
   });
 
-  it("восстановленный исполнитель стареет так же, как исходный", () => {
+  it("a restored performer ages the same way as the original", () => {
     const performer = generatePerformer(createRng(83), params);
     const restored = deserializePerformer(serializePerformer(performer));
     expect(serializePerformer(advanceYear(restored))).toEqual(

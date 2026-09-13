@@ -1,9 +1,9 @@
 /**
- * Процедурная генерация исполнителей (`specs/0001`) плюс раздача языков
- * (`specs/0006`, п.1). Всё случайное берётся из инжектированного RNG (`adr/0002`).
+ * Procedural generation of performers (`specs/0001`) plus language distribution
+ * (`specs/0006`, item 1). Everything random comes from the injected RNG (`adr/0002`).
  *
- * Ядро не читает файлы: профиль происхождения приходит готовым из доменного слоя,
- * который знает про `content/regions/*` (`adr/0001`, `adr/0003`).
+ * Core does not read files: the origin profile arrives ready-made from the domain layer,
+ * which knows about `content/regions/*` (`adr/0001`, `adr/0003`).
  */
 import {
   normalizeStats,
@@ -16,24 +16,24 @@ import {
 } from "./performer.ts";
 import type { Rng } from "./rng.ts";
 
-/** Второй язык и вероятность им владеть (`specs/0006`). */
+/** Second language and the chance of speaking it (`specs/0006`). */
 export interface SecondLanguage {
   readonly language: string;
   readonly chance: number;
 }
 
-/** Всё, что ядру нужно знать о происхождении. Числа приходят из контента. */
+/** Everything core needs to know about origin. Numbers come from content. */
 export interface OriginProfile {
   readonly id: string;
   readonly language: string;
   readonly secondLanguages: readonly SecondLanguage[];
-  /** Больше единицы — талантов больше и они сильнее. */
+  /** Above one — more talents, and stronger ones. */
   readonly talentDensity: number;
   readonly givenNames: readonly string[];
   readonly handles: readonly string[];
 }
 
-/** Черта с весом: редкие выпадают реже. Веса задаются контентом. */
+/** A trait with a weight: rare ones come up less often. Weights are set by content. */
 export interface TraitOption {
   readonly id: string;
   readonly weight: number;
@@ -41,7 +41,7 @@ export interface TraitOption {
 
 export interface GenerateParams {
   readonly origin: OriginProfile;
-  /** 1 — подвальный любитель, 5 — мировой топ. */
+  /** 1 — basement amateur, 5 — world top. */
   readonly level: number;
   readonly minAge?: number;
   readonly maxAge?: number;
@@ -52,8 +52,8 @@ const LEVEL_MIN = 1;
 const LEVEL_MAX = 5;
 
 /**
- * Средний стат по уровню: 6.5 на первом, 16.5 на пятом. Плотность талантов региона
- * сдвигает середину, но не ломает шкалу.
+ * Average stat by level: 6.5 at the first, 16.5 at the fifth. The region's talent
+ * density shifts the middle, but does not break the scale.
  */
 function statCenter(level: number, talentDensity: number): number {
   const base = 4 + 2.5 * (level - LEVEL_MIN);
@@ -67,20 +67,20 @@ export function generatePerformer(rng: Rng, params: GenerateParams): Performer {
   const maxAge = params.maxAge ?? 28;
 
   const seed = rng.nextUint32();
-  // Собственный поток исполнителя: генерация одного не зависит от того, сколько
-  // случайности потратили на предыдущих.
+  // The performer's own stream: generating one does not depend on how much
+  // randomness was spent on previous ones.
   const own = rng.stream(`performer:${seed}`);
 
   const center = statCenter(level, origin.talentDensity);
-  // Сумма трёх бросков даёт колокол вместо равномерного шума: середняков много,
-  // крайностей мало. Порядок бросков задан порядком полей в `statsFrom`.
+  // Summing three rolls gives a bell curve instead of uniform noise: mediocre values
+  // are common, extremes are rare. The order of rolls is set by the field order in `statsFrom`.
   const stats: Stats = normalizeStats(
     statsFrom(() => center + (own.int(-2, 2) + own.int(-2, 2) + own.int(-1, 1)) / 1.6),
   );
 
   const age = own.int(minAge, maxAge);
   const peakAge = own.int(19, 24);
-  // Потолок всегда выше текущего пика статов, иначе новичок «уже готов».
+  // The ceiling is always above the current peak stat, otherwise a rookie would be "already ready".
   let best = STAT_MIN;
   for (const key of STAT_KEYS) if (stats[key] > best) best = stats[key];
   const potential = Math.min(STAT_MAX, Math.round((best + own.int(1, 6)) * 10) / 10);

@@ -7,10 +7,10 @@
 | Задача | Читать | Не нужно |
 |---|---|---|
 | Добавить событие или пачку событий | `design/tone.md`, `design/events-catalog.md`, `content/schema/event.schema.json` | остальное |
-| Тронуть модель игрока (статы, черты, состояние) | `design/player.md`, `specs/0001-player-model.md` | матч, мир |
-| Работать над матчем | `design/match.md`, `design/disciplines.md`, `specs/0004-match-engine.md` | мир, экономика |
-| Работать над недельным циклом | `design/week.md`, `design/loops.md`, `specs/0003-week-loop.md` | матч |
-| Балансировать экономику | `design/week.md` (раздел мероприятий), `design/failure.md`, `specs/0002-sim-harness.md` | тон, онбординг |
+| Тронуть модель игрока (статы, черты, состояние) | `design/player.md`, затем `openspec/specs/`; пока пусто — `specs/0001-player-model.md` (реализована) | матч, мир |
+| Работать над матчем | `design/match.md`, `design/disciplines.md`, `specs/0004-match-engine.md` (заготовка) | мир, экономика |
+| Работать над недельным циклом | `design/week.md`, `design/loops.md`, `specs/0003-week-loop.md` (заготовка) | матч |
+| Балансировать экономику | `design/week.md` (раздел мероприятий), `design/failure.md`, `specs/0002-sim-harness.md` (заготовка) | тон, онбординг |
 | Добавить дисциплину | `design/disciplines.md`, `content/schema/discipline.schema.json`, `adr/0001` | — |
 | Добавить регион | `design/world.md`, `content/schema/region.schema.json` | — |
 | Писать любой текст, который увидит пользователь | `design/tone.md`, `adr/0007` | код, движок |
@@ -18,6 +18,7 @@
 | Онбординг и первая сессия | `design/onboarding.md`, `design/tone.md` | — |
 | Трогать интерфейс: сцену, панели, экран матча | `design/ui.md`, `design/match.md` (слои), `design/week.md` | ядро, контент |
 | Понять, чего пока нет | `design/roadmap.md`, `open-questions.md` | — |
+| Начать любую работу над механикой | `adr/0009` (петля спек), затем `openspec/specs/` по теме; слой наполняется с первого архива | — |
 
 ## Все документы
 
@@ -25,6 +26,15 @@
 - `vision.md` — зачем игра, фантазм, чем отличается от FM
 - `glossary.md` — термины: одно слово = одно понятие
 - `open-questions.md` — что ещё не решено
+
+**Спеки** (вне `docs/`)
+- `openspec/specs/*` — живое поведение системы: что она делает сейчас. Обновляется
+  командой `openspec archive` в ветке реализации, руками не правится
+- `openspec/changes/<slug>/` — изменения в работе: предложение, дельта спеки, задачи.
+  На `master` — реестр принятых, но не доведённых изменений
+- `specs/NNNN-*.md` — старый формат. `0001` реализована и до первого архива остаётся
+  единственной записью о поведении модели исполнителя; `0002–0006` — заготовки.
+  Новые не заводим (`adr/0009`)
 
 **Дизайн** (`design/`)
 - `loops.md` — петли недели, сезона, организации

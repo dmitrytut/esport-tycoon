@@ -5,12 +5,13 @@
 // как её увидит человек. Гейт один и тот же для агента, pre-commit и CI.
 //
 // Запускается только если в рабочем дереве есть незакоммиченные изменения, которые
-// гейт вообще может проверить: исходники, контент, конфиги тулчейна. Ход, где агент
-// ничего не менял, не платит четыре секунды.
+// гейт вообще может проверить: исходники, контент, конфиги тулчейна, артефакты спек.
+// Ход, где агент ничего не менял, не платит четыре секунды.
 
 import { execFileSync } from "node:child_process";
 
-const RELEVANT = /\.(ts|mts)$|^content\/|^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vitest\.config\.ts|eslint\.config\.mjs)$/;
+const RELEVANT =
+  /\.(ts|mts)$|^content\/|^openspec\/|^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vitest\.config\.ts|eslint\.config\.mjs)$/;
 
 let raw = "";
 for await (const chunk of process.stdin) raw += chunk;

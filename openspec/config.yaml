@@ -1,28 +1,46 @@
 schema: spec-driven
 
 context: |
-  Language: Russian
-  All artifacts must be written in Russian.
+  Language: Russian.
+  All planning artifacts (proposal, design, tasks, spec deltas) are written in Russian.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Exception (ADR 0007): any string the player will see — UI labels, event text,
+  dialogue, names — stays in English even when quoted inside a Russian artifact.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Process (ADR 0009): work is split across two pull requests. The first contains only
+  openspec/changes/<slug>/ and is reviewed and merged before any code is written.
+  The second contains the implementation together with the archived spec update.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+rules:
+  proposal:
+    - >-
+      Include a "Затрагивает" section listing the repository paths the change will
+      touch (globs allowed). The admission check compares these paths across active
+      changes to decide what may run in parallel.
+    - >-
+      A change that intentionally alters no behaviour (tooling, infrastructure, docs)
+      must set "skip_specs: true" in its .openspec.yaml. Otherwise `openspec validate`
+      fails the gate with "Change must have at least one delta".
+
+operations:
+  apply:
+    guidance:
+      - >-
+        Do not start implementation until the proposal pull request is merged into
+        master. The workflow text calls itself fluid and not phase-locked; in this
+        repository that is overridden by ADR 0009 — planning is reviewed separately.
+      - >-
+        Implementation reveals a problem in the plan: stop, report it, and change the
+        proposal in its own pull request. Never widen the accepted requirements in
+        place while writing code.
+  archive:
+    guidance:
+      - >-
+        Archive inside the implementation branch, before the pull request is merged,
+        so that a disagreement between two changes surfaces as a git conflict in
+        openspec/specs during rebase rather than after the merge.
+      - >-
+        Archive by running `openspec archive <slug> -y`. Do not create or move
+        directories by hand: the workflow's manual `mkdir -p` and `mv` fall outside
+        the granted `Bash(openspec:*)` permission and can leave the change half
+        archived. If the command cannot merge a delta, stop and report it.

@@ -29,4 +29,7 @@ try {
 const bin = resolve(cwd, "node_modules/.bin");
 if (!existsSync(bin)) process.exit(0); // Зависимости ещё не поставлены.
 
-appendFileSync(envFile, `export PATH="${bin}:$PATH"\n`);
+// Путь уходит в файл, который оболочка потом исполняет, поэтому одинарные кавычки
+// с экранированием: каталог с кавычкой или бэктиком не должен превращаться в команду.
+const quoted = `'${bin.replaceAll("'", "'\\''")}'`;
+appendFileSync(envFile, `export PATH=${quoted}:"$PATH"\n`);

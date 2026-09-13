@@ -100,6 +100,11 @@
 вызова голой командой; внутри репозитория всё равно выигрывает версия из лок-файла —
 хук `SessionStart` ставит `node_modules/.bin` в начало `PATH`.
 
+`.claude/commands/opsx/*.md` — сгенерированные файлы, руками не правятся: `openspec
+update --force` перезапишет. Свой шаг воркфлоу добавляется через `openspec/config.yaml`
+(`rules`, `operations.guidance`). Обновление: `pnpm up @fission-ai/openspec`, затем
+`openspec update --force`, затем посмотреть `git diff .claude/commands/opsx`.
+
 Правила про golden: обновление golden или baseline — отдельный коммит с префиксом
 `golden:`/`baseline:` и объяснением, что в правилах сдвинуло цифры. Смешанный коммит
 «код + golden» отклоняется хуком. Красный golden значит «симуляция поехала», а не

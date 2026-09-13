@@ -94,6 +94,36 @@ export default tseslint.config(
     rules: { "simple-import-sort/imports": "off", "simple-import-sort/exports": "off" },
   },
   {
+    // Боевой код пакетов (ADR 0010). Тесты и `tools/` живут по более мягким правилам:
+    // в тестах утверждение типа — часть постановки, а в `tools/` оно стоит на границе
+    // разбора JSON, где `unknown` иначе не сузить, а валидность проверяет ajv.
+    files: ["packages/*/src/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: 'TSAsExpression:not([typeAnnotation.typeName.name="const"])',
+          message:
+            "утверждение типа: компилятор перестаёт проверять это место. Перепиши так, " +
+            "чтобы тип выводился (пример — statsFrom в performer.ts). `as const` разрешён. " +
+            "Если случай доказуемо безопасен — eslint-disable с объяснением (ADR 0010).",
+        },
+        {
+          selector: "ExportNamedDeclaration > FunctionDeclaration TSTypeLiteral",
+          message:
+            "анонимный объектный тип в экспортируемой сигнатуре: его нельзя переиспользовать " +
+            "и нельзя назвать в спеке. Заведи именованный тип рядом (ADR 0010).",
+        },
+        {
+          selector: "ExportNamedDeclaration > VariableDeclaration TSTypeLiteral",
+          message:
+            "анонимный объектный тип в экспортируемой сигнатуре: его нельзя переиспользовать " +
+            "и нельзя назвать в спеке. Заведи именованный тип рядом (ADR 0010).",
+        },
+      ],
+    },
+  },
+  {
     // Ядро: домен-нейтральность и полный детерминизм.
     files: ["packages/core/**/*.ts"],
     plugins: { et: { rules: { "no-domain-words": noDomainWords } } },

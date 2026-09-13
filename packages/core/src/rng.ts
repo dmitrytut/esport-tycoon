@@ -109,7 +109,14 @@ function makeRng(seed: number, initial: RngState): Rng {
       const out = items.slice();
       for (let i = out.length - 1; i > 0; i--) {
         const j = int(0, i);
+        // Единственное утверждение типа в ядре (ADR 0010). Оба индекса доказуемо внутри
+        // массива — `i` идёт от length-1, `j` приходит из int(0, i), — но под
+        // noUncheckedIndexedAccess компилятор этого не выводит. Проверка на undefined
+        // здесь означала бы новый путь исключения в generic-API: `shuffle<T | undefined>`
+        // начал бы падать на легальном значении.
+        // eslint-disable-next-line no-restricted-syntax
         const left = out[i] as (typeof out)[number];
+        // eslint-disable-next-line no-restricted-syntax
         const right = out[j] as (typeof out)[number];
         out[i] = right;
         out[j] = left;

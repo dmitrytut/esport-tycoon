@@ -11,8 +11,8 @@ import {
   STAT_KEYS,
   STAT_MAX,
   STAT_MIN,
-  type StatKey,
   type Stats,
+  statsFrom,
 } from "./performer.ts";
 import type { Rng } from "./rng.ts";
 
@@ -72,14 +72,11 @@ export function generatePerformer(rng: Rng, params: GenerateParams): Performer {
   const own = rng.stream(`performer:${seed}`);
 
   const center = statCenter(level, origin.talentDensity);
-  const draft = {} as Record<StatKey, number>;
-  for (const key of STAT_KEYS) {
-    // Сумма трёх бросков даёт колокол вместо равномерного шума: середняков много,
-    // крайностей мало.
-    const spread = (own.int(-2, 2) + own.int(-2, 2) + own.int(-1, 1)) / 1.6;
-    draft[key] = center + spread;
-  }
-  const stats: Stats = normalizeStats(draft);
+  // Сумма трёх бросков даёт колокол вместо равномерного шума: середняков много,
+  // крайностей мало. Порядок бросков задан порядком полей в `statsFrom`.
+  const stats: Stats = normalizeStats(
+    statsFrom(() => center + (own.int(-2, 2) + own.int(-2, 2) + own.int(-1, 1)) / 1.6),
+  );
 
   const age = own.int(minAge, maxAge);
   const peakAge = own.int(19, 24);

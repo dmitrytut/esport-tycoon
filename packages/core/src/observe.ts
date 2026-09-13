@@ -5,7 +5,7 @@
  * выводится из собственного сида исполнителя и ключа стата, поэтому она **одна и та же**
  * при каждом взгляде — иначе разведка превращается в пересчёт до нужного ответа.
  */
-import { clamp, type Performer, STAT_KEYS, STAT_MAX, STAT_MIN, type StatKey } from "./performer.ts";
+import { clamp, type Performer, STAT_MAX, STAT_MIN, type StatKey, statsFrom } from "./performer.ts";
 import { createRng } from "./rng.ts";
 
 export interface ObservedRange {
@@ -29,10 +29,9 @@ export function observe(performer: Performer, quality: number): Observation {
   const clarity = clamp(quality, 0, 1);
   const width = 4.5 - 4 * clarity;
 
-  const stats = {} as Record<StatKey, ObservedRange>;
-  for (const key of STAT_KEYS) {
-    stats[key] = rangeFor(performer.seed, key, performer.stats[key], width, STAT_MIN, STAT_MAX);
-  }
+  const stats = statsFrom((key) =>
+    rangeFor(performer.seed, key, performer.stats[key], width, STAT_MIN, STAT_MAX),
+  );
 
   return {
     stats,

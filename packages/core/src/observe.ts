@@ -5,15 +5,8 @@
  * выводится из собственного сида исполнителя и ключа стата, поэтому она **одна и та же**
  * при каждом взгляде — иначе разведка превращается в пересчёт до нужного ответа.
  */
+import { clamp, type Performer, STAT_KEYS, STAT_MAX, STAT_MIN, type StatKey } from "./performer.ts";
 import { createRng } from "./rng.ts";
-import {
-  clamp,
-  STAT_KEYS,
-  STAT_MAX,
-  STAT_MIN,
-  type Performer,
-  type StatKey,
-} from "./performer.ts";
 
 export interface ObservedRange {
   readonly low: number;

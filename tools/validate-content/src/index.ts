@@ -16,6 +16,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
 // Схемы объявлены в диалекте 2020-12 — берём соответствующую сборку ajv.
 import { Ajv2020 as Ajv, type ValidateFunction } from "ajv/dist/2020.js";
 
@@ -127,7 +128,8 @@ const has = (type: string, id: unknown): boolean =>
   typeof id === "string" && (idsByType[type]?.has(id) ?? false);
 
 const checkRef = (entity: Entity, type: string, id: unknown, where: string): void => {
-  if (!has(type, id)) fail(entity.file, `${where} ссылается на несуществующий ${type}: «${String(id)}»`);
+  if (!has(type, id))
+    fail(entity.file, `${where} ссылается на несуществующий ${type}: «${String(id)}»`);
 };
 
 const checkKeys = (

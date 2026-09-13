@@ -3,6 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { afterEach, describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
@@ -43,7 +44,12 @@ function sandbox(): string {
 const put = (root: string, path: string, value: unknown): void =>
   writeFileSync(join(root, path), JSON.stringify(value, null, 2));
 
-const trait = { id: "night-owl", name: "Night Owl", polarity: "mixed", description: "Sleeps at dawn, plays at night." };
+const trait = {
+  id: "night-owl",
+  name: "Night Owl",
+  polarity: "mixed",
+  description: "Sleeps at dawn, plays at night.",
+};
 const region = { id: "nordics", name: "Nordics", language: "sv", modifiers: { salaryScale: 1 } };
 
 let created: string[] = [];

@@ -1,8 +1,15 @@
-export { createRng, restoreRng, type Rng, type RngState } from "./rng.ts";
+export {
+  type GenerateParams,
+  generatePerformer,
+  type OriginProfile,
+  type SecondLanguage,
+  type TraitOption,
+} from "./generate.ts";
+export { type Observation, observe, type ObservedRange, type ObservedStats } from "./observe.ts";
 export {
   advanceYear,
-  applyStateChange,
   applyStatChange,
+  applyStateChange,
   clamp,
   deserializePerformer,
   ENERGY_MAX,
@@ -13,21 +20,14 @@ export {
   MORALE_MIN,
   normalizeState,
   normalizeStats,
+  type Performer,
+  type PerformerSnapshot,
+  type PerformerState,
   serializePerformer,
   STAT_KEYS,
   STAT_MAX,
   STAT_MIN,
-  type Performer,
-  type PerformerSnapshot,
-  type PerformerState,
   type StatKey,
   type Stats,
 } from "./performer.ts";
-export {
-  generatePerformer,
-  type GenerateParams,
-  type OriginProfile,
-  type SecondLanguage,
-  type TraitOption,
-} from "./generate.ts";
-export { observe, type Observation, type ObservedRange, type ObservedStats } from "./observe.ts";
+export { createRng, restoreRng, type Rng, type RngState } from "./rng.ts";

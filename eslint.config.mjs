@@ -1,6 +1,7 @@
 // Guardrails из ADR как исполняемые правила.
 // ADR 0001: в `packages/core` нет киберспортивного словаря.
 // ADR 0002: случайность и время — только через инжектированный RNG.
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 import tseslint from "typescript-eslint";
 
 /** Доменные слова, запрещённые в ядре. Источник — docs/glossary.md. */
@@ -65,15 +66,32 @@ export default tseslint.config(
   tseslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.mts"],
+    plugins: { "simple-import-sort": simpleImportSort },
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
     rules: {
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-unnecessary-condition": "error",
+      // Каст, который ничего не даёт, — это либо мусор, либо непонятый тип.
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      // `!` глушит ровно ту проверку, ради которой включён noUncheckedIndexedAccess.
+      "@typescript-eslint/no-non-null-assertion": "error",
+      // Новый вариант в объединении обязан всплыть ошибкой компиляции, а не тихо
+      // провалиться в default. noFallthroughCasesInSwitch этого не делает.
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
       eqeqeq: ["error", "always"],
       "no-console": "off",
     },
+  },
+  {
+    // Golden и baseline: каталог защищён целиком, см. .prettierignore и ADR 0010.
+    // Правила корректности остаются, стилевые выключены — иначе `--fix` трогал бы
+    // файлы, которые форматтеру и агенту трогать запрещено.
+    files: ["**/test/golden/**/*.ts", "**/sim/baseline/**/*.ts"],
+    rules: { "simple-import-sort/imports": "off", "simple-import-sort/exports": "off" },
   },
   {
     // Ядро: домен-нейтральность и полный детерминизм.
@@ -90,19 +108,46 @@ export default tseslint.config(
       "no-restricted-properties": [
         "error",
         { object: "Math", property: "random", message: "используй инжектированный Rng (ADR 0002)" },
-        { object: "Math", property: "sin", message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)" },
-        { object: "Math", property: "cos", message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)" },
-        { object: "Math", property: "tan", message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)" },
-        { object: "Math", property: "exp", message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)" },
-        { object: "Math", property: "log", message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)" },
-        { object: "Math", property: "pow", message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)" },
+        {
+          object: "Math",
+          property: "sin",
+          message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)",
+        },
+        {
+          object: "Math",
+          property: "cos",
+          message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)",
+        },
+        {
+          object: "Math",
+          property: "tan",
+          message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)",
+        },
+        {
+          object: "Math",
+          property: "exp",
+          message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)",
+        },
+        {
+          object: "Math",
+          property: "log",
+          message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)",
+        },
+        {
+          object: "Math",
+          property: "pow",
+          message: "платформо-зависимая точность, ломает бит-в-бит (ADR 0002)",
+        },
       ],
       "no-restricted-imports": [
         "error",
         {
           patterns: [
             { group: ["@et/*", "!@et/core"], message: "ядро ни от чего не зависит (ADR 0001)" },
-            { group: ["node:*", "fs", "path", "pixi.js"], message: "ядро без ввода-вывода и без рендера (ADR 0008)" },
+            {
+              group: ["node:*", "fs", "path", "pixi.js"],
+              message: "ядро без ввода-вывода и без рендера (ADR 0008)",
+            },
           ],
         },
       ],

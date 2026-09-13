@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { createRng, restoreRng } from "../src/rng.ts";
 
 const draw = (seed: number | string, count: number): number[] => {

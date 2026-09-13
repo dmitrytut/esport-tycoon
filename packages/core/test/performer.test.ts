@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { createRng } from "../src/rng.ts";
+
+import { type GenerateParams, generatePerformer, type OriginProfile } from "../src/generate.ts";
 import {
   advanceYear,
-  applyStateChange,
   applyStatChange,
+  applyStateChange,
   deserializePerformer,
   serializePerformer,
   STAT_KEYS,
   STAT_MAX,
   STAT_MIN,
 } from "../src/performer.ts";
-import { generatePerformer, type GenerateParams, type OriginProfile } from "../src/generate.ts";
+import { createRng } from "../src/rng.ts";
 
 const origin: OriginProfile = {
   id: "cis",

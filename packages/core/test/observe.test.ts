@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createRng } from "../src/rng.ts";
+
+import { type GenerateParams, generatePerformer } from "../src/generate.ts";
 import { observe } from "../src/observe.ts";
-import { generatePerformer, type GenerateParams } from "../src/generate.ts";
 import { STAT_KEYS } from "../src/performer.ts";
+import { createRng } from "../src/rng.ts";
 
 const params: GenerateParams = {
   origin: {

@@ -5,16 +5,16 @@
  * Ядро не читает файлы: профиль происхождения приходит готовым из доменного слоя,
  * который знает про `content/regions/*` (`adr/0001`, `adr/0003`).
  */
-import type { Rng } from "./rng.ts";
 import {
   normalizeStats,
+  type Performer,
   STAT_KEYS,
   STAT_MAX,
   STAT_MIN,
-  type Performer,
   type StatKey,
   type Stats,
 } from "./performer.ts";
+import type { Rng } from "./rng.ts";
 
 /** Второй язык и вероятность им владеть (`specs/0006`). */
 export interface SecondLanguage {

@@ -81,10 +81,7 @@ export function normalizeState(state: PerformerState): PerformerState {
  * Единственный способ изменить состояние (`specs/0001`, п.4): никакой «естественной»
  * регенерации вне явного вызова.
  */
-export function applyStateChange(
-  performer: Performer,
-  delta: Partial<PerformerState>,
-): Performer {
+export function applyStateChange(performer: Performer, delta: Partial<PerformerState>): Performer {
   return {
     ...performer,
     state: normalizeState({
@@ -121,9 +118,7 @@ export function advanceYear(performer: Performer): Performer {
 
   const yearsPastPeak = age - peakAge;
   const mechanicalDelta =
-    yearsPastPeak < 0
-      ? 0.9 * learnScale * headroom("mechanical")
-      : -0.45 - 0.18 * yearsPastPeak;
+    yearsPastPeak < 0 ? 0.9 * learnScale * headroom("mechanical") : -0.45 - 0.18 * yearsPastPeak;
 
   const cognitiveDelta = Math.max(0.1, 0.45 * learnScale * headroom("cognitive"));
 

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 // Ядро обязано оставаться чистой логикой (ADR 0001, ADR 0008). Линтер проверяет код,

@@ -1,26 +1,27 @@
-# ADR 0006: без живого онлайн-PvP
+# ADR 0006: no live online PvP
 
-**Статус:** принят
+**Status:** accepted
 
-## Контекст
+## Context
 
-Очевидное расширение менеджера — дать двум пользователям сыграть друг против друга.
+An obvious extension of a manager game is to let two users play against each other.
 
-## Решение
+## Decision
 
-Живой синхронный PvP не делаем. Причины:
-- матч длится 90 секунд и содержит 3–5 решений в окнах по 5 секунд; синхронизировать это
-  между двумя людьми, оба из которых должны быть онлайн и успевать решать, технически
-  дорого, а играется хуже сингла;
-- в PvP любой дисбаланс становится критичным, а у нас он заложен дизайном: звёзды редкие
-  и дорогие;
-- серверы, античит, матчмейкинг — отдельный проект и отдельная поддержка.
+We do not build live synchronous PvP. Reasons:
+- a match lasts 90 seconds and contains 3–5 decisions in 5-second windows;
+  synchronizing this between two people, both of whom must be online and quick enough
+  to decide, is technically expensive and plays worse than singleplayer;
+- in PvP any imbalance becomes critical, and we have one built into the design by
+  intent: stars are rare and expensive;
+- servers, anticheat, matchmaking — a separate project and separate maintenance.
 
-Вместо этого — **асинхронные сезонные лиги**: раз в неделю сервер собирает 16 составов
-реальных пользователей, симулирует турнир, присылает результат. Нулевая нагрузка на
-пользователя, соревнование есть, офлайн работает.
+Instead — **asynchronous seasonal leagues**: once a week the server collects 16
+rosters of real users, simulates a tournament, and sends back the result. Zero load on
+the user, competition exists, offline works.
 
-## Требование к архитектуре с самого начала
+## Architecture requirement from the start
 
-Коллектив должен уметь сериализоваться и симулироваться на сервере без графики. Это
-бесплатно следует из `adr/0002` и `specs/0002`. Сама фича — после релиза.
+The collective must be able to serialize and simulate on the server without graphics.
+This follows for free from `adr/0002` and `specs/0002`. The feature itself — after
+release.

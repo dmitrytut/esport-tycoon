@@ -1,30 +1,30 @@
 #!/usr/bin/env node
 /**
- * Валидатор контента (ADR 0003): схемы плюс ссылочная целостность.
+ * Content validator (ADR 0003): schemas plus referential integrity.
  *
- * Проверяет:
- *  - каждый файл против JSON Schema своего типа;
- *  - имя файла совпадает с `id`;
- *  - ссылки ведут в существующие сущности: событие → черта и регион,
- *    черта → статы ядра и категории событий, дисциплина → регион,
- *    регион → пул имён.
+ * Checks:
+ *  - each file against the JSON Schema of its type;
+ *  - the file name matches `id`;
+ *  - references point to existing entities: event → trait and region,
+ *    trait → core stats and event categories, discipline → region,
+ *    region → name pool.
  *
- * Запуск: `pnpm validate:content`, или `node tools/validate-content/src/index.ts <каталог>`
- * для проверки другого набора данных (этим пользуются тесты).
- * Код возврата 1 при любой ошибке: невалидный контент не мержится.
+ * Run: `pnpm validate:content`, or `node tools/validate-content/src/index.ts <dir>`
+ * to validate a different data set (used by the tests).
+ * Exit code 1 on any error: invalid content does not merge.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Схемы объявлены в диалекте 2020-12 — берём соответствующую сборку ajv.
+// Schemas are declared in the 2020-12 dialect — pick the matching ajv build.
 import { Ajv2020 as Ajv, type ValidateFunction } from "ajv/dist/2020.js";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const contentRoot = process.argv[2] ? resolve(process.argv[2]) : join(repoRoot, "content");
 const schemaRoot = join(contentRoot, "schema");
 
-/** Статы исполнителя из specs/0001. Ключи домен-нейтральные (ADR 0001). */
+/** Performer stats from specs/0001. Keys are domain-neutral (ADR 0001). */
 const CORE_STATS = [
   "mechanical",
   "cognitive",
@@ -34,7 +34,7 @@ const CORE_STATS = [
   "presence",
 ] as const;
 
-/** Каталог контента → файл схемы. Новый тип добавляется здесь и в content/README.md. */
+/** Content directory → schema file. A new type is added here and in content/README.md. */
 const TYPES: Record<string, string> = {
   disciplines: "discipline.schema.json",
   traits: "trait.schema.json",
@@ -65,20 +65,20 @@ const listJson = (dir: string): string[] => {
   }
 };
 
-// ---------- схемы ----------
+// ---------- schemas ----------
 const ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
 const validators = new Map<string, ValidateFunction>();
 for (const [type, schemaFile] of Object.entries(TYPES)) {
   validators.set(type, ajv.compile(readJson(join(schemaRoot, schemaFile)) as object));
 }
 
-/** Категории событий берём из схемы, чтобы список жил в одном месте. */
+/** Event categories are pulled from the schema so the list lives in one place. */
 const eventSchema = readJson(join(schemaRoot, "event.schema.json")) as {
   properties: { category: { enum: string[] } };
 };
 const eventCategories = eventSchema.properties.category.enum;
 
-// ---------- загрузка ----------
+// ---------- loading ----------
 const entities: Entity[] = [];
 const idsByType: Record<string, Set<string>> = {};
 
@@ -94,11 +94,11 @@ for (const type of Object.keys(TYPES)) {
     try {
       data = readJson(join(dir, fileName));
     } catch (cause) {
-      fail(relative, `не разбирается как JSON — ${(cause as Error).message}`);
+      fail(relative, `does not parse as JSON — ${(cause as Error).message}`);
       continue;
     }
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      fail(relative, "ожидался объект сущности");
+      fail(relative, "expected an entity object");
       continue;
     }
 
@@ -106,16 +106,19 @@ for (const type of Object.keys(TYPES)) {
     const validate = validators.get(type);
     if (validate && !validate(record)) {
       for (const issue of validate.errors ?? []) {
-        fail(relative, `схема: ${issue.instancePath || "/"} ${issue.message ?? "не проходит"}`);
+        fail(
+          relative,
+          `schema: ${issue.instancePath || "/"} ${issue.message ?? "fails validation"}`,
+        );
       }
     }
 
     const id = record["id"];
     if (typeof id === "string") {
       if (id !== basename(fileName, ".json")) {
-        fail(relative, `id «${id}» не совпадает с именем файла`);
+        fail(relative, `id "${id}" does not match the file name`);
       }
-      if (knownIds.has(id)) fail(relative, `id «${id}» дублируется`);
+      if (knownIds.has(id)) fail(relative, `id "${id}" is duplicated`);
       knownIds.add(id);
     }
 
@@ -123,13 +126,13 @@ for (const type of Object.keys(TYPES)) {
   }
 }
 
-// ---------- ссылочная целостность ----------
+// ---------- referential integrity ----------
 const has = (type: string, id: unknown): boolean =>
   typeof id === "string" && (idsByType[type]?.has(id) ?? false);
 
 const checkRef = (entity: Entity, type: string, id: unknown, where: string): void => {
   if (!has(type, id))
-    fail(entity.file, `${where} ссылается на несуществующий ${type}: «${String(id)}»`);
+    fail(entity.file, `${where} refers to a nonexistent ${type}: "${String(id)}"`);
 };
 
 const checkKeys = (
@@ -141,7 +144,7 @@ const checkKeys = (
   if (typeof value !== "object" || value === null) return;
   for (const key of Object.keys(value)) {
     if (!allowed.includes(key)) {
-      fail(entity.file, `${where}: ключ «${key}» не из списка [${allowed.join(", ")}]`);
+      fail(entity.file, `${where}: key "${key}" is not in the list [${allowed.join(", ")}]`);
     }
   }
 };
@@ -193,16 +196,16 @@ for (const entity of entities) {
   }
 }
 
-// ---------- отчёт ----------
+// ---------- report ----------
 const counts = Object.entries(TYPES)
   .map(([type]) => `${type}: ${idsByType[type]?.size ?? 0}`)
   .join(" · ");
 
 if (errors.length > 0) {
-  console.error(`Контент не прошёл проверку. ${counts}\n`);
+  console.error(`Content failed validation. ${counts}\n`);
   for (const error of errors) console.error(`  ✗ ${error}`);
-  console.error(`\nОшибок: ${errors.length}. Правила — docs/adr/0003.`);
+  console.error(`\nErrors: ${errors.length}. Rules — docs/adr/0003.`);
   process.exit(1);
 }
 
-console.log(`Контент валиден. ${counts}`);
+console.log(`Content is valid. ${counts}`);

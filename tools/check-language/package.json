@@ -1,0 +1,10 @@
+{
+  "name": "@et/check-language",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Project language gate: English everywhere except the intent layer (ADR 0011)",
+  "bin": {
+    "check-language": "./src/index.ts"
+  }
+}

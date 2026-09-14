@@ -15,8 +15,8 @@ interface RunResult {
 }
 
 /**
- * Валидатор запускается процессом: проверяется то же, что видят CI и git-хук,
- * вместе с кодом возврата.
+ * The validator is run as a process: this checks the same thing CI and the git hook
+ * see, together with the exit code.
  */
 function run(contentRoot: string): RunResult {
   try {
@@ -31,7 +31,7 @@ function run(contentRoot: string): RunResult {
   }
 }
 
-/** Пустой набор контента с настоящими схемами проекта. */
+/** An empty content set with the project's real schemas. */
 function sandbox(): string {
   const root = mkdtempSync(join(tmpdir(), "et-content-"));
   cpSync(join(repoRoot, "content/schema"), join(root, "schema"), { recursive: true });
@@ -64,36 +64,36 @@ const fresh = (): string => {
   return root;
 };
 
-describe("валидатор контента (ADR 0003)", () => {
-  it("принимает согласованный набор", () => {
+describe("content validator (ADR 0003)", () => {
+  it("accepts a consistent set", () => {
     const root = fresh();
     put(root, "traits/night-owl.json", trait);
     put(root, "regions/nordics.json", region);
 
     const result = run(root);
-    expect(result.output).toContain("Контент валиден");
+    expect(result.output).toContain("Content is valid");
     expect(result.code).toBe(0);
   });
 
-  it("ловит нарушение схемы", () => {
+  it("catches a schema violation", () => {
     const root = fresh();
     put(root, "traits/night-owl.json", { ...trait, polarity: "chaotic" });
 
     const result = run(root);
     expect(result.code).toBe(1);
-    expect(result.output).toContain("схема");
+    expect(result.output).toContain("schema");
   });
 
-  it("ловит расхождение id и имени файла", () => {
+  it("catches an id/file-name mismatch", () => {
     const root = fresh();
     put(root, "traits/owl.json", trait);
 
     const result = run(root);
     expect(result.code).toBe(1);
-    expect(result.output).toContain("не совпадает с именем файла");
+    expect(result.output).toContain("does not match the file name");
   });
 
-  it("ловит висячую ссылку события на несуществующую черту", () => {
+  it("catches a dangling event reference to a nonexistent trait", () => {
     const root = fresh();
     put(root, "events/late-night.json", {
       id: "late-night",
@@ -109,10 +109,10 @@ describe("валидатор контента (ADR 0003)", () => {
 
     const result = run(root);
     expect(result.code).toBe(1);
-    expect(result.output).toContain("несуществующий traits");
+    expect(result.output).toContain("nonexistent traits");
   });
 
-  it("ловит несуществующий стат в последствиях выбора", () => {
+  it("catches a nonexistent stat in choice effects", () => {
     const root = fresh();
     put(root, "events/aim-lab.json", {
       id: "aim-lab",
@@ -127,25 +127,25 @@ describe("валидатор контента (ADR 0003)", () => {
 
     const result = run(root);
     expect(result.code).toBe(1);
-    expect(result.output).toContain("не из списка");
+    expect(result.output).toContain("is not in the list");
   });
 
-  it("ловит ссылку региона на отсутствующий пул имён", () => {
+  it("catches a region reference to a missing name pool", () => {
     const root = fresh();
     put(root, "regions/nordics.json", { ...region, namePools: ["sv-given"] });
 
     const result = run(root);
     expect(result.code).toBe(1);
-    expect(result.output).toContain("несуществующий names");
+    expect(result.output).toContain("nonexistent names");
   });
 
-  it("ловит дубликат id внутри типа", () => {
+  it("catches a duplicate id within a type", () => {
     const root = fresh();
     put(root, "traits/night-owl.json", trait);
     put(root, "traits/night-owl-copy.json", { ...trait, id: "night-owl" });
 
     const result = run(root);
     expect(result.code).toBe(1);
-    expect(result.output).toMatch(/дубл|не совпадает/);
+    expect(result.output).toMatch(/duplicated|does not match the file name/);
   });
 });

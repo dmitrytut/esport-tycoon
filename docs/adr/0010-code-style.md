@@ -1,113 +1,137 @@
-# ADR 0010: стиль и типовая дисциплина
+# ADR 0010: style and type discipline
 
-**Статус:** принят
-**Дата:** 2026-09-14
-**Связан с:** `adr/0001` (домен-нейтральное ядро), `adr/0002` (детерминизм), `adr/0007` (язык)
+**Status:** accepted
+**Date:** 2026-09-14
+**Related:** `adr/0001` (domain-neutral core), `adr/0002` (determinism), `adr/0007` (language)
+**Amended:** `adr/0011` — rule 6 below now reads "code, names, comments and docs are
+English"; markdown is still unformatted, but because tables are hand-tuned, not because
+the prose is Russian.
 
-## Контекст
+## Context
 
-Код пишут несколько агентских сессий параллельно. Форматирование до сих пор определялось
-тем, что модель сгенерировала в этот раз: ни `prettier`, ни `.editorconfig`, ни
-стилистических правил в линтере не было. Две сессии, правящие соседние строки с разными
-переносами, дают конфликт там, где семантического конфликта нет, а дифф перестаёт
-читаться — притом что ревью PR-2 сводится к вопросу «делает ли дифф ровно эти
-требования».
+Code is written by several agent sessions in parallel. Formatting so far was determined
+by whatever the model happened to generate that time: there was no `prettier`, no
+`.editorconfig`, and no style rules in the linter. Two sessions editing adjacent lines
+with different line breaks produce a conflict where there is no semantic conflict, and
+the diff stops being readable — while PR-2 review comes down to the question "does the
+diff do exactly these requirements."
 
-Внешние гайды по стилю TypeScript рассматривались и отклонены: их содержание либо уже
-обеспечено `tsconfig` (он строже большинства из них), либо выражается правилами линтера,
-либо прямо вредно ядру — например, «async-first for IO» вносит недетерминизм планировщика
-туда, где симуляция обязана быть синхронной.
+External TypeScript style guides were considered and rejected: their content is either
+already enforced by `tsconfig` (which is stricter than most of them), or is expressed as
+linter rules, or is actively harmful to the core — for example, "async-first for IO"
+introduces scheduler non-determinism where the simulation must be synchronous.
 
-## Решение
+## Decision
 
-Стиль задаётся машиной. Прозой остаётся только то, что машиной не проверяется.
+Style is enforced by the machine. What remains prose is only what the machine can't
+check.
 
-### Проверяется машиной
+### Checked by machine
 
-| Что | Чем |
+| What | By what |
 |---|---|
-| Форматирование | `prettier`, ширина 100, `pnpm format:check` в `pnpm verify` |
-| Порядок импортов | `simple-import-sort` |
-| Полнота `switch` по объединению | `switch-exhaustiveness-check` — `noFallthroughCasesInSwitch` этого не делает |
-| Бессмысленные касты | `no-unnecessary-type-assertion` |
-| Утверждения типа в боевом коде пакетов | `no-restricted-syntax`, `as const` разрешён |
-| Анонимные объектные типы в экспортируемых сигнатурах | `no-restricted-syntax` |
-| Подавление проверок через `!` | `no-non-null-assertion` |
-| Домен-нейтральность ядра | `et/no-domain-words` (`adr/0001`) |
-| Детерминизм ядра | `no-restricted-globals`, `no-restricted-properties` (`adr/0002`) |
-| Отступы и переводы строк вне кода | `.editorconfig` |
+| Formatting | `prettier`, width 100, `pnpm format:check` inside `pnpm verify` |
+| Import order | `simple-import-sort` |
+| Exhaustiveness of `switch` over a union | `switch-exhaustiveness-check` — `noFallthroughCasesInSwitch` doesn't do this |
+| Pointless casts | `no-unnecessary-type-assertion` |
+| Type assertions in packages' production code | `consistent-type-assertions` with `assertionStyle: "never"` — catches both `x as T` and `<T>x`; `as const` and `satisfies` stay allowed by the rule itself |
+| `@ts-expect-error` in packages' production code | `ban-ts-comment` — it silences strictly more than any assertion |
+| Anonymous object types on the module surface | `et/no-anonymous-shape` |
+| Suppressing checks via `!` | `no-non-null-assertion` |
+| Core domain-neutrality | `et/no-domain-words` (`adr/0001`) |
+| Core determinism | `no-restricted-globals`, `no-restricted-properties` (`adr/0002`) |
+| Stale `eslint-disable` directives | `eslint . --max-warnings 0` — the default severity is a warning, which exits zero |
 
-Markdown не форматируется: доки — русская проза с ручной вёрсткой, а
-`.claude/commands/opsx/*.md` генерируются и переписывались бы форматтером на каждом
-обновлении пакета.
+Every ban above owns a rule id on purpose. `no-restricted-syntax` carries one array per
+config object and flat config replaces rule options rather than merging them, so a later
+block adding its own selector would erase the whole set silently, with a green gate. The
+same applies in reverse to `eslint-disable`: a directive naming a shared id would mute
+every ban on that line, including ones added later.
 
-`test/golden/**` и `sim/baseline/**` не форматируются и стилевыми правилами не
-проверяются. Там не только снимки-артефакты: рядом лежит сам тест, и `it.skip` в нём
-глушит проверку не хуже правки цифр. Каталог защищён целиком — хуком `PreToolUse` от
-агента, игнором от форматтера; любое изменение в нём едет отдельным коммитом
-с префиксом `golden:`/`baseline:` (`tests/README.md`).
+`.editorconfig` is present but is an editor hint, not a gate — nothing in `pnpm verify`
+reads it. Line endings and the final newline of code files are covered by `prettier`;
+for everything else the file is advice.
 
-### Остаётся соглашением
+Markdown is not formatted: docs are Russian prose with hand-tuned layout, and
+`.claude/commands/opsx/*.md` are generated and would be rewritten by the formatter on
+every package update.
 
-1. **Идентификаторы — брендированные типы, а не голые примитивы.** `Seed`, `PerformerId`,
-   `ContestId` объявляются как `number & { readonly __brand: "Seed" }`. Без этого
-   компилятор не мешает передать сид туда, где ждут идентификатор. Правилом линтера это
-   не выражается: тип выбирается при объявлении.
+`test/golden/**` and `sim/baseline/**` are not formatted and are not checked by style
+rules. What's there isn't only snapshot artifacts: the test itself lives right next to
+them, and an `it.skip` in it defeats the check no less than editing the numbers would.
+The whole directory is protected — by a `PreToolUse` hook against the agent, by an ignore
+entry against the formatter, and by every autofixable rule being switched off for those
+paths; any change there ships as its own pull request with a single commit prefixed
+`golden:`/`baseline:` (`tests/README.md`).
 
-2. **Состояние — сумма типов, а не мешок необязательных полей.**
-   `{ kind: "resting" } | { kind: "playing"; since: Week }` вместо
-   `{ resting?: boolean; playingSince?: number }`. Форма, в которой нелегальное состояние
-   не собирается, дешевле любой проверки. `switch-exhaustiveness-check` защищает её
-   только после того, как объединение объявлено.
+### Remains a convention
 
-3. **Где живут типы.** Тип объявляется в модуле, которому принадлежит, рядом с кодом,
-   который держит его инварианты: `Performer` и `normalizeStats` — одно решение, их
-   нельзя менять порознь. Тип переезжает в `types.ts` пакета, когда его используют три
-   и более модуля и он не принадлежит ни одному. Правило «третьего потребителя» — то же,
-   по которому в `adr/0009` заводятся пакеты.
+1. **Identifiers are branded types, not bare primitives.** `Seed`, `PerformerId`,
+   `ContestId` are declared as `number & { readonly __brand: "Seed" }`. Without this the
+   compiler doesn't stop you from passing a seed where an identifier is expected. This
+   can't be expressed as a linter rule: the type is chosen at declaration time.
 
-4. **Где живут константы.** Рядом с кодом, который их соблюдает: `STAT_MAX` стоит
-   вплотную к `normalizeStats`, которая эту границу применяет. В общий `consts.ts`
-   выносится только константа без владельца. Разнести число и гарантию по разным файлам
-   значит превратить смену шкалы в правку двух мест, где одно можно забыть, — именно так
-   в `specs/0001` появилось «1–100» в одном разделе и «1–20» в другом.
+2. **State is a tagged union, not a bag of optional fields.**
+   `{ kind: "resting" } | { kind: "playing"; since: Week }` instead of
+   `{ resting?: boolean; playingSince?: number }`. A shape in which an illegal state
+   can't even be constructed is cheaper than any check. `switch-exhaustiveness-check`
+   only protects it once the union has been declared.
 
-5. **Аргументы объектом**, кроме горячего цикла симуляции, где важна аллокация.
+3. **Where types live.** A type is declared in the module it belongs to, next to the
+   code that maintains its invariants: `Performer` and `normalizeStats` are one decision
+   and can't be changed separately. A type moves to the package's `types.ts` once three
+   or more modules use it and it doesn't belong to any single one of them. This "third
+   consumer" rule is the same one by which `adr/0009` splits things into packages.
 
-6. **Код и имена английские, комментарии и доки русские** (`adr/0007`). Комментарий
-   объясняет причину, а не пересказывает строку.
+4. **Where constants live.** Next to the code that honors them: `STAT_MAX` sits right
+   next to `normalizeStats`, which enforces that bound. Only an ownerless constant goes
+   into the shared `consts.ts`. Splitting a number from its guarantee across different
+   files turns a scale change into an edit of two places, one of which can be forgotten.
+   The retired `specs/` directory carries a live example of that failure, with two
+   different stat scales stated in one document.
 
-## Отвергнутые варианты
+5. **Arguments as an object**, except in the simulation's hot loop, where allocation
+   matters.
 
-- **Запрет `as` везде, включая `tools/`.** На границе разбора JSON `unknown` иначе не
-  сузить, а валидность там уже проверяет ajv: ошибка типа приводит к понятному падению
-  инструмента, а не к испорченной симуляции. Правило бьёт туда, где цена ошибки выше.
-- **`satisfies` вместо `as`.** Проверено компилятором на трёх реальных местах нашего кода:
-  `{} satisfies Record<StatKey, number>`, `parsed satisfies Record<string, unknown>` и
-  `out[0] satisfies number` — все три `TS1360`. Это разные операторы: `satisfies`
-  проверяет готовое значение, не расширяя тип, и не умеет то, ради чего стоял `as`.
-  Правильная замена — переписать место так, чтобы тип выводился; так появился `statsFrom`.
-- **Раскладка `name.type.ts` / `name.interface.ts` / `consts.ts`.** Разрывает то, что
-  меняется вместе: тип и функцию, держащую его инвариант; константу и проверку, которая
-  её применяет. Суффикс `.interface.ts` вдобавок навязывает файлу выбор, который делается
-  на объявлении: `PerformerState` — интерфейс, `StatKey` выводится из `STAT_KEYS as const`,
-  а лежать они обязаны рядом. На ядре из пяти файлов конвенция добавила бы 5–8 файлов
-  и ни бита информации. Окупается на сотнях модулей с внешним потреблением типов.
-- **Запрет анонимных типов везде.** Запретил бы и `Partial<Stats>`, и объединения из
-  пункта 2 — то есть ровно то, что этот же ADR велит писать. Правило бьёт только по
-  экспортируемым сигнатурам, где анонимный тип нельзя ни переиспользовать, ни назвать
-  в спеке.
-- **Форматирование markdown.** `prettier` дополняет таблицы до полной ширины; изменение
-  одной ячейки перерисовывает таблицу целиком.
-- **Внешний скилл со стилем TypeScript** (`cursor/plugins`, `lobehub`). Стал бы вторым
-  источником правды рядом с этим ADR и правилами линтера, причём обновляемым извне.
-- **Отдельный `docs/code-style.md`.** Пятый вид документа рядом с четырьмя слоями
-  `adr/0009` размывает их роли. Стиль — это решение с причинами, то есть ADR.
+6. **Code, names and comments are English** (`adr/0011`). A comment explains the reason,
+   not a restatement of the line.
 
-## Следствия
+## Rejected options
 
-- `pnpm verify` удлиняется на `format:check`; на текущем репозитории это доли секунды.
-- Правка стиля — это правка конфигурации, а не договорённость. Спорить о переносах
-  больше не о чем.
-- Пункты 1 и 2 применяются с первой же механики, которая заводит идентификаторы
-  и состояния, — иначе их придётся переписывать позже.
+- **Ban `as` everywhere, including in `tools/`.** At the JSON-parsing boundary,
+  `unknown` can't be narrowed any other way, and validity there is already checked by
+  ajv: a type error there leads to a clear tool crash, not a corrupted simulation. The
+  rule should hit where the cost of a mistake is higher.
+- **`satisfies` instead of `as`.** Checked against the compiler on three real spots in
+  our code: `{} satisfies Record<StatKey, number>`, `parsed satisfies Record<string,
+  unknown>`, and `out[0] satisfies number` — all three give `TS1360`. These are different
+  operators: `satisfies` checks a value that's already complete, without widening the
+  type, and can't do what `as` was there for. The right fix is to rewrite the spot so the
+  type is inferred; that's how `statsFrom` came about.
+- **Layout of `name.type.ts` / `name.interface.ts` / `consts.ts`.** Splits apart things
+  that change together: a type and the function that maintains its invariant; a constant
+  and the check that enforces it. The `.interface.ts` suffix also forces a choice onto
+  the file that should be made at declaration time: `PerformerState` is an interface,
+  `StatKey` is inferred from `STAT_KEYS as const`, and they have to live next to each
+  other. On a five-file core, the convention would add 5–8 files and not one bit of
+  information. It pays off on hundreds of modules with external type consumption.
+- **Ban anonymous types everywhere.** Would also ban `Partial<Stats>` and the unions from
+  point 2 — that is, exactly what this same ADR tells you to write. The rule should hit
+  only exported signatures, where an anonymous type can neither be reused nor named in a
+  spec.
+- **Format markdown.** `prettier` pads tables out to full width; editing one cell
+  redraws the whole table.
+- **An external TypeScript style skill** (`cursor/plugins`, `lobehub`). Would become a
+  second source of truth alongside this ADR and the linter rules, and one updated from
+  outside at that.
+- **A separate `docs/code-style.md`.** A fifth kind of document alongside the four
+  layers of `adr/0009` blurs their roles. Style is a decision with reasons, i.e. an ADR.
+
+## Consequences
+
+- `pnpm verify` gets longer by `format:check`; on the current repo that's a fraction of a
+  second.
+- A style change is a change to configuration, not an agreement. There's nothing left to
+  argue about regarding line breaks.
+- Points 1 and 2 apply starting with the very first mechanic that introduces identifiers
+  and states — otherwise they'll have to be rewritten later.

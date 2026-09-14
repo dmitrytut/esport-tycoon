@@ -1,25 +1,27 @@
-# ADR 0004: заложить второй предметный домен
+# ADR 0004: lay the groundwork for a second domain
 
-**Статус:** принят (реализация отложена)
+**Status:** accepted (implementation deferred)
 
-## Контекст
+## Context
 
-Есть намерение позже собрать на том же ядре tycoon музыкальной группы или продюсерского
-центра. Структура сущностей совпадает почти полностью: исполнители со статами и
-характером, коллектив, календарь, энергия и мораль, события, экономика, регионы, рост
-от гаража до корпорации.
+There is an intent to later build, on the same core, a music band or production label
+tycoon. The entity structure matches almost entirely: performers with stats and
+character, a collective, a calendar, energy and morale, events, economics, regions,
+growth from garage to corporation.
 
-## Решение
+## Decision
 
-Ядро проектируется предметно-нейтральным (`adr/0001`), доменная привязка живёт в
-`src/domain/` и `content/`. Вторая игра — это новый набор конфигов и текстов, а не форк.
+The core is designed domain-neutral (`adr/0001`), the domain binding lives in
+`src/domain/` and `content/`. The second game is a new set of configs and texts, not a
+fork.
 
-Расписывать вторую игру сейчас не нужно. Требование одно: **не закладывать в ядро
-ничего, что мешает.** Детальная раскладка «что в ядре, что в конфиге» — раздел 13
-концепции, скопирован в `adr/0001`.
+There is no need to design the second game now. There is one requirement: **do not
+bake anything into the core that would get in the way.** The detailed breakdown of
+"what is in the core, what is in config" — section 13 of the concept, copied into
+`adr/0001`.
 
-## Осознанный риск
+## Deliberate risk
 
-Полная абстракция замедляет старт первой игры. Практический компромисс: не выносить
-абстракции заранее «на будущее», но и не хардкодить в логику названия статов, типы
-событий и предметную лексику. Этого достаточно.
+Full abstraction slows down the start of the first game. Practical compromise: do not
+carve out abstractions in advance "for the future," but also do not hardcode stat
+names, event types, and domain vocabulary into the logic. This is enough.

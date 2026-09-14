@@ -17,13 +17,13 @@ const params: GenerateParams = {
   level: 3,
 };
 
-describe("туман информации (specs/0001, п.2)", () => {
-  it("оценка не меняется между вызовами", () => {
+describe("information fog (specs/0001, item 2)", () => {
+  it("the estimate does not change between calls", () => {
     const performer = generatePerformer(createRng(42), params);
     expect(observe(performer, 0.4)).toEqual(observe(performer, 0.4));
   });
 
-  it("истина всегда внутри показанного диапазона", () => {
+  it("the truth is always inside the shown range", () => {
     const rng = createRng(5);
     for (let i = 0; i < 200; i++) {
       const performer = generatePerformer(rng, params);
@@ -39,7 +39,7 @@ describe("туман информации (specs/0001, п.2)", () => {
     }
   });
 
-  it("лучший скаут сужает диапазон, но не обнуляет его", () => {
+  it("the best scout narrows the range, but never zeroes it out", () => {
     const rng = createRng(7);
     let wideTotal = 0;
     let sharpTotal = 0;
@@ -57,7 +57,7 @@ describe("туман информации (specs/0001, п.2)", () => {
     expect(sharpTotal).toBeLessThan(wideTotal / 2);
   });
 
-  it("потолок виден хуже текущих статов", () => {
+  it("the ceiling is seen worse than current stats", () => {
     const rng = createRng(11);
     let statWidth = 0;
     let potentialWidth = 0;
@@ -70,7 +70,7 @@ describe("туман информации (specs/0001, п.2)", () => {
     expect(potentialWidth).toBeGreaterThan(statWidth);
   });
 
-  it("качество вне 0…1 не ломает диапазон", () => {
+  it("quality outside 0…1 does not break the range", () => {
     const performer = generatePerformer(createRng(13), params);
     expect(observe(performer, -5)).toEqual(observe(performer, 0));
     expect(observe(performer, 99)).toEqual(observe(performer, 1));

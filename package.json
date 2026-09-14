@@ -10,11 +10,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "validate:content": "node tools/validate-content/src/index.ts",
     "validate:spec": "openspec validate --all",
-    "verify": "pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec",
+    "check:language": "node tools/check-language/src/index.ts",
+    "verify": "pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec && pnpm run check:language",
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
@@ -22,7 +23,7 @@
     "@types/node": "^24.13.4",
     "eslint": "^10.10.0",
     "eslint-plugin-simple-import-sort": "^14.0.0",
-    "prettier": "^3.9.6",
+    "prettier": "~3.9.6",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.0",
     "vitest": "^5.0.0"

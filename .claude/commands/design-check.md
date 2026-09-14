@@ -1,12 +1,12 @@
 ---
-description: Найти расхождения между дизайн-документами, спеками и кодом
+description: Find discrepancies between design documents, specs, and code
 ---
 
-Задача: проверить согласованность по теме $ARGUMENTS.
+Task: check consistency on the topic $ARGUMENTS.
 
-Порядок:
-1. Прочитай относящиеся дизайн-документы и спеки (через `docs/INDEX.md`).
-2. Прочитай соответствующий код, если он есть.
-3. Выпиши расхождения тремя списками: код расходится с спекой / спека расходится с дизайном /
-   дизайн внутренне противоречив.
-4. Ничего не исправляй. Только доложи. Решение о том, что первично, принимает человек.
+Order:
+1. Read the relevant design documents and specs (via `docs/INDEX.md`).
+2. Read the corresponding code, if it exists.
+3. List discrepancies in three lists: code diverges from spec / spec diverges from design /
+   design is internally contradictory.
+4. Fix nothing. Only report. The decision on what takes precedence is made by a human.

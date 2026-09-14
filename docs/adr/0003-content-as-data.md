@@ -1,27 +1,28 @@
-# ADR 0003: контент — это данные
+# ADR 0003: content is data
 
-**Статус:** принят
+**Status:** accepted
 
-## Контекст
+## Context
 
-Основной объём проекта — не код, а контент: события, черты, дисциплины, регионы, имена,
-названия спонсоров. Этот контент удобно генерировать агентами, но только если результат
-проверяем машинно.
+The bulk of the project is not code but content: events, traits, disciplines, regions,
+names, sponsor names. This content is convenient to generate with agents, but only if
+the result is machine-verifiable.
 
-## Решение
+## Decision
 
-1. Весь контент лежит в `content/` как отдельные файлы данных, сгруппированные по типу.
-2. На каждый тип есть JSON Schema в `content/schema/`.
-3. Валидатор проверяет схему **и ссылочную целостность**: событие ссылается на
-   существующую черту, дисциплина — на существующие статы, регион — на существующий пул
-   имён и язык.
-4. Валидатор запускается в CI и локально. Невалидный контент не мержится.
-5. Добавление контента не требует изменений в коде. Если требует — это сигнал, что схема
-   неполная, и надо менять схему, а не хардкодить.
+1. All content lives in `content/` as separate data files, grouped by type.
+2. Each type has a JSON Schema in `content/schema/`.
+3. The validator checks the schema **and referential integrity**: an event references
+   an existing trait, a discipline references existing stats, a region references an
+   existing name pool and language.
+4. The validator runs in CI and locally. Invalid content is not merged.
+5. Adding content does not require code changes. If it does, that is a signal that the
+   schema is incomplete, and the schema should be changed, not the content hardcoded.
 
-## Следствия
+## Consequences
 
-- Агент может сгенерировать 40 событий и сам проверить их.
-- Тексты отделены от логики, значит перевод и правки тона не задевают код. Язык текстов —
-  английский, `adr/0007`.
-- Цена: схемы надо поддерживать, и они должны быть строгими. Слабая схема хуже отсутствия.
+- An agent can generate 40 events and verify them itself.
+- Text is separated from logic, so translation and tone edits do not touch the code.
+  The language of the texts is English, `adr/0007`.
+- Cost: schemas must be maintained, and they must be strict. A weak schema is worse
+  than none.

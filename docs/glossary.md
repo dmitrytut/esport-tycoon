@@ -1,50 +1,50 @@
-# Глоссарий
+# Glossary
 
-Название проекта — **ESport Tycoon**, в путях и идентификаторах `esport-tycoon`.
-В текстах игры название не переводим и не изменяем.
+The project name is **ESport Tycoon**, `esport-tycoon` in paths and identifiers.
+In the game's text the name is not translated or changed.
 
-Одно понятие — одно слово. Если в коде или документе появился синоним, это баг.
+One concept — one word. If a synonym shows up in code or a document, that's a bug.
 
-Язык интерфейса и контента — английский (`adr/0007`). Поэтому у каждого доменного
-понятия есть два имени: русское — для документов и разговоров, английское — то, что
-реально видит пользователь. Английские варианты обязательны в UI и контенте:
-синоним в UI — такой же баг, как синоним в коде.
+The interface and content language is English (`adr/0007`). So every domain concept has
+two names: one for docs and conversation, and the one the player actually sees. The
+player-facing forms are mandatory in the UI and content: a synonym in the UI is as much a
+bug as a synonym in code.
 
-## Домен игры (используем в дизайне, UI и `src/domain/`)
+## Game domain (used in design, UI, and the game code)
 
-| Термин | В UI (en) | Значение | Не путать с |
+| Term | In UI (en) | Meaning | Not to confuse with |
 |---|---|---|---|
-| **Игрок** | `player` | человек в составе, персонаж | «пользователь» — это тот, кто играет в нашу игру |
-| **Пользователь** | — (не показывается) | человек за телефоном | «игрок» |
-| **Состав** | `lineup` | пятеро (или четверо), выходящие на матч | «ростер» — это все контрактники, включая запасных |
-| **Ростер** | `roster` | все игроки отдела под контрактом | «состав» |
-| **Отдел** | `division` | одна дисциплина внутри организации, свой ростер и тренер | «команда» |
-| **Дисциплина** | `discipline` | вид киберспорта (шутер, MOBA, королевская битва) | «игра» |
-| **Слот** | `slot` | единица внимания на неделе | «действие» |
-| **Мероприятие** | `activity` | то, на что тратится слот: тренировка, стрим, буткемп | «событие» |
-| **Событие** | `event` | случившаяся история с выбором | «мероприятие» |
-| **Инициатива** | `momentum` | полоса «кто на волне» в матче | «счёт» |
-| **Счёт** | `score` | дискретный результат: раунды, карты, места | «инициатива» |
-| **Окно** | `call` | 3–5 секунд на решение внутри матча | «пауза» |
-| **Акт** | `act` | стадия роста пользователя: подвал / офис / организация | «эра» (отложено) |
-| **Мета** | `meta` | текущие веса статов в дисциплине | «патч» |
-| **Патч** | `patch` | событие смены меты | «мета» |
+| **Player** | `player` | a person in the lineup, a character | "user" — the person who plays our game |
+| **User** | — (not shown) | the person holding the phone | "player" |
+| **Lineup** | `lineup` | the five (or four) who take the stage for a contest | "roster" — that's everyone under contract, including substitutes |
+| **Roster** | `roster` | all players of a division under contract | "lineup" |
+| **Division** | `division` | one discipline within the organization, its own roster and coach | "team" |
+| **Discipline** | `discipline` | a type of esport (shooter, MOBA, battle royale) | "game" |
+| **Slot** | `slot` | a unit of attention within the week | "activity" |
+| **Activity** | `activity` | what a slot is spent on: practice, stream, bootcamp | "event" |
+| **Event** | `event` | a story that happened, with a choice | "activity" |
+| **Momentum** | `momentum` | the bar showing "who's riding the wave" during a contest | "score" |
+| **Score** | `score` | a discrete result: rounds, maps, placements | "momentum" |
+| **Call** | `call` | a 3–5 second decision window inside a contest | "pause" |
+| **Act** | `act` | a stage of the user's growth: basement / office / organization | "era" (deferred) |
+| **Meta** | `meta` | the current stat weights within a discipline | "patch" |
+| **Patch** | `patch` | the event that shifts the meta | "meta" |
 
-## Ядро (`src/core/`) — домен-нейтральные имена
+## Core (`packages/core/src/`) — domain-neutral names
 
-Ядро не знает про киберспорт. Соответствия:
+The core knows nothing about esports. Correspondences:
 
-| В ядре | В домене |
+| In core | In domain |
 |---|---|
-| `Performer` | Игрок |
-| `Collective` | Состав / ростер |
-| `Discipline` | Дисциплина (жанр, формат) |
-| `Contest` | Матч (выступление, релиз) |
-| `Momentum` | Инициатива |
-| `Tally` | Счёт |
-| `Slot` | Слот недели |
-| `Activity` | Мероприятие |
-| `Incident` | Событие |
-| `Org` | Организация |
+| `Performer` | Player |
+| `Collective` | Lineup / roster |
+| `Discipline` | Discipline (genre, format) |
+| `Contest` | Match (performance, release) |
+| `Momentum` | Momentum |
+| `Tally` | Score |
+| `Slot` | Week slot |
+| `Activity` | Activity |
+| `Incident` | Event |
+| `Org` | Organization |
 
-Причина — `adr/0001`. Второй предметный домен — `adr/0004`.
+Reason — `adr/0001`. The second subject domain — `adr/0004`.

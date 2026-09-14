@@ -1,21 +1,21 @@
 <!--
-PR-2: реализация. Код плюс результат `/opsx:archive` в этой же ветке.
-Требования уже приняты в PR-1 — здесь обсуждается только соответствие им.
+PR-2: implementation. Code plus the `/opsx:archive` result on the same branch.
+Requirements are already accepted in PR-1 — only conformance to them is discussed here.
 -->
 
-Closes #NNN. Реализация `<slug>`, требования приняты в PR-#NNN.
+Closes #NNN. Implementation of `<slug>`, requirements accepted in PR-#NNN.
 
-## Как проверить
+## How to verify
 
-<!-- Команда или сценарий, которым результат виден своими глазами. -->
+<!-- A command or scenario that lets the result be seen with your own eyes. -->
 
 ---
 
-### Проверить на ревью
+### Check on review
 
-- [ ] дифф делает ровно принятые требования — ни одного изменения, которого они не просили
-- [ ] все задачи в `tasks.md` отмечены
-- [ ] дельта вмержена: `openspec/specs/` обновлён, папка изменения уехала в `changes/archive/`
-- [ ] golden и baseline не тронуты; если цифры сдвинулись — отдельный PR с префиксом `golden:`/`baseline:`
-- [ ] новые инварианты покрыты тестом, а не только примером
-- [ ] `pnpm verify` зелёный
+- [ ] the diff does exactly the accepted requirements — not a single change they didn't ask for
+- [ ] all tasks in `tasks.md` are checked off
+- [ ] the delta is merged: `openspec/specs/` updated, the change folder moved to `changes/archive/`
+- [ ] golden and baseline are untouched; if numbers shifted — a separate PR with a `golden:`/`baseline:` prefix
+- [ ] new invariants are covered by a test, not just an example
+- [ ] `pnpm verify` is green

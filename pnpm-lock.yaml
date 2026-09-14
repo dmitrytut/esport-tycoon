@@ -179,7 +179,7 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0(eslint@10.10.0)
       prettier:
-        specifier: ^3.9.6
+        specifier: ~3.9.6
         version: 3.9.6
       typescript:
         specifier: ~6.0.3
@@ -192,6 +192,8 @@ importers:
         version: 5.0.0(@types/node@24.13.4)(vite@7.3.6(@types/node@24.13.4)(yaml@2.9.0))
 
   packages/core: {}
+
+  tools/check-language: {}
 
   tools/validate-content:
     dependencies:

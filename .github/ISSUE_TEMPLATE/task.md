@@ -1,36 +1,34 @@
 ---
-name: Задача
-about: Единица работы, которая пойдёт по петле спек (docs/adr/0009)
-title: ""
-labels: ""
+name: Task
+about: A unit of work that will go through the spec loop (docs/adr/0009)
 ---
 
-## Зачем
+## Why
 
-<!-- Что не работает или чего не хватает. Без предложения решения. -->
+<!-- What isn't working or what's missing. No proposed solution. -->
 
-## Откуда брать замысел
+## Where to draw intent from
 
-<!-- Файлы docs/design/*, ADR, существующие спеки. -->
+<!-- docs/design/* files, ADRs, existing specs. -->
 
-## Рамки
+## Scope
 
-В рамках:
+In scope:
 
-Вне рамок:
+Out of scope:
 
-## Что решить в предложении, а не в коде
+## What to decide in the proposal, not in code
 
 <!--
-Вопросы, у которых нет очевидного ответа. Они закрываются на PR-1.
-Пустой раздел означает «всё однозначно» — так почти никогда не бывает.
+Questions that have no obvious answer. They get closed out on PR-1.
+An empty section means "everything is unambiguous" — that's almost never the case.
 -->
 
 1.
 
-## Приёмка
+## Acceptance
 
-<!-- Наблюдаемый результат, а не список файлов. -->
+<!-- Observable result, not a list of files. -->
 
 -
-- `pnpm verify` зелёный
+- `pnpm verify` is green

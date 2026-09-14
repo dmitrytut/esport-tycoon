@@ -1,36 +1,42 @@
-# ADR 0000: движок не выбран
+# ADR 0000: engine undecided
 
-**Статус:** закрыт, заменён `adr/0008`
-**Дата закрытия:** 2026-09-11
+**Status:** closed, superseded by `adr/0008`
+**Closed:** 2026-09-11
 
-Решение принято в `adr/0008`: TypeScript-ядро, сцена на PixiJS, панели на DOM, мобильная
-упаковка через Capacitor. Ниже — исходный контекст и критерии выбора; они остаются полезны
-как объяснение, почему решение именно такое.
+Decision made in `adr/0008`: TypeScript core, scene on PixiJS, panels on DOM, mobile
+packaging via Capacitor. Below is the original context and selection criteria; they
+remain useful as an explanation of why the decision came out this way.
 
-## Контекст
+## Context
 
-Проект на стадии документов. Выбор движка влияет на структуру `src/`, инструменты и
-конвенции, но не влияет на дизайн, контент и спеки. Поэтому решение отложено осознанно:
-можно писать спеки и контент, не зная движка.
+The project is at the documents stage. The engine choice affects the structure of
+`src/`, tooling, and conventions, but does not affect design, content, or specs.
+Therefore the decision is deliberately deferred: specs and content can be written
+without knowing the engine.
 
-## Критерии выбора
+## Selection criteria
 
-| Критерий | Почему важно именно здесь |
+| Criterion | Why it matters here |
 |---|---|
-| Headless-прогон симуляции | `specs/0002-sim-harness.md` требует запуска десятков тысяч сезонов без графики. Если это неудобно, ядро придётся отделять от движка полностью |
-| Детерминизм | нужен полный контроль над генератором случайных чисел, см. `adr/0002` |
-| Мобильный экспорт | приоритетная платформа |
-| Текстовый UI-heavy интерфейс | игра это списки, таблицы и карточки, а не физика и 3D |
-| Пригодность к агентной разработке | текстовые форматы сцен, читаемые диффы, тесты из консоли |
-| Пиксель-арт | целочисленное масштабирование без размытия |
-| Штатная локализация | игра выходит на английском, второй язык планируется (`adr/0007`). Механизм перевода берём из движка, а не пишем свой |
+| Headless simulation run | `specs/0002-sim-harness.md` requires running tens of thousands of seasons without graphics. If this is inconvenient, the core will have to be separated from the engine entirely |
+| Determinism | full control over the random number generator is required, see `adr/0002` |
+| Mobile export | priority platform |
+| Text-UI-heavy interface | the game is lists, tables, and cards, not physics and 3D |
+| Fitness for agent-driven development | text scene formats, readable diffs, tests from the console |
+| Pixel art | integer scaling without blur |
+| Built-in localization | the game ships in English, a second language is planned (`adr/0007`). The translation mechanism is taken from the engine, not hand-rolled |
 
-## Варианты
+## Options
 
-- **Godot 4 + GDScript.** Мобильный экспорт из коробки, пиксель-арт хорошо, сцены текстовые. Headless есть. Минус: логика и представление легко срастаются, придётся дисциплиной держать ядро отдельно.
-- **TypeScript-ядро + веб-рендер.** Ядро тривиально тестируется и гоняется headless, идеально для агентов и для второго домена (`adr/0004`). Минус: мобильная упаковка и производительность списков — отдельная работа.
-- **Гибрид: TypeScript-ядро + Godot как оболочка.** Лучшее для архитектуры, худшее по объёму работы на мостик.
+- **Godot 4 + GDScript.** Mobile export out of the box, pixel art works well, scenes are
+  text-based. Headless is available. Downside: logic and presentation easily merge
+  together, keeping the core separate will require discipline.
+- **TypeScript core + web renderer.** The core is trivially testable and runs headless,
+  ideal for agents and for the second domain (`adr/0004`). Downside: mobile packaging
+  and list performance are separate work.
+- **Hybrid: TypeScript core + Godot as a shell.** Best for architecture, worst in the
+  amount of work for the bridge.
 
-## Решение
+## Decision
 
-Принято в `adr/0008`.
+Made in `adr/0008`.

@@ -1,37 +1,38 @@
 # content/
 
-Только данные. Ни строчки логики.
+Data only. Not a line of logic.
 
-Каждый подкаталог — один тип сущности, каждый файл — одна сущность, имя файла совпадает
-с `id`. Схемы в `schema/`. Правила — `docs/adr/0003`.
+Each subdirectory is one entity type, each file is one entity, the file name matches
+the `id`. Schemas live in `schema/`. Rules — `docs/adr/0003`.
 
-| Каталог | Что лежит | Схема |
+| Directory | What's in it | Schema |
 |---|---|---|
-| `disciplines/` | дисциплины и их конфиги матча | `discipline.schema.json` |
-| `traits/` | черты характера | `trait.schema.json` |
-| `events/` | события с выборами | `event.schema.json` |
-| `regions/` | регионы и модификаторы | `region.schema.json` |
-| `names/` | пулы имён и ников по региону | `name-pool.schema.json` |
+| `disciplines/` | disciplines and their contest configs | `discipline.schema.json` |
+| `traits/` | character traits | `trait.schema.json` |
+| `events/` | events with choices | `event.schema.json` |
+| `regions/` | regions and modifiers | `region.schema.json` |
+| `names/` | name and nickname pools by region | `name-pool.schema.json` |
 
-## Язык
+## Language
 
-Весь пользовательский текст пишется **по-английски**: тексты событий, лейблы выборов,
-названия черт, дисциплин, регионов, имена и ники (`docs/adr/0007`). Русский допустим
-только в служебных полях схем (`description`) — их пользователь не видит.
+All player-facing text is written **in English**: event text, choice labels, trait,
+discipline, and region names, given names and nicknames (`docs/adr/0007`). Russian is
+allowed only in the schemas' service fields (`description`) — the player never sees them.
 
-Локализации пока нет. Механизм (ключи строк, файлы перевода) выбирается вместе с первым
-экраном интерфейса, см. `docs/adr/0008`. До этого текст живёт инлайном в файлах сущностей.
+There's no localization yet. The mechanism (string keys, translation files) is chosen
+alongside the first interface screen, see `docs/adr/0008`. Until then, text lives inline in
+the entity files.
 
-## Подстановки в текстах
+## Substitutions in text
 
-`{player}` — имя игрока, `{team}` — название состава, `{org}` — организация,
-`{rival}` — соперник. Другие подстановки добавляются вместе с поддержкой в коде,
-а не по факту появления в тексте.
+`{player}` — the player's name, `{team}` — the lineup's name, `{org}` — the organization,
+`{rival}` — the rival. Other substitutions are added alongside code support, not as soon as
+they appear in text.
 
-Фраза пишется целиком с подстановками, а не склеивается из кусков: склейка непереводима,
-а второй язык планируется.
+A phrase is written whole, with substitutions, rather than glued together from pieces:
+gluing is untranslatable, and a second language is planned.
 
-## Перед коммитом
+## Before committing
 
-`pnpm validate:content` — схемы плюс ссылочная целостность. То же самое гоняет `pnpm verify`,
-CI и локальный pre-commit.
+`pnpm validate:content` — schemas plus referential integrity. The same thing is run by
+`pnpm verify`, CI, and the local pre-commit hook.

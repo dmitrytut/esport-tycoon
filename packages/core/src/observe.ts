@@ -1,9 +1,9 @@
 /**
- * Туман информации (`specs/0001`, п.2 и раздел «Туман»).
+ * Information fog (`specs/0001`, item 2 and the "Fog" section).
  *
- * Пользователь никогда не видит точное число: только диапазон вокруг истины. Ошибка
- * выводится из собственного сида исполнителя и ключа стата, поэтому она **одна и та же**
- * при каждом взгляде — иначе разведка превращается в пересчёт до нужного ответа.
+ * The user never sees the exact number: only a range around the truth. The error
+ * is derived from the performer's own seed and the stat key, so it is **the same**
+ * on every look — otherwise scouting would turn into recomputing until you get the answer you want.
  */
 import { clamp, type Performer, STAT_MAX, STAT_MIN, type StatKey, statsFrom } from "./performer.ts";
 import { createRng } from "./rng.ts";
@@ -17,13 +17,13 @@ export type ObservedStats = Readonly<Record<StatKey, ObservedRange>>;
 
 export interface Observation {
   readonly stats: ObservedStats;
-  /** Оценка потолка: тоже диапазон, тоже с устойчивой ошибкой. */
+  /** Ceiling estimate: also a range, also with a stable error. */
   readonly potential: ObservedRange;
 }
 
 /**
- * `quality` 0 — «посмотрел трансляцию одним глазом», 1 — лучший скаут организации.
- * Даже при 1 остаётся ширина ±0.5: правды не даёт никто (`design/player.md`, 5.6).
+ * `quality` 0 — "watched the broadcast with one eye", 1 — the organization's best scout.
+ * Even at 1 the width stays at ±0.5: nobody gives you the truth (`design/player.md`, 5.6).
  */
 export function observe(performer: Performer, quality: number): Observation {
   const clarity = clamp(quality, 0, 1);
@@ -35,7 +35,7 @@ export function observe(performer: Performer, quality: number): Observation {
 
   return {
     stats,
-    // Потолок виден хуже любого текущего стата: его вообще нельзя измерить, только угадать.
+    // The ceiling is seen worse than any current stat: it cannot be measured at all, only guessed.
     potential: rangeFor(
       performer.seed,
       "potential",
@@ -55,11 +55,11 @@ function rangeFor(
   min: number,
   max: number,
 ): ObservedRange {
-  // Поток от сида исполнителя и имени поля: два вызова подряд дают одно и то же,
-  // а соседние статы ошибаются по-разному.
+  // Stream from the performer's seed and the field name: two calls in a row give the same result,
+  // while neighboring stats err differently.
   const rng = createRng(seed).stream(`observe:${key}`);
   const half = Math.max(0.5, width / 2);
-  // Истина внутри диапазона, но не в центре: центр выдавал бы точное значение.
+  // The truth is inside the range, but not at the center: the center would give away the exact value.
   const offset = (rng.float() - 0.5) * width;
   const low = clamp(Math.round((truth - half + offset) * 10) / 10, min, max);
   const high = clamp(Math.round((truth + half + offset) * 10) / 10, min, max);

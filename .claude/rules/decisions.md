@@ -12,7 +12,7 @@ paths:
 - **A decision that loses one clause but keeps its subject is amended, not withdrawn.** It
   gets `**Amended:** adr/NNNN — <what no longer holds>` under the status line, and the body
   stays untouched, so the original reasoning survives next to the correction. `adr/0007`,
-  `adr/0009` and `adr/0010` carry such a line, all pointing at `adr/0011`.
+  `adr/0009` and `adr/0010` carry such a line; an ADR may collect more than one.
 - **The exception is an ADR that is not merged yet.** While its pull request is open it is
   a draft and is edited freely — that is the moment to get it right.
 - **An ADR carries no procedure.** It answers "why this way and not another". Steps live

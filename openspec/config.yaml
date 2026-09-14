@@ -33,9 +33,12 @@ rules:
       Never work around a decision by wording the requirement differently, and never end
       the turn with the conflict living only in the transcript.
     - >-
-      The proposal pull request is opened with `gh pr create -T proposal.md`. GitHub never
-      applies a template from PULL_REQUEST_TEMPLATE/ automatically, so without the flag the
-      review checklist for this stage simply does not appear.
+      GitHub never applies a template from PULL_REQUEST_TEMPLATE/ automatically, so the
+      proposal pull request carries its body explicitly: fill a copy of
+      .github/PULL_REQUEST_TEMPLATE/proposal.md and pass it as
+      `gh pr create -t "<title>" -F <that file>`. The `-T` flag only seeds an editor and
+      needs a TTY — without one gh refuses with "must provide --title and --body ... when
+      not running interactively", and the review checklist for this stage never appears.
 
 operations:
   apply:
@@ -60,5 +63,6 @@ operations:
         the granted `Bash(openspec:*)` permission and can leave the change half
         archived. If the command cannot merge a delta, stop and report it.
       - >-
-        Open the implementation pull request with `gh pr create -T implementation.md`.
-        Same reason as the proposal stage: the directory form of the template is opt-in.
+        Open the implementation pull request the same way as the proposal one: fill a copy
+        of .github/PULL_REQUEST_TEMPLATE/implementation.md and pass it with -F. The -T flag
+        is for an interactive terminal only.

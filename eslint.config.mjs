@@ -99,6 +99,86 @@ const noAnonymousShape = {
   },
 };
 
+/**
+ * Rule ADR 0013: the module surface carries a comment.
+ *
+ * Presence is checkable, sufficiency is not — so the rule only asks that something was
+ * written above an exported declaration or a field of a type, and the prose in
+ * `docs/adr/0013` says what makes it worth reading. Without the check, the prose is
+ * remembered on the first file of a session and forgotten by the fifth.
+ *
+ * A comment covers a run of neighbours with no blank line between them: six bounds under
+ * one "floating state" header is one idea, not six, and splitting it would produce exactly
+ * the restatement noise this rule is supposed to avoid.
+ */
+const requireComment = {
+  meta: {
+    type: "problem",
+    docs: { description: "commented module surface, see docs/adr/0013" },
+    schema: [],
+    messages: {
+      missing:
+        "{{what}} has no comment: say briefly what it is for or which invariant it holds. " +
+        "A neighbour on the line above shares its comment (ADR 0013).",
+    },
+  },
+  create(context) {
+    const source = context.sourceCode;
+
+    const check = (nodes, what) => {
+      const documented = new Map();
+      nodes.forEach((node, index) => {
+        const before = source.getCommentsBefore(node);
+        const trailing = source.getCommentsAfter(node);
+        const previous = index > 0 ? nodes[index - 1] : undefined;
+        const own =
+          (before.length > 0 &&
+            before[before.length - 1].loc.end.line >= node.loc.start.line - 1) ||
+          (trailing.length > 0 && trailing[0].loc.start.line === node.loc.end.line);
+        const shared =
+          previous !== undefined &&
+          previous.loc.end.line + 1 === node.loc.start.line &&
+          previous.type === node.type &&
+          documented.get(previous) === true;
+        documented.set(node, own || shared);
+        if (!own && !shared) context.report({ node, messageId: "missing", data: { what } });
+      });
+    };
+
+    const EXPORTED = new Set([
+      "ClassDeclaration",
+      "FunctionDeclaration",
+      "TSInterfaceDeclaration",
+      "TSTypeAliasDeclaration",
+      "TSEnumDeclaration",
+      "VariableDeclaration",
+    ]);
+
+    return {
+      Program(node) {
+        const exported = node.body.filter(
+          (statement) =>
+            (statement.type === "ExportNamedDeclaration" ||
+              statement.type === "ExportDefaultDeclaration") &&
+            statement.declaration !== null &&
+            statement.declaration !== undefined &&
+            EXPORTED.has(statement.declaration.type),
+        );
+        check(exported, "an exported declaration");
+      },
+      TSInterfaceBody(node) {
+        check(node.body, "a field of the type");
+      },
+      TSTypeLiteral(node) {
+        // A shape written on one line is read at a glance; per-field comments there would
+        // have to be spread over new lines, which is worse than the shape itself.
+        if (node.loc.start.line === node.loc.end.line) return;
+        check(node.members, "a field of the type");
+      },
+    };
+  },
+};
+
 export default tseslint.config(
   {
     ignores: [
@@ -119,7 +199,13 @@ export default tseslint.config(
     // redefine a namespace, and per-path blocks only switch rules on.
     plugins: {
       "simple-import-sort": simpleImportSort,
-      et: { rules: { "no-domain-words": noDomainWords, "no-anonymous-shape": noAnonymousShape } },
+      et: {
+        rules: {
+          "no-domain-words": noDomainWords,
+          "no-anonymous-shape": noAnonymousShape,
+          "require-comment": requireComment,
+        },
+      },
     },
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
@@ -178,6 +264,13 @@ export default tseslint.config(
       "@typescript-eslint/ban-ts-comment": ["error", { "ts-expect-error": true }],
       "et/no-anonymous-shape": "error",
     },
+  },
+  {
+    // The commented module surface (ADR 0013) covers every source file, tools included:
+    // a tool is read by whoever it broke for, and that reader has no other documentation.
+    // Tests are out — a test name already states what it checks.
+    files: ["packages/*/src/**/*.ts", "tools/*/src/**/*.ts"],
+    rules: { "et/require-comment": "error" },
   },
   {
     // Core: domain-neutrality and full determinism.

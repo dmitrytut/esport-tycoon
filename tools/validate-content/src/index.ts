@@ -43,9 +43,13 @@ const TYPES: Record<string, string> = {
   names: "name-pool.schema.json",
 };
 
+/** One content file already parsed: enough to validate it and to report where the error is. */
 interface Entity {
+  /** Directory it came from — the key in `TYPES`. */
   readonly type: string;
+  /** File name, used in messages so the reader can open it straight away. */
   readonly file: string;
+  /** Parsed body; validity against the schema is checked separately. */
   readonly data: Record<string, unknown>;
 }
 
@@ -74,6 +78,7 @@ for (const [type, schemaFile] of Object.entries(TYPES)) {
 
 /** Event categories are pulled from the schema so the list lives in one place. */
 const eventSchema = readJson(join(schemaRoot, "event.schema.json")) as {
+  // Only the part that is read here; the rest of the schema is ajv's business.
   properties: { category: { enum: string[] } };
 };
 const eventCategories = eventSchema.properties.category.enum;

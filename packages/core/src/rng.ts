@@ -17,6 +17,7 @@ const UINT32 = 0x100000000;
 /** Serializable stream state: [a, b, c, counter]. */
 export type RngState = readonly [number, number, number, number];
 
+/** One deterministic stream. The whole simulation draws randomness only through this (`adr/0002`). */
 export interface Rng {
   /** Next integer in [0, 2^32). */
   nextUint32(): number;

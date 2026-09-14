@@ -8,14 +8,20 @@
 import { clamp, type Performer, STAT_MAX, STAT_MIN, type StatKey, statsFrom } from "./performer.ts";
 import { createRng } from "./rng.ts";
 
+/** What the user sees instead of a number: bounds that always contain the true value. */
 export interface ObservedRange {
+  /** Lower bound, never below the scale minimum. */
   readonly low: number;
+  /** Upper bound, never above the scale maximum. */
   readonly high: number;
 }
 
+/** The six stats as seen from outside: one range each. */
 export type ObservedStats = Readonly<Record<StatKey, ObservedRange>>;
 
+/** Everything one look at a performer yields. */
 export interface Observation {
+  /** Current stats, each as a range. */
   readonly stats: ObservedStats;
   /** Ceiling estimate: also a range, also with a stable error. */
   readonly potential: ObservedRange;

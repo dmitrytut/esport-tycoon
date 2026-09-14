@@ -59,13 +59,14 @@ accepted ADR stops and opens an issue `ADR NNNN blocks <slug>` — a decision is
 around by rewording a requirement.
 
 **3. PR-1.** Branch `<type>/<issue>-<slug>`, for example `feat/7-week-loop`. It carries the
-change directory and nothing else. GitHub applies nothing from `PULL_REQUEST_TEMPLATE/` on
-its own, so the body is handed over explicitly: fill a copy of
-`.github/PULL_REQUEST_TEMPLATE/proposal.md` and pass it as the body.
+change directory and nothing else. The title follows `<type>: <what> (#<issue>)` in English —
+`feat: weekly cycle (#7)` — while the body stays Russian, like every message to a human.
+GitHub applies nothing from `PULL_REQUEST_TEMPLATE/` on its own, so the body is handed over
+explicitly: fill a copy of `.github/PULL_REQUEST_TEMPLATE/proposal.md` and pass it as the body.
 
 ```
 cp .github/PULL_REQUEST_TEMPLATE/proposal.md /tmp/pr-1.md   # then fill it in
-gh pr create -t "<title, Russian like every message to a human>" -F /tmp/pr-1.md
+gh pr create -t "feat: weekly cycle (#7)" -F /tmp/pr-1.md
 ```
 
 `gh pr create -T proposal.md` does the same from a terminal, but only there: `-T` seeds the
@@ -100,9 +101,10 @@ delta merges into `openspec/specs/`, the change directory moves to `changes/arch
 the branch on purpose — a disagreement between two changes then surfaces as a git conflict
 during rebase, before the merge rather than after it.
 
-**9. PR-2.** Code plus the updated spec. The body is handed over the same way, from a filled
-copy of `implementation.md`. CI runs `verify` on the merge commit, so a snapshot invalidated
-by a neighbouring merge turns red here rather than on `master`.
+**9. PR-2.** Code plus the updated spec. Title and body follow the same convention as PR-1;
+the body is handed over from a filled copy of `implementation.md`. CI runs `verify` on the
+merge commit, so a snapshot invalidated by a neighbouring merge turns red here rather than
+on `master`.
 
 **10. Second review.** One question: does the diff do exactly the accepted requirements and
 nothing else. Review notes go to `.reviews/`, which is gitignored — whatever must survive

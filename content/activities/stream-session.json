@@ -1,0 +1,17 @@
+{
+  "id": "stream-session",
+  "name": "Stream Session",
+  "slots": 1,
+  "energy": 10,
+  "target": "member",
+  "effects": [
+    {
+      "kind": "money",
+      "amount": 1200
+    },
+    {
+      "kind": "reputation",
+      "amount": 2
+    }
+  ]
+}

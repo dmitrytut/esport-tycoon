@@ -1,0 +1,14 @@
+{
+  "id": "training-cognitive",
+  "name": "Theory Session",
+  "slots": 1,
+  "energy": 20,
+  "target": "member",
+  "effects": [
+    {
+      "kind": "stat",
+      "stat": "cognitive",
+      "amount": 0.3
+    }
+  ]
+}

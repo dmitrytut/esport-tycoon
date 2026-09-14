@@ -1,0 +1,14 @@
+{
+  "id": "training-mechanical",
+  "name": "Mechanics Drills",
+  "slots": 1,
+  "energy": 20,
+  "target": "member",
+  "effects": [
+    {
+      "kind": "stat",
+      "stat": "mechanical",
+      "amount": 0.3
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "rest",
+  "name": "Rest",
+  "slots": 1,
+  "energy": 0,
+  "target": "collective",
+  "effects": [
+    {
+      "kind": "energy",
+      "amount": 25
+    },
+    {
+      "kind": "morale",
+      "amount": 5
+    }
+  ]
+}

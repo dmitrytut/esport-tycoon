@@ -1,0 +1,18 @@
+{
+  "id": "bootcamp",
+  "name": "Bootcamp",
+  "slots": 3,
+  "energy": 60,
+  "target": "collective",
+  "effects": [
+    {
+      "kind": "stat",
+      "stat": "collective",
+      "amount": 0.8
+    },
+    {
+      "kind": "morale",
+      "amount": 10
+    }
+  ]
+}

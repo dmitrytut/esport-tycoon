@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Activity",
+  "type": "object",
+  "required": ["id", "name", "slots", "energy", "target", "effects"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "English activity name, shown to the player (docs/adr/0007)"
+    },
+    "slots": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "attention the week pays for it; an activity that costs nothing is free"
+    },
+    "energy": {
+      "type": "number",
+      "minimum": 0,
+      "description": "charged to every participant, on the 0-100 performer scale"
+    },
+    "target": {
+      "enum": ["collective", "member"],
+      "description": "who pays the energy and receives the per-performer effects"
+    },
+    "effects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "amount"],
+        "properties": {
+          "kind": {
+            "enum": ["stat", "energy", "morale", "money", "reputation"],
+            "description": "closed set; what a kind means is decided by code (docs/adr/0003)"
+          },
+          "stat": {
+            "type": "string",
+            "pattern": "^[a-z]+$",
+            "description": "one of the six stats; checked by name in tools/validate-content"
+          },
+          "amount": {
+            "type": "number",
+            "description": "signed change; negative debits"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": ["kind"],
+              "properties": { "kind": { "const": "stat" } }
+            },
+            "then": {
+              "required": ["stat"],
+              "properties": { "stat": { "type": "string", "pattern": "^[a-z]+$" } }
+            },
+            "else": {
+              "not": {
+                "required": ["stat"],
+                "properties": { "stat": { "type": "string", "pattern": "^[a-z]+$" } }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "disciplines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "description": "ids from content/disciplines/; absent means the activity fits every one"
+    }
+  }
+}

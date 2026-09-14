@@ -168,8 +168,8 @@ The second worst is silently expanding the scope of a spec.
 | `openspec show <slug> --json --deltas-only` | which requirements a change touches |
 | `pnpm validate:spec` | verify spec artifacts (`openspec validate --all`) |
 | `claude --worktree <slug>` | parallel session in a separate checkout |
-| `gh pr create -T proposal.md` | open PR-1. Without `-T` GitHub applies no template at all |
-| `gh pr create -T implementation.md` | open PR-2, same reason |
+| `gh pr create -t "…" -F <filled copy>` | open a PR from a session. Fill a copy of `.github/PULL_REQUEST_TEMPLATE/proposal.md` (PR-1) or `implementation.md` (PR-2) and pass it as the body |
+| `gh pr create -T proposal.md` | the same from a terminal: `-T` only seeds the editor, so it needs an interactive run. GitHub applies no template on its own either way |
 
 `openspec` is pinned in `devDependencies`, so `pnpm install` is the only thing needed
 for the gate and CI. A global install isn't required and is only useful for calling

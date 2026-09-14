@@ -54,8 +54,8 @@ done, pair chemistry is not).
    not. Enforced by `pnpm check:language`. Reason — `docs/adr/0011`, `docs/adr/0007`.
 8. **Style isn't up for debate, it's configured.** Formatting, import order, and typing
    discipline — `prettier` and linter rules, `pnpm format` fixes it. In `packages/*/src`
-   type assertions (`as`, except `as const`) and anonymous object types in exported
-   signatures are forbidden: rewrite so the type is inferred. What remains prose:
+   type assertions in any form (`as`, `<T>x`, `@ts-expect-error`) and anonymous object
+   types on the module surface are forbidden: rewrite so the type is inferred. What remains prose:
    branded identifiers, states as tagged unions, and the rule "the type and the constant
    live next to the code that holds their invariant". Reason — `docs/adr/0010`.
 
@@ -105,12 +105,14 @@ The second worst is silently expanding the scope of a spec.
 
 | Command | What it does |
 |---|---|
-| `pnpm verify` | the single gate: types, formatting, linter, tests, content, specs. Run before any "done" |
+| `pnpm verify` | the single gate: types, formatting, linter, tests, content, specs, language. Run before any "done" |
 | `pnpm format` | `prettier --write .`: fixes formatting |
 | `pnpm test` | vitest: unit, golden |
 | `pnpm lint` | guardrails for ADR 0001 and 0002 plus typing discipline from ADR 0010 |
 | `pnpm typecheck` | `tsc --noEmit`, strict |
 | `pnpm validate:content` | schemas and referential integrity of `content/` |
+| `pnpm validate:spec` | OpenSpec artifacts (`openspec validate --all`) |
+| `pnpm check:language` | English everywhere except `docs/design/`, `content/names/ru-*`, `specs/` (ADR 0011) |
 | `pnpm run hooks:install` | enable local git hooks (once per machine) |
 | `/opsx:propose <slug>` | start a change: proposal, spec delta, tasks |
 | `/opsx:apply` | implement the change's tasks |

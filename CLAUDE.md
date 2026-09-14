@@ -126,6 +126,14 @@ The flag matters: a session bound to a worktree is blocked from editing files in
 checkout and from redirecting git back into it. A worktree is a fresh checkout without
 `node_modules`, so it starts with `pnpm install`.
 
+**Merging is the human's action, never the agent's.** The agent opens the pull request,
+reports that the gate is green, and stops there. It runs `gh pr merge` — including
+`--auto` — only after the human says so about that specific pull request, in this
+conversation, in plain words. A green CI is not permission, an approving review is not
+permission, and an ambiguous instruction — "make the PR", which can mean either open it or
+land it — is not permission: ask instead. Merging is the point where the two review checkpoints of
+`docs/adr/0009` either happened or were skipped, and only the human knows which.
+
 After the merge: the remote branch is deleted by GitHub, the local one is not. Clean up
 with `git worktree remove .claude/worktrees/<name>` and `git branch -d <branch>` — a
 worktree you created by hand is never swept automatically.

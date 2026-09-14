@@ -1,0 +1,14 @@
+{
+  "id": "training-composure",
+  "name": "Pressure Training",
+  "slots": 1,
+  "energy": 20,
+  "target": "member",
+  "effects": [
+    {
+      "kind": "stat",
+      "stat": "composure",
+      "amount": 0.3
+    }
+  ]
+}

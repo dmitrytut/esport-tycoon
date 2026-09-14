@@ -1,0 +1,14 @@
+{
+  "id": "training-collective",
+  "name": "Teamplay Session",
+  "slots": 1,
+  "energy": 20,
+  "target": "collective",
+  "effects": [
+    {
+      "kind": "stat",
+      "stat": "collective",
+      "amount": 0.2
+    }
+  ]
+}

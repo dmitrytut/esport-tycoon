@@ -14,7 +14,7 @@ matching file: they give a short digest and an ADR number, not a retelling of th
 | Add an event or a batch of events | `design/tone.md`, `design/events-catalog.md`, `content/schema/event.schema.json` | the rest |
 | Touch the performer model (stats, traits, state) | `design/player.md`, then `openspec/specs/`; still empty — `specs/0001-player-model.md` (implemented) | contest, world |
 | Work on the contest | `design/match.md`, `design/disciplines.md`, `specs/0004-match-engine.md` (stub) | world, economy |
-| Work on the weekly cycle | `design/week.md`, `design/loops.md`, `specs/0003-week-loop.md` (stub) | contest |
+| Work on the weekly cycle | `design/week.md`, `design/loops.md`, `openspec/specs/week-loop/`, `openspec/specs/activity-catalog/` | contest |
 | Balance the economy | `design/week.md` (activities section), `design/failure.md`, `specs/0002-sim-harness.md` (stub) | tone, onboarding |
 | Add a discipline | `design/disciplines.md`, `content/schema/discipline.schema.json`, `adr/0001` | — |
 | Add a region | `design/world.md`, `content/schema/region.schema.json` | — |

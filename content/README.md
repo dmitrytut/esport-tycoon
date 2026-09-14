@@ -12,6 +12,7 @@ the `id`. Schemas live in `schema/`. Rules — `docs/adr/0003`.
 | `events/` | events with choices | `event.schema.json` |
 | `regions/` | regions and modifiers | `region.schema.json` |
 | `names/` | name and nickname pools by region | `name-pool.schema.json` |
+| `activities/` | what a slot of the week is spent on | `activity.schema.json` |
 
 ## Language
 

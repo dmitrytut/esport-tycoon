@@ -7,7 +7,7 @@
  *  - the file name matches `id`;
  *  - references point to existing entities: event → trait and region,
  *    trait → core stats and event categories, discipline → region,
- *    region → name pool.
+ *    region → name pool, activity → core stats and discipline.
  *
  * Run: `pnpm validate:content`, or `node tools/validate-content/src/index.ts <dir>`
  * to validate a different data set (used by the tests).
@@ -41,6 +41,7 @@ const TYPES: Record<string, string> = {
   events: "event.schema.json",
   regions: "region.schema.json",
   names: "name-pool.schema.json",
+  activities: "activity.schema.json",
 };
 
 /** One content file already parsed: enough to validate it and to report where the error is. */
@@ -111,9 +112,13 @@ for (const type of Object.keys(TYPES)) {
     const validate = validators.get(type);
     if (validate && !validate(record)) {
       for (const issue of validate.errors ?? []) {
+        // ajv names the allowed values only in `params`; a closed set is unusable as an
+        // error unless the reader is told what the set is.
+        const allowed: unknown = issue.params["allowedValues"];
+        const listed = Array.isArray(allowed) ? ` [${allowed.join(", ")}]` : "";
         fail(
           relative,
-          `schema: ${issue.instancePath || "/"} ${issue.message ?? "fails validation"}`,
+          `schema: ${issue.instancePath || "/"} ${issue.message ?? "fails validation"}${listed}`,
         );
       }
     }
@@ -197,6 +202,25 @@ for (const entity of entities) {
   if (entity.type === "regions") {
     for (const poolId of (data["namePools"] as unknown[] | undefined) ?? []) {
       checkRef(entity, "names", poolId, "namePools");
+    }
+  }
+
+  if (entity.type === "activities") {
+    const effects = (data["effects"] as unknown[] | undefined) ?? [];
+    effects.forEach((effect, index) => {
+      if (typeof effect !== "object" || effect === null) return;
+      const fields = effect as Record<string, unknown>;
+      if (fields["kind"] !== "stat") return;
+      const stat = fields["stat"];
+      if (typeof stat !== "string" || !(CORE_STATS as readonly string[]).includes(stat)) {
+        fail(
+          entity.file,
+          `effects[${index}].stat "${String(stat)}" is not in the list [${CORE_STATS.join(", ")}]`,
+        );
+      }
+    });
+    for (const disciplineId of (data["disciplines"] as unknown[] | undefined) ?? []) {
+      checkRef(entity, "disciplines", disciplineId, "disciplines");
     }
   }
 }

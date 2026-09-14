@@ -1,0 +1,17 @@
+{
+  "id": "ad-campaign",
+  "name": "Ad Campaign",
+  "slots": 2,
+  "energy": 20,
+  "target": "collective",
+  "effects": [
+    {
+      "kind": "money",
+      "amount": 5000
+    },
+    {
+      "kind": "morale",
+      "amount": -6
+    }
+  ]
+}

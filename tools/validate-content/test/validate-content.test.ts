@@ -35,7 +35,7 @@ function run(contentRoot: string): RunResult {
 function sandbox(): string {
   const root = mkdtempSync(join(tmpdir(), "et-content-"));
   cpSync(join(repoRoot, "content/schema"), join(root, "schema"), { recursive: true });
-  for (const dir of ["disciplines", "traits", "events", "regions", "names"]) {
+  for (const dir of ["disciplines", "traits", "events", "regions", "names", "activities"]) {
     mkdirSync(join(root, dir), { recursive: true });
   }
   return root;
@@ -51,6 +51,17 @@ const trait = {
   description: "Sleeps at dawn, plays at night.",
 };
 const region = { id: "nordics", name: "Nordics", language: "sv", modifiers: { salaryScale: 1 } };
+const activity = {
+  id: "bootcamp",
+  name: "Bootcamp",
+  slots: 3,
+  energy: 60,
+  target: "collective",
+  effects: [
+    { kind: "stat", stat: "collective", amount: 0.8 },
+    { kind: "morale", amount: 10 },
+  ],
+};
 
 let created: string[] = [];
 afterEach(() => {
@@ -147,5 +158,49 @@ describe("content validator (ADR 0003)", () => {
     const result = run(root);
     expect(result.code).toBe(1);
     expect(result.output).toMatch(/duplicated|does not match the file name/);
+  });
+
+  it("accepts an activity and counts it in the report", () => {
+    const root = fresh();
+    put(root, "activities/bootcamp.json", activity);
+
+    const result = run(root);
+    expect(result.code).toBe(0);
+    expect(result.output).toContain("activities: 1");
+  });
+
+  it("catches an activity reference to a missing discipline", () => {
+    const root = fresh();
+    put(root, "activities/bootcamp.json", { ...activity, disciplines: ["ghost-discipline"] });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/activities/bootcamp.json");
+    expect(result.output).toContain("nonexistent disciplines");
+  });
+
+  it("catches an unknown stat in an activity effect", () => {
+    const root = fresh();
+    put(root, "activities/bootcamp.json", {
+      ...activity,
+      effects: [{ kind: "stat", stat: "aim", amount: 0.8 }],
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/activities/bootcamp.json");
+    expect(result.output).toContain('"aim" is not in the list');
+  });
+
+  it("rejects an unknown effect kind and lists the allowed ones", () => {
+    const root = fresh();
+    put(root, "activities/bootcamp.json", {
+      ...activity,
+      effects: [{ kind: "chemistry", amount: 2 }],
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("[stat, energy, morale, money, reputation]");
   });
 });

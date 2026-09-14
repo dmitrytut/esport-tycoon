@@ -1,4 +1,21 @@
 export {
+  type Activity,
+  type ActivityEffect,
+  type ActivityTarget,
+  type EnergyEffect,
+  type MoneyEffect,
+  type MoraleEffect,
+  type ReputationEffect,
+  type StatEffect,
+} from "./activity.ts";
+export {
+  type Collective,
+  collectiveMorale,
+  MORALE_MEAN_WEIGHT,
+  MORALE_WORST_WEIGHT,
+  participantsOf,
+} from "./collective.ts";
+export {
   type GenerateParams,
   generatePerformer,
   type OriginProfile,
@@ -6,6 +23,14 @@ export {
   type TraitOption,
 } from "./generate.ts";
 export { type Observation, observe, type ObservedRange, type ObservedStats } from "./observe.ts";
+export {
+  ACT_ONE_SLOTS,
+  applyOrgChange,
+  type Org,
+  type OrgChange,
+  REPUTATION_MAX,
+  REPUTATION_MIN,
+} from "./org.ts";
 export {
   advanceYear,
   applyStatChange,
@@ -32,3 +57,39 @@ export {
   statsFrom,
 } from "./performer.ts";
 export { createRng, restoreRng, type Rng, type RngState } from "./rng.ts";
+export {
+  type ActivitySkippedReason,
+  advance,
+  type AdvanceOptions,
+  type AdvanceResult,
+  type BlockRanOutReason,
+  classifyWeek,
+  type ContestAheadReason,
+  DEFAULT_ENERGY_THRESHOLD,
+  DEFAULT_MORALE_THRESHOLD,
+  type EnergyThresholdReason,
+  type ExecutedActivity,
+  executeWeek,
+  type IncidentPendingReason,
+  type MoneyNegativeReason,
+  type MoraleThresholdReason,
+  type PendingIncident,
+  type PlannedActivity,
+  type RunState,
+  type Sensitivity,
+  type SkipCause,
+  type SkippedActivity,
+  type StopReason,
+  type StopReasonKind,
+  UNMASKABLE_REASONS,
+  validateWeekPlan,
+  WEEK_PLAN_MAX_WEEKS,
+  WEEK_PLAN_MIN_WEEKS,
+  type WeekKind,
+  type WeekKindCounts,
+  WEEKLY_ENERGY_RECOVERY,
+  type WeekMarking,
+  type WeekOutcome,
+  type WeekPlan,
+  type WeekResult,
+} from "./week.ts";

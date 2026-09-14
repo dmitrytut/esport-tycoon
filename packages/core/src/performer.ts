@@ -6,6 +6,7 @@
  * platform-dependent function — otherwise bit-for-bit reproducibility (`adr/0002`) is lost.
  */
 
+/** The six stats. Order is fixed: the generator draws randomness in exactly this sequence. */
 export const STAT_KEYS = [
   "mechanical",
   "cognitive",
@@ -15,7 +16,9 @@ export const STAT_KEYS = [
   "presence",
 ] as const;
 
+/** One stat's name, derived from the list so the two can never drift apart. */
 export type StatKey = (typeof STAT_KEYS)[number];
+/** All six stats of one performer, read-only: a change goes through `applyStatChange`. */
 export type Stats = Readonly<Record<StatKey, number>>;
 
 /** Stat scale: 1–20 (decided in `specs/0001`). */
@@ -30,22 +33,35 @@ export const MORALE_MAX = 100;
 export const FORM_MIN = -3;
 export const FORM_MAX = 3;
 
+/** What moves week to week, unlike stats. Everything here is restored by rest and results. */
 export interface PerformerState {
+  /** Capacity for work this week, 0–100. Zero means no slot can be spent. */
   readonly energy: number;
+  /** Attitude towards the collective and the season, 0–100. Drives events, not output directly. */
   readonly morale: number;
+  /** Streak, −3…+3: a fraction of the stat scale added to a contest, forgotten within weeks. */
   readonly form: number;
 }
 
+/** A person: what is shown, what is hidden, and what changes on its own. */
 export interface Performer {
   /** Stable identifier within a run. */
   readonly id: string;
+  /** Legal name; shown in lists and contracts. */
   readonly name: string;
+  /** The nickname the public knows. Unique within a run. */
   readonly handle: string;
+  /** Region of origin: sets languages, name pool and starting level. */
   readonly originId: string;
+  /** Languages spoken. The overlap inside a collective decides chemistry. */
   readonly languages: readonly string[];
+  /** Years. The career curve reads it against `peakAge`. */
   readonly age: number;
+  /** Current values on the 1–20 scale. */
   readonly stats: Stats;
+  /** The part that moves week to week. */
   readonly state: PerformerState;
+  /** Trait ids from `content/traits/`. They modify events, not stats directly. */
   readonly traits: readonly string[];
   /** Hidden: peak age. Mechanical skill grows before it, falls after. */
   readonly peakAge: number;
@@ -55,6 +71,7 @@ export interface Performer {
   readonly seed: number;
 }
 
+/** Keeps a number inside bounds. Used wherever a change must not leave the scale. */
 export const clamp = (value: number, min: number, max: number): number =>
   value < min ? min : value > max ? max : value;
 
@@ -84,6 +101,7 @@ export function normalizeStats(stats: Stats): Stats {
   return statsFrom((key) => Math.round(clamp(stats[key], STAT_MIN, STAT_MAX) * 10) / 10);
 }
 
+/** Same for floating state: bounds plus one tenth of a step, so snapshots stay comparable. */
 export function normalizeState(state: PerformerState): PerformerState {
   return {
     energy: Math.round(clamp(state.energy, ENERGY_MIN, ENERGY_MAX) * 10) / 10,
@@ -156,6 +174,8 @@ export function advanceYear(performer: Performer): Performer {
 
 /** Snapshot for saving: includes hidden fields, otherwise loading would give a different person. */
 export interface PerformerSnapshot {
+  // Mirrors `Performer` field for field, so the meaning of each one is documented there.
+  // The only difference: `stats` is a plain record, because that is what JSON parsing yields.
   readonly id: string;
   readonly name: string;
   readonly handle: string;
@@ -170,6 +190,7 @@ export interface PerformerSnapshot {
   readonly seed: number;
 }
 
+/** Flattens a performer for saving: copies collections so the snapshot can't be mutated later. */
 export function serializePerformer(performer: Performer): PerformerSnapshot {
   const stats = statsFrom((key) => performer.stats[key]);
   return {
@@ -188,6 +209,10 @@ export function serializePerformer(performer: Performer): PerformerSnapshot {
   };
 }
 
+/**
+ * Restores a performer from a snapshot. Values are normalized on the way in: a save file
+ * edited by hand, or written by an older version, must not put a stat outside the scale.
+ */
 export function deserializePerformer(snapshot: PerformerSnapshot): Performer {
   return {
     ...snapshot,

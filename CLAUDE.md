@@ -58,6 +58,12 @@ done, pair chemistry is not).
    types on the module surface are forbidden: rewrite so the type is inferred. What remains prose:
    branded identifiers, states as tagged unions, and the rule "the type and the constant
    live next to the code that holds their invariant". Reason — `docs/adr/0010`.
+9. **The module surface is commented.** Exported declarations, fields of types and
+   interfaces, complex logic and utilities carry a short comment — one or two sentences
+   saying what it is for or which invariant it holds, never a restatement of the line.
+   Inside a function body it's optional. A comment covers a run of neighbours with no blank
+   line between them. `et/require-comment` checks presence, being enough is on the author.
+   Reason — `docs/adr/0013`.
 
 ## Language and tone of in-game text
 

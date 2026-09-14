@@ -18,33 +18,46 @@ import type { Rng } from "./rng.ts";
 
 /** Second language and the chance of speaking it (`specs/0006`). */
 export interface SecondLanguage {
+  /** Language tag as it appears in `content/regions/*`. */
   readonly language: string;
+  /** Probability 0–1 that a performer from this region speaks it. */
   readonly chance: number;
 }
 
 /** Everything core needs to know about origin. Numbers come from content. */
 export interface OriginProfile {
+  /** Region id; a generated performer keeps it in `originId`. */
   readonly id: string;
+  /** The language everyone from here speaks. */
   readonly language: string;
+  /** Additional languages, each with its own chance. */
   readonly secondLanguages: readonly SecondLanguage[];
   /** Above one — more talents, and stronger ones. */
   readonly talentDensity: number;
+  /** Pool of given names for this region. */
   readonly givenNames: readonly string[];
+  /** Pool of handles; the generator combines them with digits when a collision happens. */
   readonly handles: readonly string[];
 }
 
 /** A trait with a weight: rare ones come up less often. Weights are set by content. */
 export interface TraitOption {
+  /** Trait id from `content/traits/`. */
   readonly id: string;
+  /** Relative weight of being drawn; zero means the trait is unreachable. */
   readonly weight: number;
 }
 
+/** What the caller must decide before a performer can be generated. */
 export interface GenerateParams {
+  /** Where the performer comes from: names, languages, talent density. */
   readonly origin: OriginProfile;
   /** 1 — basement amateur, 5 — world top. */
   readonly level: number;
+  /** Age bounds; defaults are 16 and 28 — the span a career usually starts in. */
   readonly minAge?: number;
   readonly maxAge?: number;
+  /** Traits to draw from. An empty or missing pool means a performer without traits. */
   readonly traitPool?: readonly TraitOption[];
 }
 
@@ -60,6 +73,7 @@ function statCenter(level: number, talentDensity: number): number {
   return base + 2.5 + (talentDensity - 1) * 2;
 }
 
+/** Builds one performer. Every draw goes through the performer's own RNG stream (`adr/0002`). */
 export function generatePerformer(rng: Rng, params: GenerateParams): Performer {
   const level = Math.round(Math.min(Math.max(params.level, LEVEL_MIN), LEVEL_MAX));
   const { origin } = params;

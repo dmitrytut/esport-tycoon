@@ -5,6 +5,8 @@
 **Related:** `adr/0007` (language), `adr/0008` (stack)
 **Amended:** `adr/0011` — OpenSpec artifacts are now written in English, so the carve-out
 for player-facing strings inside a Russian artifact is gone. Everything else stands.
+**Amended:** `adr/0012` — the branch is named `<type>/<issue>-<slug>`, not by the bare
+slug; the change folder and the worktree directory still use the slug.
 
 ## Context
 

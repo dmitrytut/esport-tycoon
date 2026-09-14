@@ -96,6 +96,34 @@ Details — `docs/design/tone.md`.
 - Noticed a discrepancy between design and code — don't stay silent and don't "fix" the design
   to match the code. Say plainly what diverges.
 
+## Branches and worktrees
+
+One task — one branch — one worktree. `master` is never written to directly; the ruleset
+rejects it.
+
+Branch name: `<type>/<issue>-<slug>`, where `<type>` is one of `feat`, `bugfix`, `hotfix`,
+`refactor`, `chore`, `<issue>` is the GitHub issue number when one exists, and `<slug>` is
+the change slug. `feat/8-week-loop`, `bugfix/14-energy-clamp`, `chore/branch-naming` when
+there is no issue. Both pull requests of a change use the same name in turn: the proposal
+branch is deleted on merge, and implementation starts only after that (`docs/adr/0009`),
+so the name is free again. Reason — `docs/adr/0012`.
+
+Create the worktree first, then open it — `claude --worktree <name>` alone would name the
+branch `worktree-<name>`, and that name cannot be configured:
+
+```
+git worktree add .claude/worktrees/8-week-loop -b feat/8-week-loop origin/master
+claude --worktree 8-week-loop     # the directory exists, so this opens it
+```
+
+The flag matters: a session bound to a worktree is blocked from editing files in the main
+checkout and from redirecting git back into it. A worktree is a fresh checkout without
+`node_modules`, so it starts with `pnpm install`.
+
+After the merge: the remote branch is deleted by GitHub, the local one is not. Clean up
+with `git worktree remove .claude/worktrees/<name>` and `git branch -d <branch>` — a
+worktree you created by hand is never swept automatically.
+
 ## What to do when it's unclear
 
 Ask. The worst outcome in this project is a guessed mechanic that spreads through the code.

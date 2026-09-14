@@ -95,6 +95,12 @@ Details — `docs/design/tone.md`.
   (`docs/adr/0009`).
 - Noticed a discrepancy between design and code — don't stay silent and don't "fix" the design
   to match the code. Say plainly what diverges.
+- `.reviews/` — **local review artifacts**: notes from a code review run on this machine,
+  checklists, findings, diffs pulled apart for reading. The directory is gitignored and
+  nothing from it is ever committed: a review is an observation about a particular diff at
+  a particular moment, not a record of what the system does. What must survive a review
+  goes where it belongs — a defect into an issue, a decision into an ADR, a behavior into
+  a spec delta, a comment into the PR itself.
 
 ## Branches and worktrees
 
@@ -119,6 +125,14 @@ claude --worktree 8-week-loop     # the directory exists, so this opens it
 The flag matters: a session bound to a worktree is blocked from editing files in the main
 checkout and from redirecting git back into it. A worktree is a fresh checkout without
 `node_modules`, so it starts with `pnpm install`.
+
+**Merging is the human's action, never the agent's.** The agent opens the pull request,
+reports that the gate is green, and stops there. It runs `gh pr merge` — including
+`--auto` — only after the human says so about that specific pull request, in this
+conversation, in plain words. A green CI is not permission, an approving review is not
+permission, and an ambiguous instruction — "make the PR", which can mean either open it or
+land it — is not permission: ask instead. Merging is the point where the two review checkpoints of
+`docs/adr/0009` either happened or were skipped, and only the human knows which.
 
 After the merge: the remote branch is deleted by GitHub, the local one is not. Clean up
 with `git worktree remove .claude/worktrees/<name>` and `git branch -d <branch>` — a

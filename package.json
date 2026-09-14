@@ -8,17 +8,21 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint .",
     "test": "vitest run",
     "validate:content": "node tools/validate-content/src/index.ts",
     "validate:spec": "openspec validate --all",
-    "verify": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec",
+    "verify": "pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec",
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@fission-ai/openspec": "^1.13.0",
     "@types/node": "^24.13.4",
     "eslint": "^10.10.0",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "prettier": "^3.9.6",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.0",
     "vitest": "^5.0.0"

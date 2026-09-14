@@ -11,7 +11,7 @@
 import { execFileSync } from "node:child_process";
 
 const RELEVANT =
-  /\.(ts|mts)$|^content\/|^openspec\/|^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vitest\.config\.ts|eslint\.config\.mjs)$/;
+  /\.(ts|mts)$|^content\/|^openspec\/|^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vitest\.config\.ts|eslint\.config\.mjs|\.prettierrc\.json|\.prettierignore|\.editorconfig)$/;
 
 let raw = "";
 for await (const chunk of process.stdin) raw += chunk;
@@ -27,7 +27,8 @@ try {
 if (input.stop_hook_active) process.exit(0);
 
 const cwd = input.cwd || process.cwd();
-const run = (file, args) => execFileSync(file, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+const run = (file, args) =>
+  execFileSync(file, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
 let changed;
 try {

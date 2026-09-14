@@ -58,15 +58,30 @@ export interface Performer {
 export const clamp = (value: number, min: number, max: number): number =>
   value < min ? min : value > max ? max : value;
 
+/**
+ * Собирает запись по всем статам явным литералом. Цикл по `STAT_KEYS` требовал бы
+ * начинать с `{} as Record<StatKey, …>` — непроверенного утверждения, что запись уже
+ * полная. Здесь полноту проверяет компилятор: новый стат ломает сборку (`adr/0010`).
+ *
+ * Порядок вычисления — порядок полей литерала, он совпадает с `STAT_KEYS`. Это важно
+ * там, где `make` тянет случайность: сдвиг порядка поехал бы в golden-снимке.
+ */
+export function statsFrom<T>(make: (key: StatKey) => T): Readonly<Record<StatKey, T>> {
+  return {
+    mechanical: make("mechanical"),
+    cognitive: make("cognitive"),
+    collective: make("collective"),
+    composure: make("composure"),
+    adaptability: make("adaptability"),
+    presence: make("presence"),
+  };
+}
+
 /** Приводит статы к шкале и режет мусор от накопленных дробей. */
 export function normalizeStats(stats: Stats): Stats {
-  const out = {} as Record<StatKey, number>;
-  for (const key of STAT_KEYS) {
-    // Одна десятая — минимальный шаг: рост за неделю мельче, чем целый пункт,
-    // но бесконечный хвост дробей ломает сравнение снимков.
-    out[key] = Math.round(clamp(stats[key], STAT_MIN, STAT_MAX) * 10) / 10;
-  }
-  return out;
+  // Одна десятая — минимальный шаг: рост за неделю мельче, чем целый пункт,
+  // но бесконечный хвост дробей ломает сравнение снимков.
+  return statsFrom((key) => Math.round(clamp(stats[key], STAT_MIN, STAT_MAX) * 10) / 10);
 }
 
 export function normalizeState(state: PerformerState): PerformerState {
@@ -81,10 +96,7 @@ export function normalizeState(state: PerformerState): PerformerState {
  * Единственный способ изменить состояние (`specs/0001`, п.4): никакой «естественной»
  * регенерации вне явного вызова.
  */
-export function applyStateChange(
-  performer: Performer,
-  delta: Partial<PerformerState>,
-): Performer {
+export function applyStateChange(performer: Performer, delta: Partial<PerformerState>): Performer {
   return {
     ...performer,
     state: normalizeState({
@@ -97,9 +109,10 @@ export function applyStateChange(
 
 /** Явное изменение статов: события, тренировки, штрафы. Границы соблюдаются всегда. */
 export function applyStatChange(performer: Performer, delta: Partial<Stats>): Performer {
-  const next = {} as Record<StatKey, number>;
-  for (const key of STAT_KEYS) next[key] = performer.stats[key] + (delta[key] ?? 0);
-  return { ...performer, stats: normalizeStats(next) };
+  return {
+    ...performer,
+    stats: normalizeStats(statsFrom((key) => performer.stats[key] + (delta[key] ?? 0))),
+  };
 }
 
 /**
@@ -121,9 +134,7 @@ export function advanceYear(performer: Performer): Performer {
 
   const yearsPastPeak = age - peakAge;
   const mechanicalDelta =
-    yearsPastPeak < 0
-      ? 0.9 * learnScale * headroom("mechanical")
-      : -0.45 - 0.18 * yearsPastPeak;
+    yearsPastPeak < 0 ? 0.9 * learnScale * headroom("mechanical") : -0.45 - 0.18 * yearsPastPeak;
 
   const cognitiveDelta = Math.max(0.1, 0.45 * learnScale * headroom("cognitive"));
 
@@ -160,8 +171,7 @@ export interface PerformerSnapshot {
 }
 
 export function serializePerformer(performer: Performer): PerformerSnapshot {
-  const stats = {} as Record<StatKey, number>;
-  for (const key of STAT_KEYS) stats[key] = performer.stats[key];
+  const stats = statsFrom((key) => performer.stats[key]);
   return {
     id: performer.id,
     name: performer.name,

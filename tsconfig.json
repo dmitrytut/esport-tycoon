@@ -20,6 +20,6 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["packages/**/*.ts", "tools/**/*.ts", "*.ts", "*.mts"],
+  "include": ["packages/**/*.ts", "tools/**/*.ts", "tests/**/*.ts", "*.ts", "*.mts"],
   "exclude": ["**/node_modules", "**/dist"]
 }

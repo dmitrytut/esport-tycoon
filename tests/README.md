@@ -3,8 +3,14 @@
 | Directory | What it checks |
 |---|---|
 | `unit/` | individual functions and value boundaries |
+| `property/` | invariants over generated inputs: a stat never leaves the scale, the shown range always contains the truth (`docs/adr/0014`) |
 | `golden/` | fixed outcomes: this lineup against that one with seed 42 gives this result. Catches unintended balance shifts that unit tests miss |
 | `sim/` | statistical properties over large runs: the bankruptcy rate stays in range, the placement distribution hasn't degenerated |
+
+The property layer lives in `packages/*/test/property/`, with the shared fast-check
+configuration in `tests/setup/fast-check.ts`. Its seed is pinned for the same reason golden
+files are: a test that fails once in twenty runs stops meaning anything. Changing the seed or
+`numRuns` is a deliberate commit of its own.
 
 ## About golden tests
 

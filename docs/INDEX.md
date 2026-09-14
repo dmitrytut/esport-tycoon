@@ -32,6 +32,10 @@ matching file: they give a short digest and an ADR number, not a retelling of th
 - `glossary.md` — terms: one word = one concept
 - `open-questions.md` — what's still undecided
 
+**Process** (`process/`)
+- `feature-dev-process.md` — the route from a filed issue to merged code, step by step,
+  with a sequence diagram
+
 **Specs** (outside `docs/`)
 - `openspec/specs/*` — the system's live behavior: what it does now. Updated
   by the `openspec archive` command in the implementation branch, not edited by hand

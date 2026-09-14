@@ -95,6 +95,12 @@ Details — `docs/design/tone.md`.
   (`docs/adr/0009`).
 - Noticed a discrepancy between design and code — don't stay silent and don't "fix" the design
   to match the code. Say plainly what diverges.
+- `.reviews/` — **local review artifacts**: notes from a code review run on this machine,
+  checklists, findings, diffs pulled apart for reading. The directory is gitignored and
+  nothing from it is ever committed: a review is an observation about a particular diff at
+  a particular moment, not a record of what the system does. What must survive a review
+  goes where it belongs — a defect into an issue, a decision into an ADR, a behavior into
+  a spec delta, a comment into the PR itself.
 
 ## Branches and worktrees
 

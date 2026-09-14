@@ -6,3 +6,6 @@ coverage/
 
 # Parallel Claude Code sessions create worktrees here (claude --worktree <name>).
 .claude/worktrees/
+
+# Local code-review artifacts: notes, checklists, findings. Never committed.
+.reviews/

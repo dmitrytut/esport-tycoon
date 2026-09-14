@@ -86,6 +86,10 @@ Details — `docs/design/tone.md`.
 - Links between layers go bottom-up: a requirement may carry an ADR number, an ADR does not
   reference requirements — it is frozen, while the spec changes on every archive.
   Work runs into an accepted ADR — stop: the ADR gets replaced by a separate PR first.
+- Source precedence when two of them disagree: **the check that runs beats the prose that
+  describes it.** `eslint.config.mjs`, `.githooks/`, `.claude/hooks/` and `pnpm verify` are
+  authoritative; `.claude/rules/*.md` and this file are digests of them and can go stale.
+  Found a divergence — fix the digest, and say so; never weaken the check to match the text.
 - `specs/*` — the old format. `0001` is implemented and, until the first archive, remains the
   single record of the performer model's behavior; `0002–0006` are stubs. We don't start new ones
   (`docs/adr/0009`).
@@ -115,6 +119,8 @@ The second worst is silently expanding the scope of a spec.
 | `openspec show <slug> --json --deltas-only` | which requirements a change touches |
 | `pnpm validate:spec` | verify spec artifacts (`openspec validate --all`) |
 | `claude --worktree <slug>` | parallel session in a separate checkout |
+| `gh pr create -T proposal.md` | open PR-1. Without `-T` GitHub applies no template at all |
+| `gh pr create -T implementation.md` | open PR-2, same reason |
 
 `openspec` is pinned in `devDependencies`, so `pnpm install` is the only thing needed
 for the gate and CI. A global install isn't required and is only useful for calling
@@ -132,7 +138,8 @@ Six workflows are installed: `propose`, `apply`, `archive`, `explore`, `sync`, `
 The `/opsx:continue` and `/opsx:new` mentioned inside them are not installed — use
 `openspec status --change <slug> --json` and `openspec new change <slug>` instead.
 
-Rules about golden: updating golden or baseline is a separate commit with a
-`golden:`/`baseline:` prefix and an explanation of what rule change shifted the numbers.
-A mixed "code + golden" commit is rejected by the hook. A red golden means "the simulation
-drifted," not "fix the file."
+Rules about golden: regenerating golden or baseline is its own pull request holding a single
+commit prefixed `golden:`/`baseline:` that explains which rule change shifted the numbers.
+There is no shorter route — `master` only takes pull requests. A mixed "code + golden" commit
+is rejected by the hook, and editing those paths inside a session is blocked by `PreToolUse`.
+A red golden means "the simulation drifted," not "fix the file."

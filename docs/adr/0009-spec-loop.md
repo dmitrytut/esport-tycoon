@@ -117,9 +117,10 @@ hand.
    red on the very first commit. `archive --skip-specs` only skips the merge step; it
    does not waive validation.
 6. **Golden and baseline are untouched by the branch.** A snapshot only makes sense
-   against the merged result, so regeneration is a separate commit on `master` with a
-   `golden:`/`baseline:` prefix (`tests/README.md`). Editing these paths within a session
-   is blocked by the `PreToolUse` hook.
+   against the merged result, so regeneration is its own pull request with a single
+   commit prefixed `golden:`/`baseline:` (`tests/README.md`). A direct commit on `master`
+   is not an option: the ruleset only accepts pull requests. Editing these paths within
+   a session is blocked by the `PreToolUse` hook.
 
 ### What happens to `specs/`
 

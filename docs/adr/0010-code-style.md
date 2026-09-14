@@ -34,12 +34,23 @@ check.
 | Import order | `simple-import-sort` |
 | Exhaustiveness of `switch` over a union | `switch-exhaustiveness-check` — `noFallthroughCasesInSwitch` doesn't do this |
 | Pointless casts | `no-unnecessary-type-assertion` |
-| Type assertions in packages' production code | `no-restricted-syntax`, `as const` is allowed |
-| Anonymous object types in exported signatures | `no-restricted-syntax` |
+| Type assertions in packages' production code | `consistent-type-assertions` with `assertionStyle: "never"` — catches both `x as T` and `<T>x`; `as const` and `satisfies` stay allowed by the rule itself |
+| `@ts-expect-error` in packages' production code | `ban-ts-comment` — it silences strictly more than any assertion |
+| Anonymous object types on the module surface | `et/no-anonymous-shape` |
 | Suppressing checks via `!` | `no-non-null-assertion` |
 | Core domain-neutrality | `et/no-domain-words` (`adr/0001`) |
 | Core determinism | `no-restricted-globals`, `no-restricted-properties` (`adr/0002`) |
-| Indentation and line endings outside code | `.editorconfig` |
+| Stale `eslint-disable` directives | `eslint . --max-warnings 0` — the default severity is a warning, which exits zero |
+
+Every ban above owns a rule id on purpose. `no-restricted-syntax` carries one array per
+config object and flat config replaces rule options rather than merging them, so a later
+block adding its own selector would erase the whole set silently, with a green gate. The
+same applies in reverse to `eslint-disable`: a directive naming a shared id would mute
+every ban on that line, including ones added later.
+
+`.editorconfig` is present but is an editor hint, not a gate — nothing in `pnpm verify`
+reads it. Line endings and the final newline of code files are covered by `prettier`;
+for everything else the file is advice.
 
 Markdown is not formatted: docs are Russian prose with hand-tuned layout, and
 `.claude/commands/opsx/*.md` are generated and would be rewritten by the formatter on
@@ -49,8 +60,9 @@ every package update.
 rules. What's there isn't only snapshot artifacts: the test itself lives right next to
 them, and an `it.skip` in it defeats the check no less than editing the numbers would.
 The whole directory is protected — by a `PreToolUse` hook against the agent, by an ignore
-entry against the formatter; any change there ships as a separate commit with a
-`golden:`/`baseline:` prefix (`tests/README.md`).
+entry against the formatter, and by every autofixable rule being switched off for those
+paths; any change there ships as its own pull request with a single commit prefixed
+`golden:`/`baseline:` (`tests/README.md`).
 
 ### Remains a convention
 
@@ -74,15 +86,15 @@ entry against the formatter; any change there ships as a separate commit with a
 4. **Where constants live.** Next to the code that honors them: `STAT_MAX` sits right
    next to `normalizeStats`, which enforces that bound. Only an ownerless constant goes
    into the shared `consts.ts`. Splitting a number from its guarantee across different
-   files turns a scale change into an edit of two places, one of which can be forgotten —
-   that's exactly how `specs/0001` ended up with "1–100" in one section and "1–20" in
-   another.
+   files turns a scale change into an edit of two places, one of which can be forgotten.
+   The retired `specs/` directory carries a live example of that failure, with two
+   different stat scales stated in one document.
 
 5. **Arguments as an object**, except in the simulation's hot loop, where allocation
    matters.
 
-6. **Code and names are English, comments and docs are Russian** (`adr/0007`). A comment
-   explains the reason, not a restatement of the line.
+6. **Code, names and comments are English** (`adr/0011`). A comment explains the reason,
+   not a restatement of the line.
 
 ## Rejected options
 

@@ -1,8 +1,6 @@
 ---
 name: Task
 about: A unit of work that will go through the spec loop (docs/adr/0009)
-title: ""
-labels: ""
 ---
 
 ## Why

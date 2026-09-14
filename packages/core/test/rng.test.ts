@@ -130,6 +130,16 @@ describe("draws", () => {
     expect([...shuffled].sort((a, b) => a - b)).toEqual(source);
   });
 
+  // This invariant is the whole justification for the two sanctioned type assertions in
+  // `shuffle` (ADR 0010). Replacing them with an `if (x === undefined) throw` would read
+  // as an improvement and would break this: `undefined` is a legal element of `T[]`.
+  it("shuffle treats undefined as an ordinary element", () => {
+    const source = [1, undefined, 3, undefined, 5];
+    const shuffled = createRng(23).shuffle(source);
+    expect(shuffled).toHaveLength(source.length);
+    expect(shuffled.filter((value) => value === undefined)).toHaveLength(2);
+  });
+
   it("weightedIndex never returns a zero-weight index", () => {
     const rng = createRng(17);
     for (let i = 0; i < 2000; i++) {

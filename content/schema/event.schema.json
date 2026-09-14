@@ -2,13 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Event",
   "type": "object",
-  "required": [
-    "id",
-    "category",
-    "weight",
-    "text",
-    "choices"
-  ],
+  "required": ["id", "category", "weight", "text", "choices"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -63,22 +57,13 @@
         "act": {
           "type": "array",
           "items": {
-            "enum": [
-              1,
-              2,
-              3
-            ]
+            "enum": [1, 2, 3]
           }
         },
         "weekType": {
           "type": "array",
           "items": {
-            "enum": [
-              "quiet",
-              "normal",
-              "match",
-              "tournament"
-            ]
+            "enum": ["quiet", "normal", "match", "tournament"]
           }
         },
         "region": {
@@ -100,10 +85,7 @@
       "maxItems": 3,
       "items": {
         "type": "object",
-        "required": [
-          "label",
-          "effects"
-        ],
+        "required": ["label", "effects"],
         "additionalProperties": false,
         "properties": {
           "label": {

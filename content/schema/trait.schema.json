@@ -2,12 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Character trait",
   "type": "object",
-  "required": [
-    "id",
-    "name",
-    "polarity",
-    "description"
-  ],
+  "required": ["id", "name", "polarity", "description"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -24,18 +19,10 @@
       "minLength": 20
     },
     "polarity": {
-      "enum": [
-        "positive",
-        "negative",
-        "mixed"
-      ]
+      "enum": ["positive", "negative", "mixed"]
     },
     "rarity": {
-      "enum": [
-        "common",
-        "uncommon",
-        "rare"
-      ],
+      "enum": ["common", "uncommon", "rare"],
       "default": "common"
     },
     "modifiers": {

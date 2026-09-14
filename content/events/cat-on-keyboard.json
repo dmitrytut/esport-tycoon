@@ -4,10 +4,7 @@
   "weight": 8,
   "cooldownWeeks": 40,
   "triggers": {
-    "weekType": [
-      "match",
-      "tournament"
-    ]
+    "weekType": ["match", "tournament"]
   },
   "text": "Decider map, four minutes on the clock. A cat strolls through {player}'s room and sits down on the keyboard. {player} does not move the cat, because \"he'll get bored and leave on his own\".",
   "choices": [

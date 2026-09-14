@@ -27,9 +27,15 @@ rules:
       the ADR it exists because of; an ADR never references a requirement. ADRs are
       frozen once accepted, spec requirements change on every archive.
     - >-
-      A proposal that contradicts an accepted ADR is not written. Stop, say which ADR
-      blocks it, and let a human replace that ADR in its own pull request first.
-      Never work around a decision by wording the requirement differently.
+      A proposal that contradicts an accepted ADR is not written. Stop and open a GitHub
+      issue titled "ADR NNNN blocks <slug>" labelled `process`, describing the conflict,
+      then report that issue number. A human replaces the ADR in its own pull request.
+      Never work around a decision by wording the requirement differently, and never end
+      the turn with the conflict living only in the transcript.
+    - >-
+      The proposal pull request is opened with `gh pr create -T proposal.md`. GitHub never
+      applies a template from PULL_REQUEST_TEMPLATE/ automatically, so without the flag the
+      review checklist for this stage simply does not appear.
 
 operations:
   apply:
@@ -53,3 +59,6 @@ operations:
         directories by hand: the workflow's manual `mkdir -p` and `mv` fall outside
         the granted `Bash(openspec:*)` permission and can leave the change half
         archived. If the command cannot merge a delta, stop and report it.
+      - >-
+        Open the implementation pull request with `gh pr create -T implementation.md`.
+        Same reason as the proposal stage: the directory form of the template is opt-in.

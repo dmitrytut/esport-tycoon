@@ -14,12 +14,7 @@
     "unit": "round",
     "momentumMeans": "tempo control inside the round",
     "tally": "rounds",
-    "columns": [
-      "Kills",
-      "Deaths",
-      "Assists",
-      "Economy"
-    ],
+    "columns": ["Kills", "Deaths", "Assists", "Economy"],
     "participants": 2
   },
   "economy": {
@@ -27,8 +22,5 @@
     "viewerScale": 0.8,
     "salaryScale": 1.0
   },
-  "strongRegions": [
-    "western-europe",
-    "cis"
-  ]
+  "strongRegions": ["western-europe", "cis"]
 }

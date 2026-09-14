@@ -29,5 +29,6 @@ export {
   STAT_MIN,
   type StatKey,
   type Stats,
+  statsFrom,
 } from "./performer.ts";
 export { createRng, restoreRng, type Rng, type RngState } from "./rng.ts";

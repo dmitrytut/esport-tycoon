@@ -12,8 +12,11 @@
 **/test/golden/**
 **/sim/baseline/**
 
-# Content is data by schema (ADR 0003). Shape is set by the schema and the generator.
-content/
+# `content/` is deliberately NOT ignored. A JSON Schema constrains shape, never indentation,
+# key order or line endings, and these files are written by agents, not by a generator — in a
+# directory designed for thousands of them (ADR 0003). Diff stability is exactly what the
+# PR-2 review question depends on. Verified: the tree already matches prettier, so turning
+# this on costs nothing and only locks it in.
 
 node_modules/
 pnpm-lock.yaml

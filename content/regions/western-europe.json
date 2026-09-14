@@ -31,8 +31,5 @@
     "visaRisk": 0.05,
     "audienceScale": 1.15
   },
-  "namePools": [
-    "en-male",
-    "en-nick"
-  ]
+  "namePools": ["en-male", "en-nick"]
 }

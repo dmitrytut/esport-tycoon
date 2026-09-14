@@ -4,14 +4,14 @@
 // AI-native SDLC playbook: a session must have a way to check its own work before
 // a human sees it. The gate is the same one for the agent, pre-commit, and CI.
 //
-// Only runs if the working tree has uncommitted changes that the gate can actually
-// check: sources, content, toolchain configs, spec artifacts. A turn where the agent
-// changed nothing doesn't pay the four seconds.
+// Only skipped when every uncommitted path is something the gate provably cannot check.
+// The filter is a deny-list on purpose: an allow-list fails silently — one forgotten path
+// (`packages/*/tsconfig.json`, a future `prettier.config.mjs`) turns the gate off for that
+// turn with no signal. Getting the deny-list wrong only costs a few needless seconds.
 
 import { execFileSync } from "node:child_process";
 
-const RELEVANT =
-  /\.(ts|mts)$|^content\/|^openspec\/|^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vitest\.config\.ts|eslint\.config\.mjs|\.prettierrc\.json|\.prettierignore|\.editorconfig)$/;
+const IRRELEVANT = /^docs\/|^specs\/|^\.github\/|^\.claude\/(?!hooks\/|settings)|(^|\/)README\.md$/;
 
 let raw = "";
 for await (const chunk of process.stdin) raw += chunk;
@@ -35,7 +35,7 @@ try {
   changed = run("git", ["status", "--porcelain"])
     .split("\n")
     .map((line) => line.slice(3).trim())
-    .filter((path) => path && RELEVANT.test(path));
+    .filter((path) => path && !IRRELEVANT.test(path));
 } catch {
   process.exit(0); // Not a git directory — nothing to check.
 }

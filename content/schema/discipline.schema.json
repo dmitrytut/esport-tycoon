@@ -2,13 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Discipline",
   "type": "object",
-  "required": [
-    "id",
-    "name",
-    "rosterSize",
-    "statWeights",
-    "contest"
-  ],
+  "required": ["id", "name", "rosterSize", "statWeights", "contest"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -27,12 +21,7 @@
     "statWeights": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "mechanical",
-        "cognitive",
-        "collective",
-        "composure"
-      ],
+      "required": ["mechanical", "cognitive", "collective", "composure"],
       "properties": {
         "mechanical": {
           "type": "number"
@@ -56,41 +45,21 @@
     },
     "contest": {
       "type": "object",
-      "required": [
-        "format",
-        "momentumMeans",
-        "tally",
-        "columns"
-      ],
+      "required": ["format", "momentumMeans", "tally", "columns"],
       "additionalProperties": false,
       "properties": {
         "format": {
-          "enum": [
-            "bo1",
-            "bo3",
-            "bo5",
-            "points-table"
-          ]
+          "enum": ["bo1", "bo3", "bo5", "points-table"]
         },
         "unit": {
-          "enum": [
-            "round",
-            "phase",
-            "map",
-            "half"
-          ]
+          "enum": ["round", "phase", "map", "half"]
         },
         "momentumMeans": {
           "type": "string",
           "description": "what the bar means in this discipline; the text is English, shown to the player (docs/adr/0007)"
         },
         "tally": {
-          "enum": [
-            "rounds",
-            "objectives",
-            "placement-points",
-            "goals"
-          ]
+          "enum": ["rounds", "objectives", "placement-points", "goals"]
         },
         "columns": {
           "type": "array",

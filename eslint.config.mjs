@@ -61,12 +61,66 @@ const noDomainWords = {
   },
 };
 
+/**
+ * Rule ADR 0010: a module-level signature must not carry an anonymous object shape.
+ *
+ * Selector-based attempts fail here: `no-restricted-syntax` uses a descendant combinator,
+ * so it fires inside function bodies, and it only sees the two export forms spelled out in
+ * the selector — `export default function`, `export class` methods, `export interface`
+ * members and `export { f }` after a plain declaration all slip through. The public surface
+ * of this repository is declared with interfaces, so those were exactly the misses.
+ *
+ * Reported: any object type literal in a type position at module level. Allowed: the body of
+ * a named type alias (`type Observation = { … }`) — that is how you name a shape.
+ */
+const noAnonymousShape = {
+  meta: {
+    type: "problem",
+    docs: { description: "named types on the module surface, see docs/adr/0010" },
+    schema: [],
+    messages: {
+      anonymous:
+        "anonymous object type on the module surface: it cannot be reused and cannot be " +
+        "named in a spec. Declare a named type or interface next to it (ADR 0010).",
+    },
+  },
+  create(context) {
+    return {
+      TSTypeLiteral(node) {
+        // The body of a named alias is the sanctioned way to declare a shape.
+        if (node.parent?.type === "TSTypeAliasDeclaration") return;
+        // Inside an implementation a local shape is fine — ADR 0010 refuses to ban it.
+        for (const ancestor of context.sourceCode.getAncestors(node)) {
+          if (ancestor.type === "BlockStatement") return;
+        }
+        context.report({ node, messageId: "anonymous" });
+      },
+    };
+  },
+};
+
 export default tseslint.config(
-  { ignores: ["**/node_modules/**", "**/dist/**", "content/**", "docs/**"] },
+  {
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "content/**",
+      "docs/**",
+      // Worktrees of parallel sessions are a different branch's checkout. Without this
+      // `pnpm verify` reddens on someone else's code — in the very workflow CLAUDE.md
+      // advertises. `.gitignore` covers prettier, flat config does not read it.
+      ".claude/worktrees/**",
+    ],
+  },
   tseslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.mts"],
-    plugins: { "simple-import-sort": simpleImportSort },
+    // Plugins are declared once for the whole repository: flat config refuses to
+    // redefine a namespace, and per-path blocks only switch rules on.
+    plugins: {
+      "simple-import-sort": simpleImportSort,
+      et: { rules: { "no-domain-words": noDomainWords, "no-anonymous-shape": noAnonymousShape } },
+    },
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
@@ -91,43 +145,43 @@ export default tseslint.config(
     // Correctness rules stay on, style rules are off — otherwise `--fix` would touch
     // files that neither the formatter nor an agent is allowed to touch.
     files: ["**/test/golden/**/*.ts", "**/sim/baseline/**/*.ts"],
-    rules: { "simple-import-sort/imports": "off", "simple-import-sort/exports": "off" },
+    // Every rule with an autofix has to be off here, not just the observed one: `--fix`
+    // rewrites whatever it can reach, and this directory is off limits for both the
+    // formatter and the agent.
+    rules: {
+      "simple-import-sort/imports": "off",
+      "simple-import-sort/exports": "off",
+      "@typescript-eslint/consistent-type-imports": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      eqeqeq: "off",
+      "prefer-const": "off",
+      "no-var": "off",
+    },
   },
   {
     // Package production code (ADR 0010). Tests and `tools/` live by softer rules:
     // in tests a type assertion is part of the setup, and in `tools/` it sits at the
     // boundary of JSON parsing, where `unknown` can't otherwise be narrowed and validity
     // is checked by ajv.
+    //
+    // Each ban owns a rule id. `no-restricted-syntax` holds a single array per config
+    // object, and flat config replaces rule options instead of merging them: one later
+    // block adding its own selector would silently erase every ban listed here, with a
+    // green gate and no warning. A dedicated id also keeps `eslint-disable` surgical.
     files: ["packages/*/src/**/*.ts"],
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: 'TSAsExpression:not([typeAnnotation.typeName.name="const"])',
-          message:
-            "type assertion: the compiler stops checking this spot. Rewrite it so " +
-            "the type is inferred (example — statsFrom in performer.ts). `as const` is allowed. " +
-            "If the case is provably safe — eslint-disable with an explanation (ADR 0010).",
-        },
-        {
-          selector: "ExportNamedDeclaration > FunctionDeclaration TSTypeLiteral",
-          message:
-            "anonymous object type in an exported signature: it cannot be reused " +
-            "and cannot be named in a spec. Add a named type nearby (ADR 0010).",
-        },
-        {
-          selector: "ExportNamedDeclaration > VariableDeclaration TSTypeLiteral",
-          message:
-            "anonymous object type in an exported signature: it cannot be reused " +
-            "and cannot be named in a spec. Add a named type nearby (ADR 0010).",
-        },
-      ],
+      // Catches both `x as T` and the angle form `<T>x`; `as const` and `satisfies`
+      // stay allowed by the rule itself.
+      "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
+      // `@ts-expect-error` silences strictly more than any assertion does.
+      "@typescript-eslint/ban-ts-comment": ["error", { "ts-expect-error": true }],
+      "et/no-anonymous-shape": "error",
     },
   },
   {
     // Core: domain-neutrality and full determinism.
     files: ["packages/core/**/*.ts"],
-    plugins: { et: { rules: { "no-domain-words": noDomainWords } } },
     rules: {
       "et/no-domain-words": "error",
       "no-restricted-globals": [

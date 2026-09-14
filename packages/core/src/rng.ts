@@ -109,14 +109,14 @@ function makeRng(seed: number, initial: RngState): Rng {
       const out = items.slice();
       for (let i = out.length - 1; i > 0; i--) {
         const j = int(0, i);
-        // The only type assertion in core (ADR 0010). Both indices are provably inside
-        // the array — `i` runs from length-1, `j` comes from int(0, i) — but under
-        // noUncheckedIndexedAccess the compiler cannot infer that. An undefined check
-        // here would mean a new exception path in the generic API: `shuffle<T | undefined>`
-        // would start failing on a legal value.
-        // eslint-disable-next-line no-restricted-syntax
+        // The two sanctioned type assertions in core (ADR 0010). Both indices are provably
+        // inside the array — `i` runs from length-1, `j` comes from int(0, i) — but under
+        // noUncheckedIndexedAccess the compiler cannot infer that. An undefined check here
+        // would mean a new exception path in the generic API: `shuffle<T | undefined>` would
+        // start failing on a legal value. The invariant is pinned by a test in rng.test.ts.
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         const left = out[i] as (typeof out)[number];
-        // eslint-disable-next-line no-restricted-syntax
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         const right = out[j] as (typeof out)[number];
         out[i] = right;
         out[j] = left;

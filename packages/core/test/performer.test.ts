@@ -10,6 +10,8 @@ import {
   STAT_KEYS,
   STAT_MAX,
   STAT_MIN,
+  type StatKey,
+  statsFrom,
 } from "../src/performer.ts";
 import { createRng } from "../src/rng.ts";
 
@@ -31,6 +33,24 @@ const params: GenerateParams = {
     { id: "tilter", weight: 2 },
   ],
 };
+
+describe("statsFrom (ADR 0010)", () => {
+  // The ban on type assertions replaced a `for (const key of STAT_KEYS)` loop with an
+  // explicit object literal. Field order in that literal is now load-bearing:
+  // generatePerformer draws RNG inside `make`, so a reordering silently shuffles which
+  // roll lands on which stat. `Record<StatKey, T>` checks the *set* of keys, never the
+  // order, so nothing else in the type system pins this down.
+  it("evaluates fields in STAT_KEYS order", () => {
+    const seen: StatKey[] = [];
+    const built = statsFrom((key) => {
+      seen.push(key);
+      return key;
+    });
+
+    expect(seen).toEqual([...STAT_KEYS]);
+    expect(Object.keys(built)).toEqual([...STAT_KEYS]);
+  });
+});
 
 describe("generation (specs/0001)", () => {
   it("one seed and the same params give an identical performer", () => {

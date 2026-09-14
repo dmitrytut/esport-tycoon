@@ -28,7 +28,7 @@ sequenceDiagram
     H->>M: 2. /opsx:propose <slug>
     M->>H: clarifying questions
     H-->>M: answers
-    M->>G: 3. PR-1 (gh pr create -T proposal.md)
+    M->>G: 3. PR-1 (gh pr create, body = filled proposal.md)
     Note over G: openspec/changes/<slug>/ only
     G-->>H: verify is green
     H->>H: 4. review of intent and requirements
@@ -39,7 +39,7 @@ sequenceDiagram
     W->>W: 7. /opsx:apply through tasks.md
     Note over W: PreToolUse and Stop block the shortcuts
     W->>W: 8. /opsx:archive <slug> on the branch
-    W->>G: 9. PR-2 (gh pr create -T implementation.md)
+    W->>G: 9. PR-2 (gh pr create, body = filled implementation.md)
     G-->>H: verify on the merge commit
     H->>H: 10. review — diff against the requirements
     H->>G: 11. merge — the human only
@@ -59,8 +59,18 @@ accepted ADR stops and opens an issue `ADR NNNN blocks <slug>` — a decision is
 around by rewording a requirement.
 
 **3. PR-1.** Branch `<type>/<issue>-<slug>`, for example `feat/7-week-loop`. It carries the
-change directory and nothing else. Opened with `gh pr create -T proposal.md`: GitHub does
-not apply a template from `PULL_REQUEST_TEMPLATE/` on its own.
+change directory and nothing else. GitHub applies nothing from `PULL_REQUEST_TEMPLATE/` on
+its own, so the body is handed over explicitly: fill a copy of
+`.github/PULL_REQUEST_TEMPLATE/proposal.md` and pass it as the body.
+
+```
+cp .github/PULL_REQUEST_TEMPLATE/proposal.md /tmp/pr-1.md   # then fill it in
+gh pr create -t "<title, Russian like every message to a human>" -F /tmp/pr-1.md
+```
+
+`gh pr create -T proposal.md` does the same from a terminal, but only there: `-T` seeds the
+editor, and without a TTY `gh` (2.92) refuses with "must provide `--title` and `--body` ...
+when not running interactively". A session has no TTY, so an agent uses `-F`.
 
 **4. First review — the cheap one.** You read the requirements, not the code. An objection
 costs one sentence here and a rewrite later. The human merges.
@@ -90,9 +100,9 @@ delta merges into `openspec/specs/`, the change directory moves to `changes/arch
 the branch on purpose — a disagreement between two changes then surfaces as a git conflict
 during rebase, before the merge rather than after it.
 
-**9. PR-2.** Code plus the updated spec, opened with `gh pr create -T implementation.md`.
-CI runs `verify` on the merge commit, so a snapshot invalidated by a neighbouring merge
-turns red here rather than on `master`.
+**9. PR-2.** Code plus the updated spec. The body is handed over the same way, from a filled
+copy of `implementation.md`. CI runs `verify` on the merge commit, so a snapshot invalidated
+by a neighbouring merge turns red here rather than on `master`.
 
 **10. Second review.** One question: does the diff do exactly the accepted requirements and
 nothing else. Review notes go to `.reviews/`, which is gitignored — whatever must survive

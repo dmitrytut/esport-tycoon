@@ -108,7 +108,7 @@ Details — `docs/design/tone.md`.
   goes where it belongs — a defect into an issue, a decision into an ADR, a behavior into
   a spec delta, a comment into the PR itself.
 
-## Branches and worktrees
+## Branches, worktrees and pull requests
 
 One task — one branch — one worktree. `master` is never written to directly; the ruleset
 rejects it.
@@ -119,6 +119,11 @@ the change slug. `feat/8-week-loop`, `bugfix/14-energy-clamp`, `chore/branch-nam
 there is no issue. Both pull requests of a change use the same name in turn: the proposal
 branch is deleted on merge, and implementation starts only after that (`docs/adr/0009`),
 so the name is free again. Reason — `docs/adr/0012`.
+
+Pull request title: `<type>: <what> (#<issue>)` — English, lowercase after the colon, no
+trailing period, short. Types are the branch ones plus `docs`, `golden`, `baseline`;
+`bugfix` shortens to `fix`. `feat: weekly cycle (#7)`, `chore: pr title convention` without
+an issue. Nothing checks it: a wrong title is fixed by editing it, not by a red gate.
 
 Create the worktree first, then open it — `claude --worktree <name>` alone would name the
 branch `worktree-<name>`, and that name cannot be configured:

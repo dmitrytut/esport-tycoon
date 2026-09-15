@@ -8,10 +8,19 @@
       "Bash(gh pr checks:*)",
       "Bash(gh pr list:*)",
       "Bash(gh issue:*)",
+      "Bash(gh label:*)",
+      "Bash(gh api repos/dmitrytut/esport-tycoon/issues:*)",
+      "Bash(gh api repos/dmitrytut/esport-tycoon/labels:*)",
+      "Bash(gh api repos/dmitrytut/esport-tycoon/milestones:*)",
       "Bash(pnpm:*)",
       "Bash(openspec:*)"
     ],
-    "deny": ["Bash(gh pr merge:*)", "Bash(gh pr review:*)", "Bash(gh api:*)"]
+    "deny": [
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr review:*)",
+      "Bash(gh api graphql:*)",
+      "Bash(gh api repos/dmitrytut/esport-tycoon/pulls:*)"
+    ]
   },
   "hooks": {
     "SessionStart": [

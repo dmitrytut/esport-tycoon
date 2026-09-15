@@ -140,9 +140,10 @@ checkout and from redirecting git back into it. A worktree is a fresh checkout w
 **Merging is the human's action, never the agent's.** The agent opens the pull request,
 reports that the gate is green, and stops there. The `master` ruleset requires no approving
 review, so nothing on GitHub stops the author from merging — the session does:
-`.claude/settings.json` denies `gh pr merge`, `gh pr review` and `gh api` (the REST and
-GraphQL routes to the same merge). The human merges, from their own terminal, after the
-review checkpoints of `docs/adr/0009` have happened — and only the human knows whether they did.
+`.claude/settings.json` denies `gh pr merge`, `gh pr review` and the `gh api` routes that
+reach a merge, allowing `gh api` only on this repository's tracker routes; anything else
+under it stops and asks. The human merges, from their own terminal, after the review
+checkpoints of `docs/adr/0009` have happened — and only the human knows whether they did.
 
 After the merge: the remote branch is deleted by GitHub, the local one is not. Clean up
 with `git worktree remove .claude/worktrees/<name>` and `git branch -d <branch>` — a
@@ -171,7 +172,6 @@ The second worst is silently expanding the scope of a spec.
 | `/opsx:archive <slug>` | on the implementation branch: merge the delta into `openspec/specs` |
 | `openspec list --json` | active changes: what's currently in flight |
 | `openspec show <slug> --json --deltas-only` | which requirements a change touches |
-| `pnpm validate:spec` | verify spec artifacts (`openspec validate --all`) |
 | `claude --worktree <slug>` | parallel session in a separate checkout |
 | `gh pr create -t "…" -F <filled copy>` | open a PR from a session. Fill a copy of `.github/PULL_REQUEST_TEMPLATE/proposal.md` (PR-1) or `implementation.md` (PR-2) and pass it as the body |
 | `gh pr create -T proposal.md` | the same from a terminal: `-T` only seeds the editor, so it needs an interactive run. GitHub applies no template on its own either way |

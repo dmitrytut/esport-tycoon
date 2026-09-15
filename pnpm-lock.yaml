@@ -198,6 +198,8 @@ importers:
 
   tools/check-language: {}
 
+  tools/sync-labels: {}
+
   tools/validate-content:
     dependencies:
       ajv:

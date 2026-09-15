@@ -1,0 +1,10 @@
+{
+  "name": "@et/sync-labels",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The issue label taxonomy as data, checked against the repository",
+  "bin": {
+    "sync-labels": "./src/index.ts"
+  }
+}

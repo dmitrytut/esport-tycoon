@@ -1,0 +1,112 @@
+{
+  "axes": [
+    {
+      "name": "area",
+      "cardinality": "exactly-one",
+      "purpose": "Where the work lands. Decides who reads the issue and which docs it draws intent from."
+    },
+    {
+      "name": "kind",
+      "cardinality": "at-most-one",
+      "purpose": "What sort of work it is. Decides the route: spec loop, a plain pull request, or a throwaway probe."
+    },
+    {
+      "name": "flow",
+      "cardinality": "any",
+      "purpose": "Where the issue sits in the queue. A statement about the ticket, never about the work."
+    }
+  ],
+  "labels": [
+    {
+      "name": "gameplay",
+      "axis": "area",
+      "color": "1d76db",
+      "description": "Rules and mechanics of the simulation",
+      "when": "The change alters what the game does: a week, a contest, a contract, an incident, a trait. Not the numbers inside a rule that already exists — those are `balance`."
+    },
+    {
+      "name": "balance",
+      "axis": "area",
+      "color": "0e8a16",
+      "description": "Numbers, baseline and the simulation harness",
+      "when": "The rule stays, the numbers move: salaries, prize money, recovery rates, thresholds, stat weights. Also the harness that measures them and the baseline it compares against."
+    },
+    {
+      "name": "game-tech",
+      "axis": "area",
+      "color": "5319e7",
+      "description": "Shell, scene, art, animation, sound, localization",
+      "when": "Everything between the core and the player: the Vite shell, the Pixi scene, DOM panels, sprite pipeline, audio, saves, the localization mechanism."
+    },
+    {
+      "name": "harness",
+      "axis": "area",
+      "color": "006b75",
+      "description": "Process, gates, CI, the agent loop",
+      "when": "The repository's own machinery: `pnpm verify`, hooks, permissions, templates, CI workflows, the spec loop, anything that changes how work gets done rather than what the game does."
+    },
+    {
+      "name": "content",
+      "axis": "area",
+      "color": "fbca04",
+      "description": "Data under content/, no code change",
+      "when": "Writing events, traits, disciplines, regions, name pools against an existing schema. If the schema itself has to change, the area is `gameplay` and this is not enough."
+    },
+    {
+      "name": "mechanic",
+      "axis": "kind",
+      "color": "d93f0b",
+      "description": "Goes through the spec loop: two pull requests (ADR 0009)",
+      "when": "Adds or changes behaviour the specs have to record. Proposal first, code second, `openspec archive` on the implementation branch."
+    },
+    {
+      "name": "bug",
+      "axis": "kind",
+      "color": "d73a4a",
+      "description": "Behaviour differs from the spec that records it",
+      "when": "The rule is already written down and the code disagrees with it. Branch type `bugfix`, or `hotfix` when it is on master. If no spec says what the behaviour should be, it is not a bug yet — it is a `mechanic`."
+    },
+    {
+      "name": "tooling",
+      "axis": "kind",
+      "color": "c2e0c6",
+      "description": "A tool or a script",
+      "when": "Something under `tools/`, a package script, a CI job. No spec delta, one pull request."
+    },
+    {
+      "name": "adr",
+      "axis": "kind",
+      "color": "b60205",
+      "description": "A decision, its own pull request before any spec",
+      "when": "A question of the form 'why this way and not another' whose answer outlives the change. ADRs are never rewritten, so they land alone and first."
+    },
+    {
+      "name": "spike",
+      "axis": "kind",
+      "color": "bfd4f2",
+      "description": "Answers a question; the code is throwaway",
+      "when": "The deliverable is a finding, not a feature. Anything built is labelled throwaway in the report and is not merged as-is."
+    },
+    {
+      "name": "docs",
+      "axis": "kind",
+      "color": "d4c5f9",
+      "description": "Documents only",
+      "when": "`docs/`, `README`, digests. Note that `docs/design/*` is the intent layer and changes only on the author's explicit request."
+    },
+    {
+      "name": "blocked",
+      "axis": "flow",
+      "color": "e11d21",
+      "description": "Has an open dependency; the blocker is named in the body",
+      "when": "Put it on when the dependency is opened and take it off when the dependency merges. A blocker stated only in prose goes stale unnoticed — that is what this label is for."
+    },
+    {
+      "name": "tracking",
+      "axis": "flow",
+      "color": "ededed",
+      "description": "Holds a checklist of other issues; not worked on itself",
+      "when": "A group that is not yet specified far enough for real issues. Items without a number are deliberately unwritten, and that is visible."
+    }
+  ]
+}

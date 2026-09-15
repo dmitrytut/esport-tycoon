@@ -101,6 +101,11 @@ Details — `docs/design/tone.md`.
   (`docs/adr/0009`).
 - Noticed a discrepancy between design and code — don't stay silent and don't "fix" the design
   to match the code. Say plainly what diverges.
+- `.github/labels.json` — **the issue label taxonomy**: every label that may exist, which
+  axis it belongs to, and when to reach for it. Three axes: `area` (exactly one), `kind` (at
+  most one), `flow` (any). Don't invent a label in the tracker — declare it here first, then
+  `pnpm labels:apply`. `pnpm labels:check` catches both a label nobody declared and an issue
+  that wears the wrong number of them.
 - `.reviews/` — **local review artifacts**: notes from a code review run on this machine,
   checklists, findings, diffs pulled apart for reading. The directory is gitignored and
   nothing from it is ever committed: a review is an observation about a particular diff at
@@ -166,6 +171,8 @@ The second worst is silently expanding the scope of a spec.
 | `pnpm validate:content` | schemas and referential integrity of `content/` |
 | `pnpm validate:spec` | OpenSpec artifacts (`openspec validate --all`) |
 | `pnpm check:language` | English everywhere except `docs/design/`, `content/names/ru-*`, `specs/` (ADR 0011) |
+| `pnpm labels:check` | issue labels against `.github/labels.json`: the set and how open issues wear it. Needs `gh`, so it is not in `pnpm verify` |
+| `pnpm labels:apply` | pushes the declared labels to GitHub. Never deletes: an undeclared label is reported, not removed |
 | `pnpm run hooks:install` | enable local git hooks (once per machine) |
 | `/opsx:propose <slug>` | start a change: proposal, spec delta, tasks |
 | `/opsx:apply` | implement the change's tasks |

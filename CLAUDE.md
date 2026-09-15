@@ -145,10 +145,14 @@ checkout and from redirecting git back into it. A worktree is a fresh checkout w
 **Merging is the human's action, never the agent's.** The agent opens the pull request,
 reports that the gate is green, and stops there. The `master` ruleset requires no approving
 review, so nothing on GitHub stops the author from merging — the session does:
-`.claude/settings.json` denies `gh pr merge`, `gh pr review` and the `gh api` routes that
-reach a merge, allowing `gh api` only on this repository's tracker routes; anything else
-under it stops and asks. The human merges, from their own terminal, after the review
-checkpoints of `docs/adr/0009` have happened — and only the human knows whether they did.
+`.claude/settings.json` denies `gh pr merge`, `gh pr review`, and the two `gh api` routes
+that reach a merge — `graphql` and `pulls/*/merge`. `gh pr review` is denied whole because a
+prefix cannot tell `--approve` from `--comment`, and an agent's approval would put a review
+on the record that no human performed. Leaving feedback is not blocked: `gh pr comment` and
+the `pulls/*/comments` route are allowed, as are this repository's tracker routes. Anything
+else under `gh api` is neither allowed nor denied, so it stops and asks. The human merges,
+from their own terminal, after the review checkpoints of `docs/adr/0009` have happened — and
+only the human knows whether they did.
 
 After the merge: the remote branch is deleted by GitHub, the local one is not. Clean up
 with `git worktree remove .claude/worktrees/<name>` and `git branch -d <branch>` — a

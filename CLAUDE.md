@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Instructions for agents working in this repository. Read automatically.
-Keep it under 200 lines: this file itself spends context.
+Keep it under 300 lines: this file itself spends context.
 
 ## What this project is
 

@@ -2,6 +2,7 @@ export {
   type Activity,
   type ActivityEffect,
   type ActivityTarget,
+  type AudienceEffect,
   type EnergyEffect,
   type MoneyEffect,
   type MoraleEffect,
@@ -26,8 +27,10 @@ export { type Observation, observe, type ObservedRange, type ObservedStats } fro
 export {
   ACT_ONE_SLOTS,
   applyOrgChange,
+  AUDIENCE_HALF_REACH,
   type Org,
   type OrgChange,
+  reach,
   REPUTATION_MAX,
   REPUTATION_MIN,
 } from "./org.ts";

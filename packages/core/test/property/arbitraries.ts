@@ -103,6 +103,11 @@ export const activityEffectArb: fc.Arbitrary<ActivityEffect> = fc.oneof(
   fc.record({
     kind: fc.constant("money" as const),
     amount: fc.double({ min: -20_000, max: 20_000, noNaN: true }),
+    scale: fc.constantFrom("flat" as const, "audience" as const),
+  }),
+  fc.record({
+    kind: fc.constant("audience" as const),
+    amount: fc.double({ min: -100_000, max: 100_000, noNaN: true }),
   }),
   fc.record({
     kind: fc.constant("reputation" as const),
@@ -125,6 +130,7 @@ export const orgArb: fc.Arbitrary<Org> = fc.record({
   id: fc.constant("house"),
   name: fc.constant("House"),
   money: fc.double({ min: -10_000, max: 100_000, noNaN: true }),
+  audience: fc.double({ min: 0, max: 1_000_000, noNaN: true }),
   reputation: fc.double({ min: 0, max: 100, noNaN: true }),
   slots: fc.integer({ min: 1, max: 8 }),
 });

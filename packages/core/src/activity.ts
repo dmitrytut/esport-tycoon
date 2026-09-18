@@ -43,6 +43,16 @@ export interface MoneyEffect {
   readonly kind: "money";
   /** Signed change of the balance; negative debits it. */
   readonly amount: number;
+  /** How income is resolved. Absent means the declared amount is flat. */
+  readonly scale?: "flat" | "audience";
+}
+
+/** Moves the org's audience once per execution, not once per participant. */
+export interface AudienceEffect {
+  /** Discriminator of the effect union. */
+  readonly kind: "audience";
+  /** Signed change of the audience; the org clamps the result at zero. */
+  readonly amount: number;
 }
 
 /** Moves the org's reputation once per execution, not once per participant. */
@@ -54,11 +64,11 @@ export interface ReputationEffect {
 }
 
 /**
- * The closed set of effect kinds. A sixth kind is a change of its own (`adr/0003`): an
+ * The closed set of effect kinds. Each kind is a change of its own (`adr/0003`): an
  * expression field would turn `content/` into code the validator cannot judge.
  */
 export type ActivityEffect =
-  StatEffect | EnergyEffect | MoraleEffect | MoneyEffect | ReputationEffect;
+  StatEffect | EnergyEffect | MoraleEffect | MoneyEffect | AudienceEffect | ReputationEffect;
 
 /** One activity as loaded from content. Core never reads a file: the caller hands it over. */
 export interface Activity {

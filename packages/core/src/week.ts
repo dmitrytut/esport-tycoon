@@ -14,7 +14,7 @@ import type { Activity } from "./activity.ts";
 import type { Collective } from "./collective.ts";
 import { participantsOf } from "./collective.ts";
 import type { Org } from "./org.ts";
-import { applyOrgChange } from "./org.ts";
+import { applyOrgChange, reach } from "./org.ts";
 import type { PerformerState, StatKey } from "./performer.ts";
 import { applyStatChange, applyStateChange, statsFrom } from "./performer.ts";
 import type { RngState } from "./rng.ts";
@@ -366,6 +366,7 @@ export function executeWeek(
     let energyDelta = -activity.energy;
     let moraleDelta = 0;
     let moneyDelta = 0;
+    let audienceDelta = 0;
     let reputationDelta = 0;
     for (const effect of activity.effects) {
       switch (effect.kind) {
@@ -378,8 +379,20 @@ export function executeWeek(
         case "morale":
           moraleDelta += effect.amount;
           break;
-        case "money":
-          moneyDelta += effect.amount;
+        case "money": {
+          if (effect.scale !== "audience") {
+            moneyDelta += effect.amount;
+            break;
+          }
+          const scaled = Math.round(effect.amount * reach(org) * 10) / 10;
+          // The money grid may round finite reach to the base, so cap positive payouts at
+          // the highest tenth that remains strictly below it.
+          const belowBase = Math.ceil(effect.amount * 10) / 10 - 0.1;
+          moneyDelta += effect.amount > 0 ? Math.min(scaled, belowBase) : scaled;
+          break;
+        }
+        case "audience":
+          audienceDelta += effect.amount;
           break;
         case "reputation":
           reputationDelta += effect.amount;
@@ -399,10 +412,14 @@ export function executeWeek(
         }),
       };
     }
-    // Money and reputation belong to the org, so they land once per execution and are not
-    // multiplied by however many people took part.
-    if (moneyDelta !== 0 || reputationDelta !== 0) {
-      org = applyOrgChange(org, { money: moneyDelta, reputation: reputationDelta });
+    // Money, audience and reputation belong to the org, so they land once per execution and
+    // are not multiplied by however many people took part.
+    if (moneyDelta !== 0 || audienceDelta !== 0 || reputationDelta !== 0) {
+      org = applyOrgChange(org, {
+        money: moneyDelta,
+        audience: audienceDelta,
+        reputation: reputationDelta,
+      });
     }
 
     executed.push({ activityId: activity.id, participantIds: [...participantIds], excludedIds });

@@ -46,5 +46,6 @@ The core knows nothing about esports. Correspondences:
 | `Activity` | Activity |
 | `Incident` | Event |
 | `Org` | Organization |
+| `Audience` | Fanbase |
 
 Reason — `adr/0001`. The second subject domain — `adr/0004`.

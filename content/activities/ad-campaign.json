@@ -7,7 +7,8 @@
   "effects": [
     {
       "kind": "money",
-      "amount": 5000
+      "amount": 5000,
+      "scale": "audience"
     },
     {
       "kind": "morale",

@@ -192,6 +192,45 @@ describe("content validator (ADR 0003)", () => {
     expect(result.output).toContain('"aim" is not in the list');
   });
 
+  it("rejects scale on a non-money effect", () => {
+    const root = fresh();
+    put(root, "activities/bootcamp.json", {
+      ...activity,
+      effects: [{ kind: "stat", stat: "collective", amount: 0.8, scale: "audience" }],
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/activities/bootcamp.json");
+  });
+
+  it("rejects an unknown money scale and lists the allowed ones", () => {
+    const root = fresh();
+    put(root, "activities/bootcamp.json", {
+      ...activity,
+      effects: [{ kind: "money", amount: 5000, scale: "viewers" }],
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/activities/bootcamp.json");
+    expect(result.output).toContain("[flat, audience]");
+  });
+
+  it("accepts audience-scaled money and audience effects", () => {
+    const root = fresh();
+    put(root, "activities/bootcamp.json", {
+      ...activity,
+      effects: [
+        { kind: "money", amount: 5000, scale: "audience" },
+        { kind: "audience", amount: 400 },
+      ],
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(0);
+  });
+
   it("rejects an unknown effect kind and lists the allowed ones", () => {
     const root = fresh();
     put(root, "activities/bootcamp.json", {
@@ -201,6 +240,6 @@ describe("content validator (ADR 0003)", () => {
 
     const result = run(root);
     expect(result.code).toBe(1);
-    expect(result.output).toContain("[stat, energy, morale, money, reputation]");
+    expect(result.output).toContain("[stat, energy, morale, money, audience, reputation]");
   });
 });

@@ -100,6 +100,71 @@ describe("effects", () => {
     expect(outcome.state.org.reputation).toBe(53);
   });
 
+  it("credits a flat money effect regardless of the audience", () => {
+    const activity = makeActivity({
+      id: "flat-fee",
+      effects: [{ kind: "money", amount: 400, scale: "flat" }],
+    });
+    const state = makeState(makeCollective(five()), makeOrg(10_000, 5, 50_000));
+
+    expect(executeWeek(state, [{ activity }]).state.org.money).toBe(10_400);
+  });
+
+  it("scales audience-driven money by the current reach", () => {
+    const stream = makeActivity({
+      id: "stream",
+      effects: [{ kind: "money", amount: 5_000, scale: "audience" }],
+    });
+    const unknown = makeState(makeCollective(five()), makeOrg(10_000, 5, 0));
+    const established = makeState(makeCollective(five()), makeOrg(10_000, 5, 50_000));
+
+    expect(executeWeek(unknown, [{ activity: stream }]).state.org.money).toBe(10_000);
+    expect(executeWeek(established, [{ activity: stream }]).state.org.money).toBe(12_500);
+  });
+
+  it("keeps a finite high-audience payout below its base after money normalization", () => {
+    const activity = makeActivity({
+      id: "large-reach",
+      effects: [{ kind: "money", amount: 1, scale: "audience" }],
+    });
+    const state = makeState(makeCollective(five()), makeOrg(0, 5, 1_000_000_000));
+
+    expect(executeWeek(state, [{ activity }]).state.org.money).toBe(0.9);
+  });
+
+  it("uses audience gained earlier in the same week for later income", () => {
+    const grow = makeActivity({
+      id: "grow",
+      effects: [{ kind: "audience", amount: 400 }],
+    });
+    const campaign = makeActivity({
+      id: "campaign",
+      effects: [{ kind: "money", amount: 5_000, scale: "audience" }],
+    });
+    const state = makeState(makeCollective(five()), makeOrg(10_000, 5, 50_000));
+
+    const outcome = executeWeek(state, [{ activity: grow }, { activity: campaign }]);
+
+    expect(outcome.state.org.audience).toBe(50_400);
+    expect(outcome.state.org.money).toBe(12_510);
+  });
+
+  it("moves audience once rather than once per participant", () => {
+    const grow = makeActivity({
+      id: "grow",
+      effects: [{ kind: "audience", amount: 400 }],
+    });
+    const state = makeState(makeCollective(five().slice(0, 4)), makeOrg(10_000, 5, 100));
+
+    expect(executeWeek(state, [{ activity: grow }]).state.org.audience).toBe(500);
+  });
+
+  it("leaves audience unchanged across weeks without an audience effect", () => {
+    const state = makeState(makeCollective(five()), makeOrg(10_000, 5, 750));
+
+    expect(advance(state, emptyWeeks(4)).state.org.audience).toBe(750);
+  });
+
   it("aims a member activity at the one named", () => {
     const drill = makeActivity({
       id: "drill",

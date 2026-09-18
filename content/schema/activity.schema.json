@@ -36,7 +36,7 @@
         "required": ["kind", "amount"],
         "properties": {
           "kind": {
-            "enum": ["stat", "energy", "morale", "money", "reputation"],
+            "enum": ["stat", "energy", "morale", "money", "audience", "reputation"],
             "description": "closed set; what a kind means is decided by code (docs/adr/0003)"
           },
           "stat": {
@@ -47,6 +47,10 @@
           "amount": {
             "type": "number",
             "description": "signed change; negative debits"
+          },
+          "scale": {
+            "enum": ["flat", "audience"],
+            "description": "money only; absent means flat, audience uses current org reach"
           }
         },
         "allOf": [
@@ -63,6 +67,18 @@
               "not": {
                 "required": ["stat"],
                 "properties": { "stat": { "type": "string", "pattern": "^[a-z]+$" } }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": ["kind"],
+              "properties": { "kind": { "const": "money" } }
+            },
+            "else": {
+              "not": {
+                "required": ["scale"],
+                "properties": { "scale": { "enum": ["flat", "audience"] } }
               }
             }
           }

@@ -11,7 +11,8 @@ import type {
   StopReasonKind,
   WeekPlan,
 } from "../../src/week.ts";
-import { advance, UNMASKABLE_REASONS } from "../../src/week.ts";
+import { advance, executeWeek, UNMASKABLE_REASONS } from "../../src/week.ts";
+import { makeActivity, makeCollective, makeOrg, makePerformer, makeState } from "../fixtures.ts";
 import { collectiveArb, planArb, runStateArb, seedArb } from "./arbitraries.ts";
 
 /** A run together with a plan written for its own members. */
@@ -58,6 +59,37 @@ describe("the week loop: invariants", () => {
           expect(member.state.morale).toBeLessThanOrEqual(MORALE_MAX);
         }
       }),
+    );
+  });
+
+  it("never lets audience fall below zero", () => {
+    fc.assert(
+      fc.property(runArb, ([state, plan]) => {
+        expect(advance(state, plan).state.org.audience).toBeGreaterThanOrEqual(0);
+      }),
+    );
+  });
+
+  it("never credits more than an audience-driven base", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 1_000_000 }),
+        fc.double({ min: 0, max: 20_000, noNaN: true }),
+        (audience, base) => {
+          const activity = makeActivity({
+            id: "audience-income",
+            effects: [{ kind: "money", amount: base, scale: "audience" }],
+          });
+          const state = makeState(
+            makeCollective([makePerformer("member")]),
+            makeOrg(0, 1, audience),
+          );
+          const credited = executeWeek(state, [{ activity }]).state.org.money;
+
+          expect(credited).toBeGreaterThanOrEqual(0);
+          expect(credited).toBeLessThanOrEqual(base);
+        },
+      ),
     );
   });
 

@@ -33,9 +33,9 @@ export function makeCollective(members: readonly Performer[]): Collective {
   return { id: "first", name: "First", members };
 }
 
-/** An org with money to lose and the act-one slot pool. */
-export function makeOrg(money = 10_000, slots: number = ACT_ONE_SLOTS): Org {
-  return { id: "house", name: "House", money, reputation: 50, slots };
+/** An org with money to lose, no audience and the act-one slot pool. */
+export function makeOrg(money = 10_000, slots: number = ACT_ONE_SLOTS, audience = 0): Org {
+  return { id: "house", name: "House", money, audience, reputation: 50, slots };
 }
 
 /** A run parked at a given week, with a stream that nothing has drawn from yet. */

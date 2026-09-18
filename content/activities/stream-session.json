@@ -7,10 +7,11 @@
   "effects": [
     {
       "kind": "money",
-      "amount": 1200
+      "amount": 1200,
+      "scale": "audience"
     },
     {
-      "kind": "reputation",
+      "kind": "audience",
       "amount": 2
     }
   ]

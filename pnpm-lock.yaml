@@ -198,6 +198,8 @@ importers:
 
   tools/check-language: {}
 
+  tools/check-lockfile: {}
+
   tools/sync-labels: {}
 
   tools/validate-content:

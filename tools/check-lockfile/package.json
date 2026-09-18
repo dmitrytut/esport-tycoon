@@ -1,0 +1,10 @@
+{
+  "name": "@et/check-lockfile",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Checks that pnpm-lock.yaml matches every workspace manifest",
+  "bin": {
+    "check-lockfile": "./src/index.ts"
+  }
+}

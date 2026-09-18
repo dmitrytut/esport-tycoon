@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,10 +59,16 @@ const fresh = (): string => {
 };
 
 describe("lockfile checker", () => {
-  it("accepts a workspace whose manifests and importers agree", () => {
-    const result = run(fresh());
+  it("accepts a synchronized workspace without writing install state", () => {
+    const root = fresh();
+    const lockfilePath = join(root, "pnpm-lock.yaml");
+    const lockfileBefore = readFileSync(lockfilePath, "utf8");
+
+    const result = run(root);
 
     expect(result).toEqual({ code: 0, output: expect.any(String) });
+    expect(existsSync(join(root, "node_modules"))).toBe(false);
+    expect(readFileSync(lockfilePath, "utf8")).toBe(lockfileBefore);
   });
 
   it("rejects a new empty workspace package without an importer", () => {

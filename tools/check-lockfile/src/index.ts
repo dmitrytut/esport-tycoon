@@ -8,7 +8,7 @@ const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const result = spawnSync(
   pnpm,
   ["install", "--frozen-lockfile", "--lockfile-only", "--ignore-scripts"],
-  { stdio: "inherit" },
+  { shell: process.platform === "win32", stdio: "inherit" },
 );
 
 if (result.status !== 0) {

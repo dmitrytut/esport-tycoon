@@ -14,10 +14,11 @@
     "test": "vitest run",
     "validate:content": "node tools/validate-content/src/index.ts",
     "validate:spec": "openspec validate --all",
+    "check:lockfile": "node tools/check-lockfile/src/index.ts",
     "check:language": "node tools/check-language/src/index.ts",
     "labels:check": "node tools/sync-labels/src/index.ts",
     "labels:apply": "node tools/sync-labels/src/index.ts --apply",
-    "verify": "pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec && pnpm run check:language",
+    "verify": "pnpm run check:lockfile && pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec && pnpm run check:language",
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {

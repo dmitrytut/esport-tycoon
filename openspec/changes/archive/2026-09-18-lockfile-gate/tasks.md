@@ -13,4 +13,4 @@
 - [x] 3.1 Document `check:lockfile` in `tools/README.md`, including that `verify` runs the read-only frozen check and never repairs files. Run `pnpm check:language` and `pnpm run format:check`.
 - [x] 3.2 Run `pnpm verify` once and verify the complete gate is green with the lockfile check first.
 - [x] 3.3 Run `openspec archive lockfile-gate -y` on the implementation branch. Verify the change moves under `openspec/changes/archive/` without modifying `openspec/specs/`, then run `pnpm validate:spec`.
-- [ ] 3.4 Open PR-2 with a filled copy of `.github/PULL_REQUEST_TEMPLATE/implementation.md` passed via `-F`; verify CI is green and leave merging to the human.
+- [x] 3.4 Open PR-2 with a filled copy of `.github/PULL_REQUEST_TEMPLATE/implementation.md` passed via `-F`; verify CI is green and leave merging to the human.

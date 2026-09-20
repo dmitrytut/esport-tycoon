@@ -23,26 +23,37 @@ with #8. This change builds the first half of that same tool: weeks, not seasons
 ## What Changes
 
 - **A console runner advances real weeks through the real core.** One command, no graphics,
-  no input: declared seeds, a week horizon, a policy. It calls `advance` from `@et/core`
-  and never reimplements a rule the week already owns.
+  no input: declared seeds, a week horizon, a policy. The policy plans a block at a time,
+  the runner advances one week at a time with `executeWeek` and keeps the state the core
+  hands back, and a week that would have returned control to a user is recorded rather than
+  obeyed — the run walks on to its horizon. It reimplements no rule the week owns, and an
+  equivalence test pins the walk to what `advance` produces over the same plan.
+- **The per-week walk is forced by the core's shape, not chosen for taste.** `WeekResult`
+  carries no snapshot of the run and `advance` returns the state once, after its last
+  simulated week. A harness built on `advance` alone could report a balance at block
+  boundaries and nowhere else — which is not a balance tool. Adding a snapshot to
+  `WeekResult` would be cleaner still, and it is a change to core rather than to its
+  consumer.
 - **Three policies, each a declared preference over content.** Money, development,
   balanced. A policy chooses which activity to plan and who takes part; it never computes a
   payout, applies an effect or reads a value the week has not yet produced. Ties are broken
   by a stated rule, never by the iteration order of a collection.
 - **A scenario is a versioned file, not a constant in the runner.** The starting balance,
   the audience, the slot pool, the region and level the collective is generated from, the
-  activity ids in play and the block length live in `tools/sim-harness/scenarios/*.json`.
-  The command line overrides only seeds, horizon, policy and output format. This is how
-  #52 later tunes numbers without editing the tool, and how #8 adds a season scenario
-  beside this one.
+  activity ids in play, the block length and the sensitivity live in
+  `tools/sim-harness/scenarios/*.json`. The command line overrides only seeds, horizon,
+  policy and output format. This is how #52 later tunes numbers without editing the tool,
+  and how #8 adds a season scenario beside this one.
 - **The run reports two different quiet things separately.** `WeekKind.quiet` — a week that
-  spent no slot and produced no reason — and an uninterrupted week — a week the advance
-  passed through without handing control back. A week with a training session and no stop
-  is uninterrupted and `ordinary` at the same time, and the report never adds those two
-  columns together.
-- **The report states what produced it.** Seeds, horizon, policy, scenario id, the number
-  of activities the content tree offered. A machine-readable object and a human-readable
-  table, from the same data, so #8 and #52 read the object while a human reads the table.
+  spent no slot and produced no reason — and an uninterrupted week — a week whose result
+  carries no reason the declared mask leaves unmasked. A week with a training session and
+  no reason is uninterrupted and `ordinary` at the same time, and the report never adds
+  those two columns together.
+- **The report states what produced it, and attributes nothing the core does not.** Seeds,
+  horizon, policy, scenario id, mask, the size of the content set; a weekly series of
+  balance, audience, morale and energy; no money split per activity, because core reports a
+  balance rather than a ledger and splitting one would mean recomputing reach inside the
+  measuring tool. One machine-readable object and one table rendered from it.
 - **Wall-clock duration is measured and kept out of comparisons.** The same inputs produce
   identical game metrics; the milliseconds they took are reported next to them and are not
   part of that identity.
@@ -74,8 +85,8 @@ Out of scope, and each for its own reason:
    file-system access and a command line, the same class as `validate-content`. `#8` grows
    the same directory with a season mode rather than opening a second tool.
 3. **The uninterrupted metric is defined against the week, not against the call.** A week
-   counts as uninterrupted when its own result carries no unmasked reason, with the
-   block-ran-out reason disregarded. #29's draft phrases it as "every week except the one
+   counts as uninterrupted when its own result carries no unmasked reason. #29's draft
+   phrases it as "every week except the one
    the call returned at", which makes the number a function of the block length: the same
    twenty-four weeks score differently at four-week and six-week blocks, and #52 would be
    comparing slicing choices while believing it compares policies. The divergence is
@@ -86,8 +97,8 @@ Out of scope, and each for its own reason:
 ### New Capabilities
 
 - `sim-harness`: what a headless run is, how a scenario and a policy define it, what the
-  runner guarantees about the horizon and about continuation after a stop, and what the
-  report must state.
+  runner guarantees about the horizon, about the plan a returned control leaves unexecuted
+  and about equalling the core's own block advance, and what the report must state.
 
 ## Impact
 
@@ -97,13 +108,15 @@ finding to report rather than a licence to widen it inside this change. The repo
 one workspace package under `tools/`, one script in `package.json` and one row in
 `tools/README.md`.
 
-Risks. First, a policy is a piece of judgement pretending to be a rule: "prefer money" has
-to be spelled out to the tie-break or the comparison is noise. The spec therefore states the
-ordering, and a test pins it. Second, a runner that mirrors the week's arithmetic to produce
-its metrics would report its own copy of the rules rather than the rules — the counter is a
-cross-check test asserting the report equals a hand-written direct core run over a short
-scenario. Third, the measured cost of a run decides whether this ever belongs in CI; the
-number is reported and no workflow is added on a guess.
+Risks. First, a policy is judgement pretending to be a rule: "prefer money" has to be
+spelled out to the tie-break or the comparison is noise. The spec states the ordering and a
+test pins it. Second, the harness decides for itself when control would have returned to a
+user rather than letting `advance` decide — that is the metric it exists to report, and
+everything around it is pinned by an equivalence test against `advance` over the same plan.
+Third, a runner that mirrored the week's arithmetic to produce its metrics would report its
+own copy of the rules; the counter is a cross-check test asserting the reported figures
+equal a direct core run. Fourth, the measured cost of a run decides whether this ever
+belongs in CI; the number is reported and no workflow is added on a guess.
 
 ## Affects
 

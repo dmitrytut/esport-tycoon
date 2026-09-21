@@ -1,0 +1,33 @@
+{
+  "id": "gear-malfunction-mid-scrim",
+  "category": "tech",
+  "weight": 5,
+  "cooldownWeeks": 8,
+  "text": "{player}'s mouse dies in the middle of a scrim block, and the backup is buried in someone else's bag.",
+  "choices": [
+    {
+      "id": "borrow-a-spare",
+      "label": "Borrow a teammate's spare",
+      "detail": "It works, but it feels like typing with someone else's handwriting.",
+      "outcome": {
+        "kind": "direct",
+        "effects": [
+          { "kind": "energy", "amount": -4 },
+          { "kind": "form", "amount": -3 }
+        ]
+      }
+    },
+    {
+      "id": "power-through",
+      "label": "Power through on the wired backup",
+      "detail": "The sensitivity is wrong and the plan is to complain about it later.",
+      "outcome": {
+        "kind": "direct",
+        "effects": [
+          { "kind": "energy", "amount": -8 },
+          { "kind": "morale", "amount": -5 }
+        ]
+      }
+    }
+  ]
+}

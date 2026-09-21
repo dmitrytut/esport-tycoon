@@ -1,0 +1,36 @@
+{
+  "id": "sponsor-audit-surprise",
+  "category": "sponsors",
+  "weight": 4,
+  "cooldownWeeks": 16,
+  "conditions": {
+    "baseWeekKind": ["ordinary"]
+  },
+  "text": "A sponsor's compliance team calls an unscheduled audit of {player}'s stream disclosures.",
+  "choices": [
+    {
+      "id": "hand-over-everything",
+      "label": "Hand over every log without a fight",
+      "detail": "Boring, thorough, and it buys goodwill nobody will ever mention.",
+      "outcome": {
+        "kind": "direct",
+        "effects": [
+          { "kind": "reputation", "amount": 3 },
+          { "kind": "money", "amount": -200 }
+        ]
+      }
+    },
+    {
+      "id": "stall-the-auditors",
+      "label": "Stall until the lawyers weigh in",
+      "detail": "The sponsor notices the delay, and so does the invoice for the lawyers.",
+      "outcome": {
+        "kind": "direct",
+        "effects": [
+          { "kind": "money", "amount": -600 },
+          { "kind": "audience", "amount": -150 }
+        ]
+      }
+    }
+  ]
+}

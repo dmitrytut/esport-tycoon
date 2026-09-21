@@ -1,7 +1,7 @@
 ## 1. Executable incident content
 
-- [ ] 1.1 Replace the aspirational event schema with the closed condition, outcome and effect unions, require explicit cooldown, and constrain trait event-weight categories and values; add validator coverage for ids, ranges, optional empty conditions, empty allow-lists, references and every rejected field, and verify the focused content-validator tests pass.
-- [ ] 1.2 Add the three executable incident files, remove `cat-on-keyboard.json` from active content, and verify `pnpm validate:content` accepts the catalog and each required resolution family is present.
+- [x] 1.1 Replace the aspirational event schema with the closed condition, outcome and effect unions, require explicit cooldown, and constrain trait event-weight categories and values; add validator coverage for ids, ranges, optional empty conditions, empty allow-lists, references and every rejected field, and verify the focused content-validator tests pass.
+- [x] 1.2 Add the three executable incident files, remove `cat-on-keyboard.json` from active content, and verify `pnpm validate:content` accepts the catalog and each required resolution family is present.
 
 ## 2. Incident state and selection
 

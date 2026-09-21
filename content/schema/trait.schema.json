@@ -68,8 +68,10 @@
     "eventWeightBoost": {
       "type": "object",
       "additionalProperties": {
-        "type": "number"
-      }
+        "type": "number",
+        "minimum": 0
+      },
+      "description": "keys are incident categories (event.schema.json); values are non-negative multipliers"
     }
   }
 }

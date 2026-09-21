@@ -82,6 +82,17 @@ describe("eligibleTargetIds", () => {
     expect(eligibleTargetIds(baseInput({ incident, collective }))).toEqual(["both"]);
   });
 
+  it("excludes a trait-holder at the energy boundary and includes one just below it (spec scenario)", () => {
+    const incident = makeIncident("i1", {
+      conditions: { energyBelow: 30, requiresTrait: ["stoic"] },
+    });
+    const atBoundary = { ...makePerformer("at-boundary", 30, 70), traits: ["stoic"] };
+    const belowBoundary = { ...makePerformer("below-boundary", 29, 70), traits: ["stoic"] };
+    const collective = makeCollective([atBoundary, belowBoundary]);
+
+    expect(eligibleTargetIds(baseInput({ incident, collective }))).toEqual(["below-boundary"]);
+  });
+
   it("requires every listed trait, not just one", () => {
     const incident = makeIncident("i1", { conditions: { requiresTrait: ["stoic", "leader"] } });
     const partial = { ...makePerformer("partial"), traits: ["stoic"] };

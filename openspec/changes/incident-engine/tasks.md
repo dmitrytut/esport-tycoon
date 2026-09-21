@@ -8,7 +8,7 @@
 - [x] 2.1 Add the commented public incident types and mandatory serialized incident lifecycle to `RunState`, migrate every state constructor and fixture in one cutover, and verify `pnpm typecheck` passes.
 - [x] 2.2 Implement target eligibility against post-week performer state and `baseWeekKind`; verify focused tests cover unconditional incidents, strict thresholds, AND semantics, trait/region/kind filters and no-candidate behavior.
 - [x] 2.3 Implement the explicit cadence gate, event-first mean weighting and weighted target selection on the independent incident RNG stream; verify cadence 0/1, zero weights, roster-size neutrality, input-order invariance and pinned deterministic selection tests pass.
-- [ ] 2.4 Add property coverage for deterministic selection and ineligible-content RNG stability with a pinned fast-check seed, and verify the focused property suite passes.
+- [x] 2.4 Add property coverage for deterministic selection and ineligible-content RNG stability with a pinned fast-check seed, and verify the focused property suite passes.
 
 ## 3. Choice resolution and cooldown
 

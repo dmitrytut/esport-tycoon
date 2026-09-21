@@ -97,6 +97,6 @@
 - [x] 6.3 Run `openspec archive sim-harness -y` on the implementation branch and review the
       diff in `openspec/specs/`. Verify `pnpm validate:spec` passes, the new capability
       landed, and the change folder has moved under `openspec/changes/archive/`.
-- [ ] 6.4 Open PR-2 with a filled copy of
+- [x] 6.4 Open PR-2 with a filled copy of
       `.github/PULL_REQUEST_TEMPLATE/implementation.md` passed via `-F`. Verify the pull
       request exists and CI is green; the merge itself is the human's action.

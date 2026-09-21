@@ -1,5 +1,6 @@
 import type { Activity } from "../src/activity.ts";
 import type { Collective } from "../src/collective.ts";
+import type { Incident } from "../src/incident.ts";
 import { createIncidentState } from "../src/incident.ts";
 import type { Org } from "../src/org.ts";
 import { ACT_ONE_SLOTS } from "../src/org.ts";
@@ -32,6 +33,22 @@ export function makePerformer(id: string, energy = 80, morale = 70): Performer {
 /** Five members at the same values unless a test says otherwise. */
 export function makeCollective(members: readonly Performer[]): Collective {
   return { id: "first", name: "First", members };
+}
+
+/**
+ * A minimal valid incident, overridable field by field; eligibility tests only need
+ * `conditions`.
+ */
+export function makeIncident(id: string, fields: Partial<Incident> = {}): Incident {
+  return {
+    id,
+    category: "general",
+    weight: 1,
+    cooldownWeeks: 0,
+    text: "{player} has a moment.",
+    choices: [],
+    ...fields,
+  };
 }
 
 /** An org with money to lose, no audience and the act-one slot pool. */

@@ -3,11 +3,12 @@
  * target, choice, consequence and cooldown are part of the run rather than a caller's
  * invention (`openspec/changes/incident-engine/design.md`).
  *
- * This module only declares the closed executable contract and the serializable lifecycle
- * state; eligibility, selection and resolution are separate cutovers (tasks 2.2–2.5+).
+ * This module declares the closed executable contract, the serializable lifecycle state and
+ * pure target eligibility; selection and resolution are separate cutovers (tasks 2.3–2.5+).
  */
 
-import type { StatKey } from "./performer.ts";
+import type { Collective } from "./collective.ts";
+import type { Performer, StatKey } from "./performer.ts";
 import { createRng, type RngState } from "./rng.ts";
 import type { WeekKind } from "./week.ts";
 
@@ -238,4 +239,76 @@ export function createIncidentState(seed: number | string): IncidentState {
     pending: null,
     cooldowns: [],
   };
+}
+
+/**
+ * Input to `eligibleTargetIds`: one incident's conditions and cooldown evaluated against a
+ * collective already carrying the completed week's activity and recovery effects.
+ */
+export interface EligibilityInput {
+  /** The incident whose conditions and global cooldown are being evaluated. */
+  readonly incident: Incident;
+  /** The collective in its post-week state; never mutated or reordered by this function. */
+  readonly collective: Collective;
+  /**
+   * The week's preliminary classification, computed before incident selection adds its own
+   * reason.
+   */
+  readonly baseWeekKind: WeekKind;
+  /** Absolute week index eligibility is evaluated for. */
+  readonly currentWeek: number;
+  /**
+   * The run's global per-incident cooldown ledger; only entries matching this incident's id
+   * apply.
+   */
+  readonly cooldowns: readonly IncidentCooldown[];
+}
+
+/**
+ * A performer meets one incident's conditions: every present field of a closed AND object.
+ * An omitted `conditions` object or `undefined` imposes no restriction.
+ */
+function meetsConditions(
+  performer: Performer,
+  conditions: IncidentConditions | undefined,
+  baseWeekKind: WeekKind,
+): boolean {
+  if (conditions === undefined) return true;
+  if (conditions.energyBelow !== undefined && !(performer.state.energy < conditions.energyBelow)) {
+    return false;
+  }
+  if (conditions.moraleBelow !== undefined && !(performer.state.morale < conditions.moraleBelow)) {
+    return false;
+  }
+  if (
+    conditions.requiresTrait !== undefined &&
+    !conditions.requiresTrait.every((trait) => performer.traits.includes(trait))
+  ) {
+    return false;
+  }
+  if (conditions.region !== undefined && !conditions.region.includes(performer.originId)) {
+    return false;
+  }
+  if (conditions.baseWeekKind !== undefined && !conditions.baseWeekKind.includes(baseWeekKind)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * The incident's eligible targets in the collective at the current week: every member whose
+ * post-week state satisfies its conditions, unless a global cooldown for this incident id is
+ * still active (spec "Eligibility is evaluated for one performer after the week", design
+ * "Cooldown belongs to the incident id, not the target"). Pure: consumes no RNG, and neither
+ * mutates nor reorders the caller's collective. Weighting and selection are separate cutovers.
+ */
+export function eligibleTargetIds(input: EligibilityInput): readonly string[] {
+  const { incident, collective, baseWeekKind, currentWeek, cooldowns } = input;
+  const onCooldown = cooldowns.some(
+    (cooldown) => cooldown.incidentId === incident.id && currentWeek < cooldown.eligibleWeek,
+  );
+  if (onCooldown) return [];
+  return collective.members
+    .filter((performer) => meetsConditions(performer, incident.conditions, baseWeekKind))
+    .map((performer) => performer.id);
 }

@@ -9,7 +9,7 @@ console on Node.
 | `check-lockfile` | `pnpm check:lockfile` | read-only pnpm frozen validation: workspace manifests and `pnpm-lock.yaml` must agree | ready |
 | `sync-labels` | `pnpm labels:check` · `pnpm labels:apply` | the issue label taxonomy: `.github/labels.json` is the source, GitHub the copy. Checks the label set and how open issues wear it. Needs the network, so it is not in `pnpm verify` | ready |
 | `lint_core` | `pnpm lint` | forbidden domain words and nondeterministic calls in `packages/core`, see `docs/adr/0001` and `0002` | ready, rules in `eslint.config.mjs` |
-| `sim_harness` | — | a run of N seasons with no graphics for given seeds, see `specs/0002` | not written |
+| `sim_harness` | `pnpm sim` | headless week runs over declared seeds and policies; reports money, attention, people, skipped work and returns of control | ready |
 | `balance_report` | — | comparison of a run's metrics against baseline, highlighting significant shifts | not written |
 
 One gate for everything: `pnpm verify` — lockfile freshness, types, formatting, linter,

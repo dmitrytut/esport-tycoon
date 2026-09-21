@@ -1,0 +1,13 @@
+{
+  "name": "@et/sim-harness",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless run of weeks on declared seeds, comparing policies (issue #46)",
+  "bin": {
+    "sim-harness": "./src/index.ts"
+  },
+  "dependencies": {
+    "@et/core": "workspace:*"
+  }
+}

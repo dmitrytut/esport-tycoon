@@ -200,6 +200,12 @@ importers:
 
   tools/check-lockfile: {}
 
+  tools/sim-harness:
+    dependencies:
+      '@et/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
   tools/sync-labels: {}
 
   tools/validate-content:

@@ -12,6 +12,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
+    "sim": "node tools/sim-harness/src/index.ts",
     "validate:content": "node tools/validate-content/src/index.ts",
     "validate:spec": "openspec validate --all",
     "check:lockfile": "node tools/check-lockfile/src/index.ts",

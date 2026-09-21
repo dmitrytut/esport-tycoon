@@ -309,6 +309,34 @@ describe("selectIncident", () => {
     expect(withoutBoost.state.rng).toEqual(withBoost.state.rng);
   });
 
+  it("weights target selection by the target's own multiplier, not uniformly among eligible targets", () => {
+    // One incident, two eligible targets: p1 unboosted (multiplier 1), p2 with a trait
+    // that quadruples this category (multiplier 4). Seed 2 is pinned because the weighted
+    // draw [1, 4] selects p2, while a uniform draw among the same two targets selects p1
+    // (verified by hand against `rng.ts`'s primitives before writing this assertion).
+    const catalog = [makeIncident("solo-incident", { weight: 1, category: "cat" })];
+    const collective = makeCollective([
+      makePerformer("p1"),
+      { ...makePerformer("p2"), traits: ["boost"] },
+    ]);
+    const input = baseSelectInput({
+      seed: 2,
+      state: createIncidentState(2),
+      collective,
+      catalog,
+      cadence: 1,
+      traitMultipliers: { boost: { cat: 4 } },
+    });
+
+    const result = selectIncident(input);
+
+    expect(result.selected).toEqual({
+      incidentId: "solo-incident",
+      performerId: "p2",
+      week: 10,
+    });
+  });
+
   it("gives the same selection and final incident rng state regardless of catalog or collective order", () => {
     const catalog = [
       makeIncident("first", { weight: 3, category: "cat", conditions: {} }),

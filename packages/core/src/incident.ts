@@ -71,7 +71,7 @@ export interface IncidentFormEffect {
   readonly amount: number;
 }
 
-/** Moves the organization's balance once, independent of roster size. Unclamped. */
+/** Moves the organization's balance once per execution, not once per participant. Unclamped. */
 export interface IncidentMoneyEffect {
   /** Discriminator of the effect union. */
   readonly kind: "money";
@@ -97,8 +97,8 @@ export interface IncidentReputationEffect {
 
 /**
  * The closed set of incident effect kinds: performer kinds land on the pending target only,
- * organization kinds land once regardless of roster size (spec "Effects move only their
- * declared owner").
+ * organization kinds land once per execution, not once per participant (spec "Effects move
+ * only their declared owner").
  */
 export type IncidentEffect =
   | IncidentStatEffect

@@ -26,6 +26,7 @@ export {
 export {
   createIncidentState,
   type Incident,
+  type IncidentAudienceEffect,
   type IncidentCategory,
   type IncidentCategoryMultipliers,
   type IncidentCheckOutcome,
@@ -34,8 +35,14 @@ export {
   type IncidentCooldown,
   type IncidentDirectOutcome,
   type IncidentEffect,
+  type IncidentEnergyEffect,
+  type IncidentFormEffect,
+  type IncidentMoneyEffect,
+  type IncidentMoraleEffect,
   type IncidentOutcome,
+  type IncidentReputationEffect,
   type IncidentState,
+  type IncidentStatEffect,
   type PendingIncident,
 } from "./incident.ts";
 export { type Observation, observe, type ObservedRange, type ObservedStats } from "./observe.ts";

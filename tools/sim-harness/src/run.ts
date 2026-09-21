@@ -8,6 +8,7 @@
  * the walk to what `advance` produces over the same plan.
  */
 import {
+  createIncidentState,
   createRng,
   executeWeek,
   generatePerformer,
@@ -79,6 +80,7 @@ export function openingState(scenario: Scenario, content: SimContent, seed: numb
     week: 0,
     seed,
     rng: rng.state(),
+    incidents: createIncidentState(seed),
   };
 }
 

@@ -4,6 +4,7 @@ import type { Activity, ActivityEffect } from "../../src/activity.ts";
 import type { Collective } from "../../src/collective.ts";
 import type { GenerateParams, OriginProfile } from "../../src/generate.ts";
 import { generatePerformer } from "../../src/generate.ts";
+import { createIncidentState } from "../../src/incident.ts";
 import type { Org } from "../../src/org.ts";
 import type { Performer } from "../../src/performer.ts";
 import { normalizeState, STAT_KEYS } from "../../src/performer.ts";
@@ -163,4 +164,5 @@ export const runStateArb: fc.Arbitrary<RunState> = fc
     week: 0,
     seed,
     rng: createRng(seed).state(),
+    incidents: createIncidentState(seed),
   }));

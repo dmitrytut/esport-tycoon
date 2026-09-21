@@ -23,6 +23,21 @@ export {
   type SecondLanguage,
   type TraitOption,
 } from "./generate.ts";
+export {
+  createIncidentState,
+  type Incident,
+  type IncidentCategory,
+  type IncidentCategoryMultipliers,
+  type IncidentCheckOutcome,
+  type IncidentChoice,
+  type IncidentConditions,
+  type IncidentCooldown,
+  type IncidentDirectOutcome,
+  type IncidentEffect,
+  type IncidentOutcome,
+  type IncidentState,
+  type PendingIncident,
+} from "./incident.ts";
 export { type Observation, observe, type ObservedRange, type ObservedStats } from "./observe.ts";
 export {
   ACT_ONE_SLOTS,
@@ -76,9 +91,9 @@ export {
   type IncidentPendingReason,
   type MoneyNegativeReason,
   type MoraleThresholdReason,
-  type PendingIncident,
   type PlannedActivity,
   type RunState,
+  type ScheduledIncident,
   type Sensitivity,
   type SkipCause,
   type SkippedActivity,

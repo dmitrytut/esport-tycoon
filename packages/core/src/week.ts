@@ -13,6 +13,7 @@
 import type { Activity } from "./activity.ts";
 import type { Collective } from "./collective.ts";
 import { participantsOf } from "./collective.ts";
+import type { IncidentState } from "./incident.ts";
 import type { Org } from "./org.ts";
 import { applyOrgChange, reach } from "./org.ts";
 import type { PerformerState, StatKey } from "./performer.ts";
@@ -149,8 +150,12 @@ export interface Sensitivity {
   readonly masked: readonly StopReasonKind[];
 }
 
-/** An incident waiting at a given week. Data, so the week loop stays free of the system. */
-export interface PendingIncident {
+/**
+ * An incident scheduled by a caller at an absolute week, keyed for `AdvanceOptions.incidents`.
+ * Legacy scheduling input: the incident lifecycle itself lives in `IncidentState`
+ * (`incident.ts`); this shape is superseded by that engine's public API in a later cutover.
+ */
+export interface ScheduledIncident {
   /** Absolute week index it waits at. */
   readonly week: number;
   /** Identifier handed back in the stop reason. */
@@ -168,7 +173,7 @@ export interface AdvanceOptions {
   /** Marking per absolute week index. A week past the end of the list is unmarked. */
   readonly calendar?: readonly WeekMarking[];
   /** Incidents awaiting a choice, by absolute week index. */
-  readonly incidents?: readonly PendingIncident[];
+  readonly incidents?: readonly ScheduledIncident[];
 }
 
 /** The whole run as the week loop sees it. Serializable: a save resumes the same sequence. */
@@ -183,6 +188,8 @@ export interface RunState {
   readonly seed: number | string;
   /** Continuation of that stream. */
   readonly rng: RngState;
+  /** The mandatory, independently seeded incident lifecycle: pending choice and cooldowns. */
+  readonly incidents: IncidentState;
 }
 
 /** An activity that happened, and who it happened to. */

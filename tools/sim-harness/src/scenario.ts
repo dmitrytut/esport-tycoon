@@ -89,7 +89,10 @@ export function loadScenario(path: string, content: SimContent): Scenario {
   }
 
   const activities: Activity[] = [];
+  const activityIds = new Set<string>();
   for (const id of file.activities) {
+    if (activityIds.has(id)) fail(`names activity "${id}" more than once`);
+    activityIds.add(id);
     const activity = content.activities.get(id);
     if (activity === undefined) fail(`names activity "${id}", which content does not define`);
     else activities.push(activity);

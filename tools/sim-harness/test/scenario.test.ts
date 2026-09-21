@@ -61,6 +61,12 @@ describe("a run's scenario", () => {
     );
   });
 
+  it("refuses a duplicate activity before planning", () => {
+    const path = scenarioWith({ activities: ["rest", "rest"] });
+
+    expect(() => loadScenario(path, content)).toThrow(/broken.*rest.*more than once/s);
+  });
+
   it("refuses a block the week loop would reject", () => {
     const path = scenarioWith({ blockWeeks: 3 });
 

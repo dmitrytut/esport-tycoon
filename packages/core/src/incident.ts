@@ -3,13 +3,14 @@
  * target, choice, consequence and cooldown are part of the run rather than a caller's
  * invention (`openspec/changes/incident-engine/design.md`).
  *
- * This module declares the closed executable contract, the serializable lifecycle state and
- * pure target eligibility; selection and resolution are separate cutovers (tasks 2.3–2.5+).
+ * This module declares the closed executable contract, the serializable lifecycle state,
+ * pure target eligibility and cadence-gated weighted selection; resolution is a separate
+ * cutover (tasks 2.5+).
  */
 
 import type { Collective } from "./collective.ts";
 import type { Performer, StatKey } from "./performer.ts";
-import { createRng, type RngState } from "./rng.ts";
+import { createRng, restoreRng, type RngState } from "./rng.ts";
 import type { WeekKind } from "./week.ts";
 
 /**
@@ -311,4 +312,180 @@ export function eligibleTargetIds(input: EligibilityInput): readonly string[] {
   return collective.members
     .filter((performer) => meetsConditions(performer, incident.conditions, baseWeekKind))
     .map((performer) => performer.id);
+}
+
+/**
+ * Content-declared weight multipliers by trait id (`content/traits/*`'s
+ * `eventWeightBoost`). A trait or category absent from the map contributes a multiplier of
+ * one; core trusts the content validator's finite, non-negative bound (design "Cadence
+ * gates occurrence; weights choose identity").
+ */
+export type IncidentTraitMultipliers = Readonly<Record<string, IncidentCategoryMultipliers>>;
+
+/**
+ * Input to `selectIncident`: everything needed to gate occurrence and, on success, choose
+ * one incident and one of its eligible performers on the incident engine's own RNG stream.
+ */
+export interface SelectIncidentInput {
+  /** The run's root seed; the named `incidents` stream is re-derived from it every call. */
+  readonly seed: number | string;
+  /** The incident lifecycle to continue from; an existing pending rejects inertly. */
+  readonly state: IncidentState;
+  /** Absolute week index this selection runs for; stored on a new pending incident. */
+  readonly currentWeek: number;
+  /** The week's preliminary classification, evaluated before incident selection. */
+  readonly baseWeekKind: WeekKind;
+  /** The collective in its post-week state; never mutated or reordered by this function. */
+  readonly collective: Collective;
+  /** Every incident the caller allows this week; never mutated or reordered. */
+  readonly catalog: readonly Incident[];
+  /** Chance in [0, 1] that an eligible week produces one incident. */
+  readonly cadence: number;
+  /** Declared trait weight boosts by trait id. */
+  readonly traitMultipliers: IncidentTraitMultipliers;
+}
+
+/**
+ * Result of `selectIncident`: the continued incident state, and, only on success, the
+ * identity that was also written into that state's `pending`.
+ */
+export interface SelectIncidentResult {
+  /** Continuation of the incident lifecycle; the same reference as the input when nothing moved. */
+  readonly state: IncidentState;
+  /** The incident and target chosen this call, or null when none was selected. */
+  readonly selected: PendingIncident | null;
+}
+
+/** One incident that survived eligibility and effective-weight filtering, before sorting. */
+interface IncidentCandidate {
+  /** The candidate incident itself. */
+  readonly incident: Incident;
+  /** Its eligible target ids, in collective order; sorted only right before a draw. */
+  readonly targetIds: readonly string[];
+  /** Each eligible target's category multiplier, keyed by performer id. */
+  readonly multipliers: Readonly<Record<string, number>>;
+  /** Base weight times the arithmetic mean of `multipliers`; always positive. */
+  readonly effectiveWeight: number;
+}
+
+/** Ascending code-point order of stable ids: the one order every weighted draw sorts by. */
+function compareIds(a: string, b: string): number {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
+/** A performer's category multiplier: the product of its trait multipliers, one when absent. */
+function categoryMultiplier(
+  performer: Performer,
+  category: IncidentCategory,
+  traitMultipliers: IncidentTraitMultipliers,
+): number {
+  return performer.traits.reduce(
+    (product, traitId) => product * (traitMultipliers[traitId]?.[category] ?? 1),
+    1,
+  );
+}
+
+/**
+ * Every incident with at least one eligible target and a positive effective weight: base
+ * weight times the arithmetic mean of eligible-performer multipliers (spec "Cadence and
+ * weighted selection are separate inputs"). Eligible-performer count alone never changes
+ * the result. Order follows the catalog; callers sort before drawing.
+ */
+function positiveCandidates(
+  catalog: readonly Incident[],
+  collective: Collective,
+  baseWeekKind: WeekKind,
+  currentWeek: number,
+  cooldowns: readonly IncidentCooldown[],
+  traitMultipliers: IncidentTraitMultipliers,
+): readonly IncidentCandidate[] {
+  const performerById: Record<string, Performer> = {};
+  for (const performer of collective.members) performerById[performer.id] = performer;
+  const candidates: IncidentCandidate[] = [];
+  for (const incident of catalog) {
+    const targetIds = eligibleTargetIds({
+      incident,
+      collective,
+      baseWeekKind,
+      currentWeek,
+      cooldowns,
+    });
+    if (targetIds.length === 0) continue;
+    const multipliers: Record<string, number> = {};
+    for (const id of targetIds) {
+      const performer = performerById[id];
+      if (performer === undefined) {
+        throw new RangeError(`eligible target ${id} is not a member of the collective`);
+      }
+      multipliers[id] = categoryMultiplier(performer, incident.category, traitMultipliers);
+    }
+    const mean = targetIds.reduce((sum, id) => sum + (multipliers[id] ?? 0), 0) / targetIds.length;
+    const effectiveWeight = incident.weight * mean;
+    if (effectiveWeight <= 0) continue;
+    candidates.push({ incident, targetIds, multipliers, effectiveWeight });
+  }
+  return candidates;
+}
+
+/**
+ * The engine's cadence gate and weighted selection (design "Cadence gates occurrence;
+ * weights choose identity"). Pure aside from the returned RNG continuation: never mutates
+ * the caller's collective, catalog or cooldowns. An existing pending incident rejects
+ * inertly, before any RNG movement. A catalog with no positive candidate consumes no RNG
+ * either; only an actual cadence draw or a successful selection advances the stream.
+ */
+export function selectIncident(input: SelectIncidentInput): SelectIncidentResult {
+  const { seed, state, currentWeek, baseWeekKind, collective, catalog, cadence, traitMultipliers } =
+    input;
+  if (state.pending !== null) return { state, selected: null };
+
+  const candidates = positiveCandidates(
+    catalog,
+    collective,
+    baseWeekKind,
+    currentWeek,
+    state.cooldowns,
+    traitMultipliers,
+  );
+  if (candidates.length === 0) return { state, selected: null };
+
+  const incidentsSeed = createRng(seed).stream(INCIDENT_STREAM_NAME).seed;
+  const rng = restoreRng(incidentsSeed, state.rng);
+
+  if (!rng.chance(cadence)) {
+    return {
+      state: { rng: rng.state(), pending: null, cooldowns: state.cooldowns },
+      selected: null,
+    };
+  }
+
+  const sortedIncidents = candidates
+    .slice()
+    .sort((a, b) => compareIds(a.incident.id, b.incident.id));
+  const incidentIndex = rng.weightedIndex(
+    sortedIncidents.map((candidate) => candidate.effectiveWeight),
+  );
+  const chosen = sortedIncidents[incidentIndex];
+  if (chosen === undefined) {
+    throw new RangeError("weightedIndex returned an out-of-range incident index");
+  }
+
+  const sortedTargetIds = chosen.targetIds.slice().sort(compareIds);
+  const targetIndex = rng.weightedIndex(sortedTargetIds.map((id) => chosen.multipliers[id] ?? 0));
+  const performerId = sortedTargetIds[targetIndex];
+  if (performerId === undefined) {
+    throw new RangeError("weightedIndex returned an out-of-range target index");
+  }
+
+  const selected: PendingIncident = {
+    incidentId: chosen.incident.id,
+    performerId,
+    week: currentWeek,
+  };
+  return {
+    state: { rng: rng.state(), pending: selected, cooldowns: state.cooldowns },
+    selected,
+  };
 }

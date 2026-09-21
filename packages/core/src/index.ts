@@ -43,7 +43,11 @@ export {
   type IncidentReputationEffect,
   type IncidentState,
   type IncidentStatEffect,
+  type IncidentTraitMultipliers,
   type PendingIncident,
+  selectIncident,
+  type SelectIncidentInput,
+  type SelectIncidentResult,
 } from "./incident.ts";
 export { type Observation, observe, type ObservedRange, type ObservedStats } from "./observe.ts";
 export {

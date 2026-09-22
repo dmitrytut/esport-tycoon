@@ -4,15 +4,19 @@
  * The walk advances one week at a time with `executeWeek` because a balance tool has to
  * read the run after every week, and `advance` returns the state once, after its last
  * simulated week. Nothing of the week loop is reproduced here: the only judgement the
- * harness adds is when a user would have been handed control back, and `run.test.ts` pins
- * the walk to what `advance` produces over the same plan.
+ * harness adds is when a user would have been handed control back and, for a pending
+ * incident, which choice a policy submits; `run.test.ts` pins the walk to what `advance`
+ * produces over the same plan, and the post-resolution state to core's own resolution.
  */
 import {
   createIncidentState,
   createRng,
   executeWeek,
   generatePerformer,
+  type IncidentInput,
+  type IncidentResolution,
   type PlannedActivity,
+  resolveIncident,
   type RunState,
   type StopReasonKind,
   validateWeekPlan,
@@ -21,7 +25,7 @@ import {
 } from "@et/core";
 
 import type { SimContent } from "./content.ts";
-import { planWeek, type PolicyName } from "./policy.ts";
+import { chooseIncidentChoice, planWeek, type PolicyName } from "./policy.ts";
 import type { Scenario } from "./scenario.ts";
 
 /** One advanced week: what it produced, what it left behind, and whether it interrupted. */
@@ -34,6 +38,8 @@ export interface WalkedWeek {
   readonly returnedControl: boolean;
   /** What the block planned for this week, kept for the weeks after a returned control. */
   readonly planned: readonly PlannedActivity[];
+  /** Present only when this week's occurrence was resolved by the harness. */
+  readonly resolution?: IncidentResolution;
 }
 
 /** One policy walked over one seed to the horizon. */
@@ -96,15 +102,35 @@ export function planBlock(scenario: Scenario, policy: PolicyName, state: RunStat
 }
 
 /**
+ * Builds the week loop's explicit incident input from a scenario, or omits it entirely when
+ * the scenario has not opted into incidents. Its absence disables selection at the core
+ * boundary rather than the harness quietly declining to act on a pending incident.
+ */
+export function incidentInputFor(
+  scenario: Scenario,
+  content: SimContent,
+): IncidentInput | undefined {
+  if (scenario.incidents === undefined) return undefined;
+  return {
+    catalog: scenario.incidents.catalog,
+    cadence: scenario.incidents.cadence,
+    traitMultipliers: content.traitMultipliers,
+  };
+}
+
+/**
  * Advances the weeks of one block, at most `limit` of them, recording where control would
  * have returned. A returned control does not end the walk: the weeks the block already
- * planned are advanced with the activities and members they were planned with.
+ * planned are advanced with the activities and members they were planned with. When a week
+ * leaves an incident pending, the harness resolves it immediately through core's public
+ * resolver and records the resolved state as that week's own, before continuing the plan.
  */
 export function walkBlock(
   state: RunState,
   plan: WeekPlan,
   masked: readonly StopReasonKind[],
   limit: number,
+  incidentInput?: IncidentInput,
 ): readonly WalkedWeek[] {
   validateWeekPlan(plan, state.collective);
 
@@ -112,13 +138,42 @@ export function walkBlock(
   let current = state;
   for (const planned of plan.weeks) {
     if (walked.length >= limit) break;
-    const outcome = executeWeek(current, planned);
+    const outcome = executeWeek(
+      current,
+      planned,
+      incidentInput === undefined ? {} : { incidentInput },
+    );
     current = outcome.state;
+
+    let resolution: IncidentResolution | undefined;
+    const pending = current.incidents.pending;
+    if (pending !== null) {
+      if (incidentInput === undefined) {
+        throw new Error(
+          `run.ts: incident "${pending.incidentId}" is pending but no incident catalog was supplied`,
+        );
+      }
+      const incident = incidentInput.catalog.find((entry) => entry.id === pending.incidentId);
+      if (incident === undefined) {
+        throw new Error(
+          `run.ts: pending incident "${pending.incidentId}" is not in the supplied catalog`,
+        );
+      }
+      const resolved = resolveIncident({
+        state: current,
+        catalog: incidentInput.catalog,
+        choiceId: chooseIncidentChoice(incident.choices),
+      });
+      current = resolved.state;
+      resolution = resolved.resolution;
+    }
+
     walked.push({
       result: outcome.result,
       state: current,
       returnedControl: outcome.result.reasons.some((reason) => !masked.includes(reason.kind)),
       planned,
+      ...(resolution === undefined ? {} : { resolution }),
     });
   }
   return walked;
@@ -133,6 +188,7 @@ export function runPolicy(
   horizon: number,
 ): PolicyRun {
   const opening = openingState(scenario, content, seed);
+  const incidentInput = incidentInputFor(scenario, content);
 
   const weeks: WalkedWeek[] = [];
   let current = opening;
@@ -142,6 +198,7 @@ export function runPolicy(
       planBlock(scenario, policy, current),
       scenario.masked,
       horizon - weeks.length,
+      incidentInput,
     );
     if (block.length === 0) throw new Error("a block advanced no week, which would never end");
     weeks.push(...block);

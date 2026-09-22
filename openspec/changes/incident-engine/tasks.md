@@ -24,10 +24,10 @@
 
 ## 5. Harness integration
 
-- [ ] 5.1 Load validated incident and trait-weight content plus optional scenario cadence, keep `act-one.json` incident-free, and add `incidents-smoke.json`; verify loader tests reject unknown or duplicate ids and invalid cadence before a week advances, and every smoke seed produces a resolution within its horizon.
-- [ ] 5.2 Make every policy submit the first stable choice id in ascending code-point order through core resolution while retaining the remainder of the current plan; verify walk tests match block advance before resolution and core's public resolution result afterward for a pending incident inside a block.
-- [ ] 5.3 Add incident configuration, occurrence and resolution data to the shared report model and both renderers; verify JSON reproducibility, declared inputs, direct/check field presence and post-resolution state with focused report tests.
-- [ ] 5.4 Run the actual harness against every seed of the incident smoke scenario in JSON and text modes, and verify the outputs show an occurrence, core resolution and continued advancement to the requested horizon without presenting the cadence as a balance default.
+- [x] 5.1 Load validated incident and trait-weight content plus optional scenario cadence, keep `act-one.json` incident-free, and add `incidents-smoke.json`; verify loader tests reject unknown or duplicate ids and invalid cadence before a week advances, and every smoke seed produces a resolution within its horizon.
+- [x] 5.2 Make every policy submit the first stable choice id in ascending code-point order through core resolution while retaining the remainder of the current plan; verify walk tests match block advance before resolution and core's public resolution result afterward for a pending incident inside a block.
+- [x] 5.3 Add incident configuration, occurrence and resolution data to the shared report model and both renderers; verify JSON reproducibility, declared inputs, direct/check field presence and post-resolution state with focused report tests.
+- [x] 5.4 Run the actual harness against every seed of the incident smoke scenario in JSON and text modes, and verify the outputs show an occurrence, core resolution and continued advancement to the requested horizon without presenting the cadence as a balance default.
 
 ## 6. Integration gate and archive
 

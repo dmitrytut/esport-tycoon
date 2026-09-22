@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -74,5 +74,31 @@ describe("content for a run", () => {
     );
 
     expect(() => loadContent(root)).toThrow(/western-europe/);
+  });
+
+  it("loads incidents by id", () => {
+    const content = loadContent(contentRoot);
+    const incident = content.incidents.get("gear-malfunction-mid-scrim");
+
+    expect(incident?.category).toBe("tech");
+    expect(incident?.weight).toBe(5);
+    expect(incident?.choices.map((choice) => choice.id)).toEqual([
+      "borrow-a-spare",
+      "power-through",
+    ]);
+  });
+
+  it("builds trait event-weight boosts by trait id", () => {
+    const content = loadContent(contentRoot);
+
+    expect(content.traitMultipliers.streamer).toEqual({ fame: 2.0, press: 1.5, health: 1.3 });
+  });
+
+  it("refuses a duplicate incident id", () => {
+    const root = copyOfContent();
+    const duplicate = readFileSync(join(root, "events/gear-malfunction-mid-scrim.json"), "utf8");
+    writeFileSync(join(root, "events/gear-malfunction-mid-scrim-copy.json"), duplicate);
+
+    expect(() => loadContent(root)).toThrow(/gear-malfunction-mid-scrim/);
   });
 });

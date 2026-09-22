@@ -15,6 +15,16 @@ context: |
 rules:
   proposal:
     - >-
+      Every proposal must include a "Player Experience (MDA / SDT)" section. For a
+      change that affects player-facing behavior, keep it brief and state: the intended
+      player experience; the mechanics and expected dynamics, including the meaningful
+      decision and how its consequences become legible; the expected effect on autonomy,
+      competence and relatedness, including neutral or negative effects; and one
+      falsifiable failure signal such as a dominant strategy, unclear causality or a
+      motivation the change fails to support. A tooling, infrastructure, process or
+      docs-only change may write "Not applicable" only with one sentence explaining why
+      it cannot affect player experience. Keep implementation details in design.md.
+    - >-
       Include an "Affects" section listing the repository paths the change will
       touch (globs allowed). The admission check compares these paths across active
       changes to decide what may run in parallel.

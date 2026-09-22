@@ -18,6 +18,7 @@ Proposal for #NNN.
 ### Check on review
 
 - [ ] the task being solved is the same as in the issue, scope hasn't crept
+- [ ] `Player Experience (MDA / SDT)` names the intended experience, mechanics, expected dynamics and meaningful decision, how consequences become legible, effect on autonomy / competence / relatedness, and a falsifiable failure signal — or explains `Not applicable` for a non-player change
 - [ ] every requirement has a scenario, not just a heading
 - [ ] open questions are closed — not a single "we'll clarify during implementation"
 - [ ] doesn't contradict `docs/design/*`; if it does, the proposal is fixed, not the design

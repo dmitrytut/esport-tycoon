@@ -134,6 +134,7 @@ export function loadScenario(path: string, content: SimContent): Scenario {
   let incidents: Scenario["incidents"];
   if (file.incidents !== undefined) {
     const { ids, cadence } = file.incidents;
+    if (ids.length === 0) fail("declares incident configuration with no ids");
     const incidentIds = new Set<string>();
     const catalog: Incident[] = [];
     for (const id of ids) {

@@ -8,6 +8,7 @@ import type { SimReport } from "../src/report.ts";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const entry = join(repoRoot, "tools/sim-harness/src/index.ts");
+const smokeScenario = join(repoRoot, "tools/sim-harness/scenarios/incidents-smoke.json");
 
 /** Captured process result from invoking the public command line. */
 interface CliResult {
@@ -85,5 +86,33 @@ describe("the simulation command line", () => {
       JSON.stringify(report, (key, value: unknown) => (key === "durationMs" ? undefined : value));
 
     expect(deterministicJson(first)).toBe(deterministicJson(second));
+  });
+
+  it("tolerates the leading -- separator pnpm run forwards from `pnpm sim -- ...`", () => {
+    const result = run(["--", "--seeds", "1", "--weeks", "3", "--format", "json"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    const report: SimReport = JSON.parse(result.stdout);
+    expect(report.horizon).toBe(3);
+    expect(report.seeds).toEqual([1]);
+  });
+
+  it("produces byte-identical incident data on identical invocations of the smoke scenario", () => {
+    const args = ["--scenario", smokeScenario, "--seeds", "1,2,3", "--weeks", "4"];
+    const first = jsonRun(args);
+    const second = jsonRun(args);
+    const deterministicJson = (report: SimReport): string =>
+      JSON.stringify(report, (key, value: unknown) => (key === "durationMs" ? undefined : value));
+
+    expect(deterministicJson(first)).toBe(deterministicJson(second));
+    expect(first.incidents).toEqual({
+      enabled: true,
+      ids: ["press-conference-own-goal", "sponsor-audit-surprise", "gear-malfunction-mid-scrim"],
+      cadence: 1,
+    });
+    for (const policy of first.policies) {
+      for (const seed of policy.seeds) expect(seed.incidents.length).toBeGreaterThan(0);
+    }
   });
 });

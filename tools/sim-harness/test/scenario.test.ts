@@ -142,4 +142,10 @@ describe("a run's scenario", () => {
 
     expect(() => loadScenario(path, content)).toThrow(/broken.*-0\.1|-0\.1.*broken/s);
   });
+
+  it("refuses a present incident configuration declaring no ids", () => {
+    const path = scenarioWith({ incidents: { ids: [], cadence: 1 } });
+
+    expect(() => loadScenario(path, content)).toThrow(/broken.*no ids|no ids.*broken/s);
+  });
 });

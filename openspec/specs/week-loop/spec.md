@@ -109,6 +109,12 @@ week as contested; an incident awaits a choice. Advancing SHALL report the index
 week it stopped at together with every reason that week produced. A week with no reason
 SHALL pass without stopping.
 
+When incident input is present, one eligible incident MAY be selected after the week's
+activities, recovery and other reasons have been produced. A selected incident SHALL be
+stored in run state and SHALL add `incident-pending` to that same week's reasons. Advancing
+an input state that already has a pending incident SHALL fail before validating or executing
+the plan.
+
 #### Scenario: Quiet weeks pass in one call
 
 - **WHEN** a block of five weeks is advanced and only week four produces a stop reason
@@ -126,6 +132,17 @@ SHALL pass without stopping.
 - **WHEN** a week both skips a planned activity and takes a performer's energy across its
   threshold
 - **THEN** advancing stops at that week and reports both reasons
+
+#### Scenario: A selected incident stops the block
+
+- **WHEN** the incident cadence succeeds after week two of a four-week block
+- **THEN** week two reports `incident-pending` with the selected incident and target,
+  advancing stops there, and weeks three and four remain unexecuted
+
+#### Scenario: Pending state cannot advance
+
+- **WHEN** block advancement is called with an unresolved incident already in run state
+- **THEN** it fails before plan validation, and no week or random stream moves
 
 ### Requirement: A threshold reason fires on a downward crossing, never on a level
 
@@ -169,12 +186,17 @@ not stop the advance.
 
 ### Requirement: Week kind is classified from that week alone
 
-Every advanced week SHALL be labelled with exactly one kind: `series` when the calendar
+Every advanced week SHALL be labelled with exactly one final kind: `series` when the calendar
 marked it as a series of contests, `contest` when it held a single contest, `ordinary` when
-it produced a stop reason or spent at least one slot, `quiet` otherwise. The kind SHALL be a
-function of that week's own inputs and results only: it SHALL NOT depend on the kinds of
+it produced a stop reason or spent at least one slot, `quiet` otherwise. The final kind SHALL
+be a function of that week's own inputs and results only: it SHALL NOT depend on the kinds of
 earlier weeks, on the distribution accumulated so far, or on any target share. Advancing
-SHALL report the kind of every week it simulated.
+SHALL report the final kind of every week it simulated.
+
+When incident eligibility reads `baseWeekKind`, the week loop SHALL classify it by the same
+rule before adding `incident-pending`; after selection, the final kind SHALL be classified
+again with that reason included. The base kind SHALL exist only as incident input and SHALL
+NOT replace the final kind in the week result.
 
 #### Scenario: The same week classifies the same way regardless of history
 
@@ -187,6 +209,11 @@ SHALL report the kind of every week it simulated.
 - **WHEN** a week is advanced with no activities planned, no calendar marking and no stop
   reason produced
 - **THEN** the week is labelled `quiet`
+
+#### Scenario: An incident changes quiet to ordinary
+
+- **WHEN** a week with base kind `quiet` selects an incident
+- **THEN** incident conditions read `quiet`, while the returned final kind is `ordinary`
 
 #### Scenario: The distribution is an observation
 
@@ -230,16 +257,18 @@ crosses zero downward SHALL produce the money stop reason.
 ### Requirement: Advancing a week is deterministic
 
 Advancing SHALL depend only on its inputs: the state of the run, the plan, the sensitivity
-mask, the calendar and the injected random number generator. The same inputs SHALL produce
-the same weeks, the same stop index, the same reasons and the same kinds. The week loop
-SHALL NOT read a system random number generator or a system clock.
+mask, the calendar, the incident catalog and cadence, the trait category multipliers, and
+the injected serializable random streams. The same inputs SHALL produce the same weeks,
+incident occurrence and target, stop index, reasons, kinds and resulting state. The week
+loop SHALL NOT read a system random number generator or a system clock, and incident draws
+SHALL NOT move another subsystem's stream.
 
 #### Scenario: Same seed, same plan, same result
 
 - **WHEN** the same run is advanced twice from the same state with the same seed, plan,
-  mask and calendar
+  mask, calendar, incident input and trait category multipliers
 - **THEN** both advances produce identical results down to every performer's state, the
-  stop index, the reasons and the week kinds
+  pending incident, every RNG state, the stop index, the reasons and the week kinds
 
 #### Scenario: A different seed is allowed to differ
 

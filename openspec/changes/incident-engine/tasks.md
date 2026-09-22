@@ -31,5 +31,5 @@
 
 ## 6. Integration gate and archive
 
-- [ ] 6.1 Run `pnpm format` followed by `pnpm verify`, fix every failure without regenerating golden or baseline artifacts, and record the green gate in the implementation pull request.
+- [x] 6.1 Run `pnpm format` followed by `pnpm verify`, fix every failure without regenerating golden or baseline artifacts, and record the green gate in the implementation pull request.
 - [ ] 6.2 Archive `incident-engine` through `/opsx:archive incident-engine`, verify `openspec validate --all` passes and the archived `incident-engine`, `week-loop` and `sim-harness` specifications contain the accepted behavior before opening PR-2.

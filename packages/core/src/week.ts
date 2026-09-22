@@ -329,9 +329,9 @@ export function executeWeek(
   }
   const energyThreshold = options.energyThreshold ?? DEFAULT_ENERGY_THRESHOLD;
   const moraleThreshold = options.moraleThreshold ?? DEFAULT_MORALE_THRESHOLD;
-  // Nothing in this tick draws yet: the effects of an activity are declared numbers. The
-  // stream is restored and its continuation saved so that the rule which does start drawing
-  // — an incident, a contest — changes no shape here (`design.md`).
+  // The root stream draws nothing here: activity effects are declared numbers and incidents
+  // draw only from their own stream. Restore and save this continuation for future rules,
+  // such as contests, that may use the root stream (`design.md`).
   const rng = restoreRng(state.seed, state.rng);
 
   const opening = new Map<string, PerformerState>();

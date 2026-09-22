@@ -18,9 +18,9 @@
 
 ## 4. Week-loop integration
 
-- [ ] 4.1 Select at most one incident after activities and recovery, report its unmaskable reason, and preserve separate base and final week kinds; verify focused `executeWeek` tests cover quiet-to-ordinary classification and coexisting reasons.
-- [ ] 4.2 Reject one-week and block advancement from unresolved state before plan validation or execution; verify tests compare the complete state and RNGs before and after the rejected calls.
-- [ ] 4.3 Prove integrated replay and random-stream isolation over week execution with pinned property tests, and verify the focused week-loop suites pass.
+- [x] 4.1 Select at most one incident after activities and recovery, report its unmaskable reason, and preserve separate base and final week kinds; verify focused `executeWeek` tests cover quiet-to-ordinary classification and coexisting reasons.
+- [x] 4.2 Reject one-week and block advancement from unresolved state before plan validation or execution; verify tests compare the complete state and RNGs before and after the rejected calls.
+- [x] 4.3 Prove integrated replay and random-stream isolation over week execution with pinned property tests, and verify the focused week-loop suites pass.
 
 ## 5. Harness integration
 

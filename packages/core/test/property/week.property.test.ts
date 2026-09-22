@@ -2,6 +2,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import { collectiveMorale } from "../../src/collective.ts";
+import type { IncidentInput } from "../../src/incident.ts";
 import { ENERGY_MAX, ENERGY_MIN, MORALE_MAX, MORALE_MIN } from "../../src/performer.ts";
 import { createRng } from "../../src/rng.ts";
 import type {
@@ -12,7 +13,14 @@ import type {
   WeekPlan,
 } from "../../src/week.ts";
 import { advance, executeWeek, UNMASKABLE_REASONS } from "../../src/week.ts";
-import { makeActivity, makeCollective, makeOrg, makePerformer, makeState } from "../fixtures.ts";
+import {
+  makeActivity,
+  makeCollective,
+  makeIncident,
+  makeOrg,
+  makePerformer,
+  makeState,
+} from "../fixtures.ts";
 import { collectiveArb, planArb, runStateArb, seedArb } from "./arbitraries.ts";
 
 /** A run together with a plan written for its own members. */
@@ -158,6 +166,79 @@ describe("the week loop: determinism", () => {
 
         expect(runWith(first)).toEqual(runWith(first));
         expect(runWith(second)).toEqual(runWith(second));
+      }),
+    );
+  });
+});
+
+/**
+ * One always-eligible unconditioned incident, cadence drawn across the whole [0, 1] range:
+ * exercises the cadence gate at both ends and every point between.
+ */
+const incidentInputArb: fc.Arbitrary<IncidentInput> = fc
+  .record({
+    cadence: fc.double({ min: 0, max: 1, noNaN: true }),
+    weight: fc.integer({ min: 1, max: 5 }),
+  })
+  .map(({ cadence, weight }) => ({
+    catalog: [makeIncident("anchor", { weight })],
+    cadence,
+    traitMultipliers: {},
+  }));
+
+/** Never eligible for any generated performer: energy never drops below zero. */
+const alwaysIneligibleIncident = makeIncident("impossible", { conditions: { energyBelow: -1 } });
+
+describe("the week loop: incidents", () => {
+  it("replays a whole block identically for identical inputs, incident selection included", () => {
+    fc.assert(
+      fc.property(runArb, incidentInputArb, ([state, plan], incidentInput) => {
+        const options: AdvanceOptions = { incidentInput };
+
+        expect(advance(state, plan, options)).toEqual(advance(state, plan, options));
+      }),
+    );
+  });
+
+  it("keeps the root rng and every non-incident field independent of the incident draw", () => {
+    fc.assert(
+      fc.property(runArb, incidentInputArb, ([state, plan], incidentInput) => {
+        const planned = plan.weeks[0] ?? [];
+        const withIncidents = executeWeek(state, planned, { incidentInput });
+        const without = executeWeek(state, planned, {});
+
+        expect(withIncidents.state.rng).toEqual(without.state.rng);
+        expect(withIncidents.state.org).toEqual(without.state.org);
+        expect(withIncidents.state.collective).toEqual(without.state.collective);
+        expect(withIncidents.result.executed).toEqual(without.result.executed);
+        expect(withIncidents.result.skipped).toEqual(without.result.skipped);
+      }),
+    );
+  });
+
+  it("draws no incident rng and leaves the incident lifecycle untouched without incident input", () => {
+    fc.assert(
+      fc.property(runArb, ([state, plan]) => {
+        const planned = plan.weeks[0] ?? [];
+        const { state: next } = executeWeek(state, planned);
+
+        expect(next.incidents).toEqual(state.incidents);
+      }),
+    );
+  });
+
+  it("does not drift the incident draw when the catalog gains an always-ineligible entry", () => {
+    fc.assert(
+      fc.property(runArb, incidentInputArb, ([state, plan], incidentInput) => {
+        const planned = plan.weeks[0] ?? [];
+        const base = executeWeek(state, planned, { incidentInput });
+        const widened: IncidentInput = {
+          ...incidentInput,
+          catalog: [...incidentInput.catalog, alwaysIneligibleIncident],
+        };
+        const withExtra = executeWeek(state, planned, { incidentInput: widened });
+
+        expect(withExtra).toEqual(base);
       }),
     );
   });

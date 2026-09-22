@@ -326,6 +326,20 @@ export function eligibleTargetIds(input: EligibilityInput): readonly string[] {
 export type IncidentTraitMultipliers = Readonly<Record<string, IncidentCategoryMultipliers>>;
 
 /**
+ * The week loop's explicit incident engine input (`week.ts`'s `AdvanceOptions.incidentInput`):
+ * catalog, cadence and trait weighting. Its absence is what lets a caller run the week loop
+ * without enabling incidents or drawing from the incident RNG stream at all.
+ */
+export interface IncidentInput {
+  /** Every incident the caller allows this week; never mutated or reordered. */
+  readonly catalog: readonly Incident[];
+  /** Chance in [0, 1] that an eligible week produces one incident. */
+  readonly cadence: number;
+  /** Declared trait weight boosts by trait id. */
+  readonly traitMultipliers: IncidentTraitMultipliers;
+}
+
+/**
  * Input to `selectIncident`: everything needed to gate occurrence and, on success, choose
  * one incident and one of its eligible performers on the incident engine's own RNG stream.
  */

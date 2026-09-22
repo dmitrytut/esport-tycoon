@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import type { StopReasonKind, WeekPlan } from "../src/week.ts";
+import { createIncidentState } from "../src/incident.ts";
+import type { AdvanceOptions, RunState, StopReasonKind, WeekPlan } from "../src/week.ts";
 import { advance, executeWeek, WEEKLY_ENERGY_RECOVERY } from "../src/week.ts";
-import { makeActivity, makeCollective, makeOrg, makePerformer, makeState } from "./fixtures.ts";
+import {
+  makeActivity,
+  makeCollective,
+  makeIncident,
+  makeOrg,
+  makePerformer,
+  makeState,
+} from "./fixtures.ts";
 
 const ids = ["a", "b", "c", "d", "e"];
 const five = (energy = 80, morale = 70) => ids.map((id) => makePerformer(id, energy, morale));
@@ -266,13 +274,103 @@ describe("stop reasons", () => {
 
     expect(result.reasons).toEqual([{ kind: "contest-ahead", marking: "series" }]);
   });
+});
 
-  it("stops on an incident awaiting a choice", () => {
-    const state = makeState(makeCollective(five()));
+describe("incident selection", () => {
+  const soloInput = (incident = makeIncident("brawl")): AdvanceOptions => ({
+    incidentInput: { catalog: [incident], cadence: 1, traitMultipliers: {} },
+  });
 
-    const { result } = executeWeek(state, [], { incidents: [{ week: 0, id: "brawl" }] });
+  /** A run whose incident lifecycle already has one incident awaiting a choice. */
+  const pendingState = (): RunState => ({
+    ...makeState(makeCollective(five())),
+    incidents: {
+      ...createIncidentState(42),
+      pending: { incidentId: "old", performerId: "a", week: 0 },
+    },
+  });
 
-    expect(result.reasons).toEqual([{ kind: "incident-pending", incidentId: "brawl" }]);
+  it("selects an incident and reports both its id and its target", () => {
+    const state = makeState(makeCollective([makePerformer("solo")]));
+
+    const { state: next, result } = executeWeek(state, [], soloInput());
+
+    expect(result.reasons).toEqual([
+      { kind: "incident-pending", incidentId: "brawl", performerId: "solo" },
+    ]);
+    // The returned state's own incident lifecycle must carry the same identity, not just
+    // the week result: a caller resumes from `next`, not from `result.reasons`.
+    expect(next.incidents.pending).toEqual({ incidentId: "brawl", performerId: "solo", week: 0 });
+    expect(next.incidents.rng).not.toEqual(state.incidents.rng);
+  });
+
+  it("reads the base kind as quiet for eligibility while the final kind becomes ordinary", () => {
+    const state = makeState(makeCollective([makePerformer("solo")]));
+    const incident = makeIncident("brawl", { conditions: { baseWeekKind: ["quiet"] } });
+
+    const { result } = executeWeek(state, [], soloInput(incident));
+
+    // Only reachable if eligibility saw `quiet`: a `quiet`-only condition would exclude
+    // "solo" entirely had the engine already counted its own pending reason.
+    expect(result.reasons).toEqual([
+      { kind: "incident-pending", incidentId: "brawl", performerId: "solo" },
+    ]);
+    expect(result.kind).toBe("ordinary");
+  });
+
+  it("selects alongside an already-produced reason, keeping both", () => {
+    const state = makeState(makeCollective([makePerformer("solo")]));
+
+    const { result } = executeWeek(state, [], {
+      ...soloInput(),
+      calendar: ["none", "contest"],
+    });
+
+    expect(kindsOf(result.reasons)).toEqual(["contest-ahead", "incident-pending"]);
+  });
+
+  it("draws no incident rng and leaves the incident lifecycle untouched without incident input", () => {
+    const state = makeState(makeCollective([makePerformer("solo")]));
+
+    const { state: next } = executeWeek(state, []);
+
+    expect(next.incidents).toEqual(state.incidents);
+  });
+
+  it("rejects executeWeek outright when an incident is already pending", () => {
+    const state = pendingState();
+    const before = structuredClone(state);
+
+    expect(() => executeWeek(state, [{ activity: sour }])).toThrow(/pending/);
+    expect(state).toEqual(before);
+  });
+
+  it("rejects advance before plan validation when an incident is already pending", () => {
+    const state = pendingState();
+    const before = structuredClone(state);
+
+    // A three-week plan would otherwise fail its own "4 to 6 weeks" check; the pending
+    // error must win that race, proving the guard runs first.
+    expect(() => advance(state, emptyWeeks(3))).toThrow(/pending/);
+    expect(state).toEqual(before);
+  });
+
+  it("rejects advance before sensitivity validation when an incident is already pending", () => {
+    const state = pendingState();
+
+    expect(() =>
+      advance(state, emptyWeeks(4), { sensitivity: { masked: ["incident-pending"] } }),
+    ).toThrow(/pending/);
+  });
+
+  it("stops the block at the week an incident is selected, leaving later weeks unexecuted", () => {
+    const state = makeState(makeCollective([makePerformer("solo")]));
+
+    const result = advance(state, emptyWeeks(4), soloInput());
+
+    expect(result.weeks).toHaveLength(1);
+    expect(result.stoppedAt).toBe(0);
+    expect(kindsOf(result.reasons)).toEqual(["incident-pending"]);
   });
 });
 

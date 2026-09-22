@@ -13,6 +13,7 @@
 import type { Activity } from "./activity.ts";
 import type { Collective } from "./collective.ts";
 import { participantsOf } from "./collective.ts";
+import { type IncidentInput, type IncidentState, selectIncident } from "./incident.ts";
 import type { Org } from "./org.ts";
 import { applyOrgChange, reach } from "./org.ts";
 import type { PerformerState, StatKey } from "./performer.ts";
@@ -115,6 +116,8 @@ export interface IncidentPendingReason {
   readonly kind: "incident-pending";
   /** Which incident is waiting. */
   readonly incidentId: string;
+  /** Which performer it targets. */
+  readonly performerId: string;
 }
 
 /**
@@ -149,14 +152,6 @@ export interface Sensitivity {
   readonly masked: readonly StopReasonKind[];
 }
 
-/** An incident waiting at a given week. Data, so the week loop stays free of the system. */
-export interface PendingIncident {
-  /** Absolute week index it waits at. */
-  readonly week: number;
-  /** Identifier handed back in the stop reason. */
-  readonly id: string;
-}
-
 /** Everything advancing reads besides the plan. Every field has a default. */
 export interface AdvanceOptions {
   /** Which reasons are suppressed; absent means every reason stops the advance. */
@@ -167,8 +162,11 @@ export interface AdvanceOptions {
   readonly moraleThreshold?: number;
   /** Marking per absolute week index. A week past the end of the list is unmarked. */
   readonly calendar?: readonly WeekMarking[];
-  /** Incidents awaiting a choice, by absolute week index. */
-  readonly incidents?: readonly PendingIncident[];
+  /**
+   * Explicit incident engine input; absent disables selection entirely and draws nothing
+   * from the incident RNG stream, so an existing run that never sets it is unaffected.
+   */
+  readonly incidentInput?: IncidentInput;
 }
 
 /** The whole run as the week loop sees it. Serializable: a save resumes the same sequence. */
@@ -183,6 +181,8 @@ export interface RunState {
   readonly seed: number | string;
   /** Continuation of that stream. */
   readonly rng: RngState;
+  /** The mandatory, independently seeded incident lifecycle: pending choice and cooldowns. */
+  readonly incidents: IncidentState;
 }
 
 /** An activity that happened, and who it happened to. */
@@ -322,11 +322,16 @@ export function executeWeek(
   planned: readonly PlannedActivity[],
   options: AdvanceOptions = {},
 ): WeekOutcome {
+  if (state.incidents.pending !== null) {
+    throw new Error(
+      "executeWeek: an incident is already pending and must be resolved before another week runs",
+    );
+  }
   const energyThreshold = options.energyThreshold ?? DEFAULT_ENERGY_THRESHOLD;
   const moraleThreshold = options.moraleThreshold ?? DEFAULT_MORALE_THRESHOLD;
-  // Nothing in this tick draws yet: the effects of an activity are declared numbers. The
-  // stream is restored and its continuation saved so that the rule which does start drawing
-  // — an incident, a contest — changes no shape here (`design.md`).
+  // The root stream draws nothing here: activity effects are declared numbers and incidents
+  // draw only from their own stream. Restore and save this continuation for future rules,
+  // such as contests, that may use the root stream (`design.md`).
   const rng = restoreRng(state.seed, state.rng);
 
   const opening = new Map<string, PerformerState>();
@@ -463,17 +468,45 @@ export function executeWeek(
   }
   const ahead = options.calendar?.[state.week + 1] ?? "none";
   if (ahead !== "none") reasons.push({ kind: "contest-ahead", marking: ahead });
-  const incident = options.incidents?.find((pending) => pending.week === state.week);
-  if (incident !== undefined) {
-    reasons.push({ kind: "incident-pending", incidentId: incident.id });
-  }
 
   const slotsSpent = state.org.slots - slotsLeft;
+  const marking = options.calendar?.[state.week] ?? "none";
+  // The base kind reads every reason produced so far but not the incident itself, so a
+  // selected incident's own conditions see the week as it stood before selection
+  // (`design.md` "Selection happens after activities, recovery and non-incident reasons").
+  const baseWeekKind = classifyWeek(marking, slotsSpent, reasons);
+
+  // Absent input means no incident RNG is drawn at all, not merely that none is selected.
+  let incidents = state.incidents;
+  if (options.incidentInput !== undefined) {
+    const { catalog, cadence, traitMultipliers } = options.incidentInput;
+    const selection = selectIncident({
+      seed: state.seed,
+      state: state.incidents,
+      currentWeek: state.week,
+      baseWeekKind,
+      collective,
+      catalog,
+      cadence,
+      traitMultipliers,
+    });
+    incidents = selection.state;
+    if (selection.selected !== null) {
+      reasons.push({
+        kind: "incident-pending",
+        incidentId: selection.selected.incidentId,
+        performerId: selection.selected.performerId,
+      });
+    }
+  }
+
   return {
-    state: { ...state, org, collective, week: state.week + 1, rng: rng.state() },
+    state: { ...state, org, collective, week: state.week + 1, rng: rng.state(), incidents },
     result: {
       week: state.week,
-      kind: classifyWeek(options.calendar?.[state.week] ?? "none", slotsSpent, reasons),
+      // Reclassified with the incident reason included, so a base-quiet week that selected
+      // one returns `ordinary` even though its conditions were evaluated against `quiet`.
+      kind: classifyWeek(marking, slotsSpent, reasons),
       slotsSpent,
       executed,
       skipped,
@@ -493,6 +526,11 @@ export function advance(
   plan: WeekPlan,
   options: AdvanceOptions = {},
 ): AdvanceResult {
+  if (state.incidents.pending !== null) {
+    throw new Error(
+      "advance: an incident is already pending and must be resolved before advancing",
+    );
+  }
   validateWeekPlan(plan, state.collective);
   if (options.sensitivity !== undefined) validateSensitivity(options.sensitivity);
   const masked = new Set<StopReasonKind>(options.sensitivity?.masked ?? []);

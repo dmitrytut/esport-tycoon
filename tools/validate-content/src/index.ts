@@ -163,27 +163,53 @@ for (const entity of entities) {
   const data = entity.data;
 
   if (entity.type === "events") {
-    const triggers = (data["triggers"] ?? {}) as Record<string, unknown>;
-    for (const traitId of (triggers["requiresTrait"] as unknown[] | undefined) ?? []) {
-      checkRef(entity, "traits", traitId, "triggers.requiresTrait");
+    const conditions = (data["conditions"] ?? {}) as Record<string, unknown>;
+    for (const traitId of (conditions["requiresTrait"] as unknown[] | undefined) ?? []) {
+      checkRef(entity, "traits", traitId, "conditions.requiresTrait");
     }
-    for (const regionId of (triggers["region"] as unknown[] | undefined) ?? []) {
-      checkRef(entity, "regions", regionId, "triggers.region");
+    for (const regionId of (conditions["region"] as unknown[] | undefined) ?? []) {
+      checkRef(entity, "regions", regionId, "conditions.region");
     }
+
+    const checkEffectStats = (effects: unknown, where: string): void => {
+      for (const effect of (effects as unknown[] | undefined) ?? []) {
+        const fields = (effect ?? {}) as Record<string, unknown>;
+        if (fields["kind"] !== "stat") continue;
+        const stat = fields["stat"];
+        if (typeof stat !== "string" || !(CORE_STATS as readonly string[]).includes(stat)) {
+          fail(
+            entity.file,
+            `${where}.stat "${String(stat)}" is not in the list [${CORE_STATS.join(", ")}]`,
+          );
+        }
+      }
+    };
+
+    const seenChoiceIds = new Set<string>();
     const choices = (data["choices"] as unknown[] | undefined) ?? [];
     choices.forEach((choice, index) => {
-      const effects = ((choice as Record<string, unknown>)["effects"] ?? {}) as Record<
-        string,
-        unknown
-      >;
-      const where = `choices[${index}].effects`;
-      if (effects["addTrait"] !== undefined) {
-        checkRef(entity, "traits", effects["addTrait"], `${where}.addTrait`);
+      const choiceData = (choice ?? {}) as Record<string, unknown>;
+      const id = choiceData["id"];
+      if (typeof id === "string") {
+        if (seenChoiceIds.has(id)) fail(entity.file, `choices[${index}].id "${id}" is duplicated`);
+        seenChoiceIds.add(id);
       }
-      if (effects["removeTrait"] !== undefined) {
-        checkRef(entity, "traits", effects["removeTrait"], `${where}.removeTrait`);
+
+      const outcome = (choiceData["outcome"] ?? {}) as Record<string, unknown>;
+      const where = `choices[${index}].outcome`;
+      if (outcome["kind"] === "direct") {
+        checkEffectStats(outcome["effects"], `${where}.effects`);
+      } else if (outcome["kind"] === "check") {
+        const stat = outcome["stat"];
+        if (typeof stat !== "string" || !(CORE_STATS as readonly string[]).includes(stat)) {
+          fail(
+            entity.file,
+            `${where}.stat "${String(stat)}" is not in the list [${CORE_STATS.join(", ")}]`,
+          );
+        }
+        checkEffectStats(outcome["successEffects"], `${where}.successEffects`);
+        checkEffectStats(outcome["failureEffects"], `${where}.failureEffects`);
       }
-      checkKeys(entity, effects["statDelta"], CORE_STATS, `${where}.statDelta`);
     });
   }
 

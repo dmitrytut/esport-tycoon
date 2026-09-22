@@ -78,6 +78,9 @@ function parseArgs(args: readonly string[]): CliOptions {
 
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index];
+    // `pnpm <script> -- <args>` forwards the literal `--` separator itself; it marks no
+    // option of its own and must not be rejected as unknown.
+    if (option === "--") continue;
     if (option === "--scenario") {
       scenarioPath = resolve(valueAfter(args, index));
       index += 1;

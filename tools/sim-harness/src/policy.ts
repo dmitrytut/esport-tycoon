@@ -1,16 +1,31 @@
 /**
  * Policies: the three stand-ins for a user this harness compares (issue #46). A policy
- * chooses what to plan and who takes part, reading nothing but the activities content
- * declared and the state the core returned. It computes no payout and applies no effect —
- * what a week costs and pays is the week loop's answer.
+ * chooses what to plan, who takes part and, for a pending incident, which choice id to
+ * submit. It reads nothing but the activities content declared and the state the core
+ * returned. It computes no payout and applies no effect — what a week costs and pays, and
+ * what an incident choice resolves to, is the core's answer.
  */
-import type { Activity, Collective, PlannedActivity } from "@et/core";
+import type { Activity, Collective, IncidentChoice, PlannedActivity } from "@et/core";
 
 /** The three policies a run may be asked for. */
 export type PolicyName = "money" | "development" | "balanced";
 
 /** Every policy, in the order a report lists them. */
 export const POLICY_NAMES: readonly PolicyName[] = ["money", "development", "balanced"];
+
+/**
+ * The one neutral, total ordering every policy submits for a pending incident: the first
+ * choice id in ascending code-point order. It does not inspect effects, predict a check or
+ * draw RNG (design "Harness policy is neutral and total").
+ */
+export function chooseIncidentChoice(choices: readonly IncidentChoice[]): string {
+  let chosen: string | undefined;
+  for (const choice of choices) {
+    if (chosen === undefined || choice.id < chosen) chosen = choice.id;
+  }
+  if (chosen === undefined) throw new Error("an incident with no choices cannot be resolved");
+  return chosen;
+}
 
 /** Sum of what an activity's money effects declare; a base counts as declared, not as paid. */
 function declaredMoney(activity: Activity): number {

@@ -1,9 +1,50 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Event",
+  "title": "Incident",
   "type": "object",
-  "required": ["id", "category", "weight", "text", "choices"],
+  "required": ["id", "category", "weight", "cooldownWeeks", "text", "choices"],
   "additionalProperties": false,
+  "$defs": {
+    "effects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "amount"],
+        "properties": {
+          "kind": {
+            "enum": ["energy", "morale", "form", "stat", "money", "audience", "reputation"],
+            "description": "closed set; performer kinds energy/morale/form/stat, organization kinds money/audience/reputation"
+          },
+          "stat": {
+            "type": "string",
+            "pattern": "^[a-z]+$",
+            "description": "one of the six stats; required only for kind stat, checked by name in tools/validate-content"
+          },
+          "amount": {
+            "type": "number",
+            "description": "signed, finite change; negative debits"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": ["kind"],
+              "properties": { "kind": { "const": "stat" } }
+            },
+            "then": {
+              "required": ["stat"],
+              "properties": { "stat": { "type": "string", "pattern": "^[a-z]+$" } }
+            },
+            "else": {
+              "not": { "required": ["stat"] }
+            }
+          }
+        ]
+      }
+    }
+  },
   "properties": {
     "id": {
       "type": "string",
@@ -27,57 +68,63 @@
     "weight": {
       "type": "number",
       "minimum": 0,
-      "maximum": 100
+      "description": "relative base weight among eligible incidents; frequency is the caller's cadence, not this field"
     },
     "cooldownWeeks": {
       "type": "integer",
       "minimum": 0,
-      "default": 26
+      "description": "required; global weeks this incident is ineligible for every target after it resolves"
     },
-    "triggers": {
+    "conditions": {
       "type": "object",
       "additionalProperties": false,
+      "description": "closed AND object; omitted or {} imposes no restriction (docs incident-engine design)",
       "properties": {
         "energyBelow": {
-          "type": "integer",
+          "type": "number",
           "minimum": 0,
-          "maximum": 100
+          "maximum": 100,
+          "description": "strict threshold on the target's current energy"
         },
         "moraleBelow": {
-          "type": "integer",
+          "type": "number",
           "minimum": 0,
-          "maximum": 100
+          "maximum": 100,
+          "description": "strict threshold on the target's current morale"
         },
         "requiresTrait": {
           "type": "array",
+          "minItems": 1,
           "items": {
-            "type": "string"
-          }
-        },
-        "act": {
-          "type": "array",
-          "items": {
-            "enum": [1, 2, 3]
-          }
-        },
-        "weekType": {
-          "type": "array",
-          "items": {
-            "enum": ["quiet", "normal", "match", "tournament"]
-          }
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "description": "non-empty allow-list; target must possess every listed trait id"
         },
         "region": {
           "type": "array",
+          "minItems": 1,
           "items": {
-            "type": "string"
-          }
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "description": "non-empty allow-list of region ids"
+        },
+        "baseWeekKind": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": ["quiet", "ordinary", "contest", "series"]
+          },
+          "description": "non-empty allow-list of core week-kind names, evaluated before incident selection"
         }
       }
     },
     "text": {
       "type": "string",
-      "description": "English event text, substitutions {player}/{team}/{org}/{rival}, see docs/adr/0007",
-      "minLength": 40
+      "description": "English incident text, must contain the {player} token, see docs/adr/0007",
+      "minLength": 40,
+      "pattern": "\\{player\\}"
     },
     "choices": {
       "type": "array",
@@ -85,61 +132,55 @@
       "maxItems": 3,
       "items": {
         "type": "object",
-        "required": ["label", "effects"],
+        "required": ["id", "label", "detail", "outcome"],
         "additionalProperties": false,
         "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "stable within the incident; unique choice ids checked in tools/validate-content"
+          },
           "label": {
             "type": "string",
             "description": "English choice button text (docs/adr/0007)",
-            "minLength": 3
+            "minLength": 1
           },
           "detail": {
             "type": "string",
-            "description": "English description of the consequence (docs/adr/0007)"
+            "description": "English description of the consequence (docs/adr/0007)",
+            "minLength": 1
           },
-          "effects": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "energy": {
-                "type": "integer"
-              },
-              "morale": {
-                "type": "integer"
-              },
-              "form": {
-                "type": "integer"
-              },
-              "money": {
-                "type": "integer"
-              },
-              "fanbase": {
-                "type": "number"
-              },
-              "reputation": {
-                "type": "integer"
-              },
-              "respect": {
-                "type": "integer"
-              },
-              "statDelta": {
+          "outcome": {
+            "oneOf": [
+              {
                 "type": "object",
-                "additionalProperties": {
-                  "type": "integer"
+                "required": ["kind", "effects"],
+                "additionalProperties": false,
+                "properties": {
+                  "kind": { "const": "direct" },
+                  "effects": { "$ref": "#/$defs/effects" }
                 }
               },
-              "riskLoss": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              },
-              "addTrait": {
-                "type": "string"
-              },
-              "removeTrait": {
-                "type": "string"
+              {
+                "type": "object",
+                "required": ["kind", "stat", "difficulty", "successEffects", "failureEffects"],
+                "additionalProperties": false,
+                "properties": {
+                  "kind": { "const": "check" },
+                  "stat": {
+                    "type": "string",
+                    "pattern": "^[a-z]+$",
+                    "description": "one of the six stats; checked by name in tools/validate-content"
+                  },
+                  "difficulty": {
+                    "type": "integer",
+                    "description": "target for target.stats[stat] + d20 roll"
+                  },
+                  "successEffects": { "$ref": "#/$defs/effects" },
+                  "failureEffects": { "$ref": "#/$defs/effects" }
+                }
               }
-            }
+            ]
           }
         }
       }

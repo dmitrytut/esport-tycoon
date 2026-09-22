@@ -1,16 +1,21 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { advance } from "@et/core";
+import { advance, resolveIncident } from "@et/core";
 import { describe, expect, it } from "vitest";
 
 import { loadContent } from "../src/content.ts";
-import { openingState, planBlock, runPolicy, walkBlock } from "../src/run.ts";
+import { chooseIncidentChoice } from "../src/policy.ts";
+import { incidentInputFor, openingState, planBlock, runPolicy, walkBlock } from "../src/run.ts";
 import { loadScenario } from "../src/scenario.ts";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const content = loadContent(join(repoRoot, "content"));
 const scenario = loadScenario(join(repoRoot, "tools/sim-harness/scenarios/act-one.json"), content);
+const smokeScenario = loadScenario(
+  join(repoRoot, "tools/sim-harness/scenarios/incidents-smoke.json"),
+  content,
+);
 
 describe("the horizon walk", () => {
   it("advances exactly the horizon when it is a whole number of blocks", () => {
@@ -78,5 +83,67 @@ describe("the horizon walk", () => {
       ),
     );
     expect(walked[stopIndex]?.state).toEqual(advanced.state);
+  });
+});
+
+describe("incident resolution inside the walk", () => {
+  it("matches block advance before resolution and core's resolution result after", () => {
+    const incidentInput = incidentInputFor(smokeScenario, content);
+    if (incidentInput === undefined) throw new Error("the smoke scenario must enable incidents");
+
+    const state = openingState(smokeScenario, content, 1);
+    const plan = planBlock(smokeScenario, "money", state);
+
+    const walked = walkBlock(state, plan, smokeScenario.masked, plan.weeks.length, incidentInput);
+    const advanced = advance(state, plan, {
+      sensitivity: { masked: smokeScenario.masked },
+      incidentInput,
+    });
+
+    // Before the harness resolves anything, the walk equals what block advance itself
+    // produces over the same plan, up to and including the week it stopped at.
+    expect(walked.slice(0, advanced.weeks.length).map((week) => week.result)).toEqual(
+      advanced.weeks,
+    );
+    const stopped = advanced.weeks[advanced.weeks.length - 1];
+    expect(stopped?.reasons.some((reason) => reason.kind === "incident-pending")).toBe(true);
+
+    // After resolution, the harness's recorded post-week state equals core's own public
+    // resolution result for the identical pending incident and submitted choice.
+    const pending = advanced.state.incidents.pending;
+    if (pending === null) throw new Error("the smoke scenario must produce a pending incident");
+    const incident = incidentInput.catalog.find((entry) => entry.id === pending.incidentId);
+    if (incident === undefined) throw new Error(`unknown incident "${pending.incidentId}"`);
+
+    const resolved = resolveIncident({
+      state: advanced.state,
+      catalog: incidentInput.catalog,
+      choiceId: chooseIncidentChoice(incident.choices),
+    });
+
+    const resolvedWeek = walked[advanced.weeks.length - 1];
+    expect(resolvedWeek?.state).toEqual(resolved.state);
+    expect(resolvedWeek?.resolution).toEqual(resolved.resolution);
+  });
+
+  it("preserves the rest of the block's plan after resolving an incident inside it", () => {
+    const incidentInput = incidentInputFor(smokeScenario, content);
+    if (incidentInput === undefined) throw new Error("the smoke scenario must enable incidents");
+
+    const state = openingState(smokeScenario, content, 1);
+    const plan = planBlock(smokeScenario, "money", state);
+    const walked = walkBlock(state, plan, smokeScenario.masked, plan.weeks.length, incidentInput);
+
+    expect(walked).toHaveLength(plan.weeks.length);
+    expect(walked.map((week) => week.planned)).toEqual(plan.weeks);
+  });
+
+  it("produces a resolution within the horizon for every declared smoke seed", () => {
+    for (const seed of smokeScenario.seeds) {
+      const run = runPolicy(smokeScenario, content, "balanced", seed, smokeScenario.horizon);
+
+      expect(run.weeks).toHaveLength(smokeScenario.horizon);
+      expect(run.weeks.some((week) => week.resolution !== undefined)).toBe(true);
+    }
   });
 });

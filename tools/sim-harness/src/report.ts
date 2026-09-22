@@ -1,4 +1,11 @@
-import type { RunState, SkipCause, StatKey, StopReasonKind, WeekKindCounts } from "@et/core";
+import type {
+  IncidentEffect,
+  RunState,
+  SkipCause,
+  StatKey,
+  StopReasonKind,
+  WeekKindCounts,
+} from "@et/core";
 import { collectiveMorale, STAT_KEYS, statsFrom } from "@et/core";
 
 import type { SimContent } from "./content.ts";
@@ -54,6 +61,44 @@ export interface StatGrowth {
   readonly byStat: Readonly<Record<StatKey, number>>;
 }
 
+/**
+ * One incident's occurrence and resolution, linked under the absolute week it occurred so a
+ * consumer need not join a `WeekResult` and a separate `IncidentResolution` itself. Core's
+ * own records stay distinct; this is only the report's presentation of both together.
+ */
+export interface IncidentReportEntry {
+  /** Absolute week the incident occurred in. */
+  readonly week: number;
+  /** Which incident occurred. */
+  readonly incidentId: string;
+  /** Which performer it targeted. */
+  readonly performerId: string;
+  /** The choice id the policy submitted. */
+  readonly choiceId: string;
+  /** Direct/success/failure outcome core reported. */
+  readonly outcome: "direct" | "success" | "failure";
+  /** The d20 roll; present only for a checked choice. */
+  readonly roll?: number;
+  /** Roll plus the target's stat; present only for a checked choice. */
+  readonly total?: number;
+  /** Effects core reports as applied, in the order the content declared them. */
+  readonly effects: readonly IncidentEffect[];
+  /** Run snapshot after resolution, so the reported state already includes the choice. */
+  readonly postState: RunSnapshot;
+}
+
+/** A scenario's incident configuration, or that it declared none. */
+export type IncidentConfig =
+  | { readonly enabled: false }
+  | {
+      /** Discriminator: incidents are configured and enabled. */
+      readonly enabled: true;
+      /** Incident ids enabled, in the scenario's declared order. */
+      readonly ids: readonly string[];
+      /** Chance in [0, 1] that an eligible week produces one incident. */
+      readonly cadence: number;
+    };
+
 /** The observed figures for one policy and seed. */
 export interface SeedReport {
   /** Seed that generated this run. */
@@ -86,6 +131,14 @@ export interface SeedReport {
   readonly uninterruptedShare: number;
   /** Week-by-week observations in chronological order. */
   readonly weekly: readonly WeeklyReport[];
+  /** Occurrences observed this seed, counted by incident id. */
+  readonly incidentOccurrences: Readonly<Record<string, number>>;
+  /** Resolved choices this seed, counted by stable choice id. */
+  readonly incidentChoices: Readonly<Record<string, number>>;
+  /** Resolutions this seed, counted by direct/success/failure outcome. */
+  readonly incidentOutcomes: Readonly<Record<"direct" | "success" | "failure", number>>;
+  /** Occurrence and resolution linked under the absolute week, in chronological order. */
+  readonly incidents: readonly IncidentReportEntry[];
 }
 
 /** Numeric week values averaged across seeds; categorical events remain in seed reports. */
@@ -126,6 +179,12 @@ export interface MeanReport {
   readonly uninterruptedShare: number;
   /** Mean numeric state after each absolute week. */
   readonly weekly: readonly MeanWeeklyReport[];
+  /** Mean occurrence count by incident id. */
+  readonly incidentOccurrences: Readonly<Record<string, number>>;
+  /** Mean choice count by stable choice id. */
+  readonly incidentChoices: Readonly<Record<string, number>>;
+  /** Mean count by direct/success/failure outcome. */
+  readonly incidentOutcomes: Readonly<Record<"direct" | "success" | "failure", number>>;
 }
 
 /** All seed runs and their means for one policy. */
@@ -144,6 +203,8 @@ export interface ContentProvenance {
   readonly activities: number;
   /** Number of origin definitions available while generating the collective. */
   readonly regions: number;
+  /** Number of incident definitions available for a scenario to enable. */
+  readonly incidents: number;
 }
 
 /** One complete, serializable simulation report. */
@@ -164,6 +225,8 @@ export interface SimReport {
   readonly policies: readonly PolicyReport[];
   /** Wall-clock cost of building all policy runs, excluded from game comparisons. */
   readonly durationMs: number;
+  /** Configured incident ids and cadence, or that the scenario disabled incidents. */
+  readonly incidents: IncidentConfig;
 }
 
 /** Inputs needed to turn completed runs into one report. */
@@ -242,6 +305,14 @@ function summarize(run: PolicyRun, masked: readonly StopReasonKind[]): SeedRepor
     series: 0,
   };
   const weekly: WeeklyReport[] = [];
+  const incidentOccurrences: Record<string, number> = {};
+  const incidentChoices: Record<string, number> = {};
+  const incidentOutcomes: Record<"direct" | "success" | "failure", number> = {
+    direct: 0,
+    success: 0,
+    failure: 0,
+  };
+  const incidents: IncidentReportEntry[] = [];
   let previous = opening;
   let minimumBalance = opening.balance;
   let minimumBalanceWeek: number | null = null;
@@ -260,6 +331,7 @@ function summarize(run: PolicyRun, masked: readonly StopReasonKind[]): SeedRepor
       const weeks = reasonWeeks[reason.kind] ?? [];
       weeks.push(result.week);
       reasonWeeks[reason.kind] = weeks;
+      if (reason.kind === "incident-pending") increment(incidentOccurrences, reason.incidentId);
     }
     kinds[result.kind] += 1;
     if (current.balance < minimumBalance) {
@@ -284,6 +356,22 @@ function summarize(run: PolicyRun, masked: readonly StopReasonKind[]): SeedRepor
       unmaskedReasons,
     });
     previous = current;
+    if (walked.resolution !== undefined) {
+      const resolution = walked.resolution;
+      increment(incidentChoices, resolution.choiceId);
+      incidentOutcomes[resolution.outcome] += 1;
+      incidents.push({
+        week: resolution.week,
+        incidentId: resolution.incidentId,
+        performerId: resolution.performerId,
+        choiceId: resolution.choiceId,
+        outcome: resolution.outcome,
+        effects: resolution.effects,
+        postState: current,
+        ...(resolution.roll === undefined ? {} : { roll: resolution.roll }),
+        ...(resolution.total === undefined ? {} : { total: resolution.total }),
+      });
+    }
   }
 
   const uninterruptedWeeks = weekly.filter((week) => week.unmaskedReasons === 0).length;
@@ -303,6 +391,10 @@ function summarize(run: PolicyRun, masked: readonly StopReasonKind[]): SeedRepor
     uninterruptedWeeks,
     uninterruptedShare: weekly.length === 0 ? 0 : uninterruptedWeeks / weekly.length,
     weekly,
+    incidentOccurrences: sortedRecord(incidentOccurrences),
+    incidentChoices: sortedRecord(incidentChoices),
+    incidentOutcomes,
+    incidents,
   };
 }
 
@@ -369,6 +461,13 @@ function aggregate(seeds: readonly SeedReport[]): MeanReport {
     uninterruptedWeeks: mean(seeds.map((seed) => seed.uninterruptedWeeks)),
     uninterruptedShare: mean(seeds.map((seed) => seed.uninterruptedShare)),
     weekly: meanWeekly(seeds),
+    incidentOccurrences: meanRecords(seeds.map((seed) => seed.incidentOccurrences)),
+    incidentChoices: meanRecords(seeds.map((seed) => seed.incidentChoices)),
+    incidentOutcomes: {
+      direct: mean(seeds.map((seed) => seed.incidentOutcomes.direct)),
+      success: mean(seeds.map((seed) => seed.incidentOutcomes.success)),
+      failure: mean(seeds.map((seed) => seed.incidentOutcomes.failure)),
+    },
   };
 }
 
@@ -392,6 +491,15 @@ export function buildReport(options: BuildReportOptions): SimReport {
     policies.push({ policy, seeds, mean: aggregate(seeds) });
   }
 
+  const incidentConfig: IncidentConfig =
+    options.scenario.incidents === undefined
+      ? { enabled: false }
+      : {
+          enabled: true,
+          ids: options.scenario.incidents.catalog.map((incident) => incident.id),
+          cadence: options.scenario.incidents.cadence,
+        };
+
   return {
     scenario: options.scenario.id,
     scenarioPath: options.scenarioPath,
@@ -401,9 +509,11 @@ export function buildReport(options: BuildReportOptions): SimReport {
     content: {
       activities: options.content.activities.size,
       regions: options.content.origins.size,
+      incidents: options.content.incidents.size,
     },
     policies,
     durationMs: options.durationMs,
+    incidents: incidentConfig,
   };
 }
 
@@ -415,7 +525,10 @@ export function renderReport(report: SimReport): string {
   const lines = [
     `Simulation: ${report.scenario} (${report.scenarioPath})`,
     `horizon ${report.horizon} · seeds ${report.seeds.join(",")} · mask ${report.mask.join(",") || "none"}`,
-    `content: activities ${report.content.activities} · regions ${report.content.regions}`,
+    `content: activities ${report.content.activities} · regions ${report.content.regions} · incidents ${report.content.incidents}`,
+    report.incidents.enabled
+      ? `incidents: ${report.incidents.ids.join(",")} · cadence ${formatNumber(report.incidents.cadence)}`
+      : "incidents: disabled",
     "",
     "policy       seed  balance(open→close|min)  audience  energy  morale  stats  quiet  uninterrupted",
   ];
@@ -431,6 +544,15 @@ export function renderReport(report: SimReport): string {
           `${String(seed.kinds.quiet).padStart(5)}  ` +
           `${seed.uninterruptedWeeks}/${seed.weekly.length}`,
       );
+      for (const entry of seed.incidents) {
+        const check =
+          entry.roll !== undefined && entry.total !== undefined
+            ? ` roll ${entry.roll}/total ${entry.total}`
+            : "";
+        lines.push(
+          `    incident wk${entry.week} ${entry.incidentId} -> ${entry.choiceId} (${entry.outcome}${check})`,
+        );
+      }
     }
   }
   lines.push(

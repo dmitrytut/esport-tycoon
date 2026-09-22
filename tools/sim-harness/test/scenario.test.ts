@@ -86,4 +86,66 @@ describe("a run's scenario", () => {
 
     expect(() => loadScenario(path, content)).toThrow(/atlantis/);
   });
+
+  it("omits incident configuration by default, so a run advances without incidents", () => {
+    const scenario = loadScenario(actOne, content);
+
+    expect(scenario.incidents).toBeUndefined();
+  });
+
+  it("resolves a declared incident configuration to a catalog and cadence", () => {
+    const path = scenarioWith({
+      incidents: { ids: ["gear-malfunction-mid-scrim", "sponsor-audit-surprise"], cadence: 1 },
+    });
+    const scenario = loadScenario(path, content);
+
+    expect(scenario.incidents?.cadence).toBe(1);
+    expect(scenario.incidents?.catalog.map((incident) => incident.id)).toEqual([
+      "gear-malfunction-mid-scrim",
+      "sponsor-audit-surprise",
+    ]);
+  });
+
+  it("refuses an incident id content does not define", () => {
+    const path = scenarioWith({ incidents: { ids: ["ghost-incident"], cadence: 1 } });
+
+    expect(() => loadScenario(path, content)).toThrow(
+      /broken.*ghost-incident|ghost-incident.*broken/s,
+    );
+  });
+
+  it("refuses a repeated incident id", () => {
+    const path = scenarioWith({
+      incidents: {
+        ids: ["gear-malfunction-mid-scrim", "gear-malfunction-mid-scrim"],
+        cadence: 1,
+      },
+    });
+
+    expect(() => loadScenario(path, content)).toThrow(
+      /broken.*gear-malfunction-mid-scrim.*more than once/s,
+    );
+  });
+
+  it("refuses an incident cadence above one", () => {
+    const path = scenarioWith({
+      incidents: { ids: ["gear-malfunction-mid-scrim"], cadence: 1.5 },
+    });
+
+    expect(() => loadScenario(path, content)).toThrow(/broken.*1\.5|1\.5.*broken/s);
+  });
+
+  it("refuses a negative incident cadence", () => {
+    const path = scenarioWith({
+      incidents: { ids: ["gear-malfunction-mid-scrim"], cadence: -0.1 },
+    });
+
+    expect(() => loadScenario(path, content)).toThrow(/broken.*-0\.1|-0\.1.*broken/s);
+  });
+
+  it("refuses a present incident configuration declaring no ids", () => {
+    const path = scenarioWith({ incidents: { ids: [], cadence: 1 } });
+
+    expect(() => loadScenario(path, content)).toThrow(/broken.*no ids|no ids.*broken/s);
+  });
 });

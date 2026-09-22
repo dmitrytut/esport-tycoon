@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 
-import type { Activity, Org, StopReasonKind } from "@et/core";
+import type { Activity, Incident, Org, StopReasonKind } from "@et/core";
 import { UNMASKABLE_REASONS, WEEK_PLAN_MAX_WEEKS, WEEK_PLAN_MIN_WEEKS } from "@et/core";
 
 import type { SimContent } from "./content.ts";
@@ -22,6 +22,14 @@ export interface CollectiveSpec {
   /** Age bounds handed to the generator. */
   readonly minAge: number;
   readonly maxAge: number;
+}
+
+/** Incident occurrence configuration a scenario opts into; omitted disables incidents. */
+export interface ScenarioIncidents {
+  /** Resolved incidents, in the order the scenario declared their ids. */
+  readonly catalog: readonly Incident[];
+  /** Chance in [0, 1] that an eligible week produces one incident. */
+  readonly cadence: number;
 }
 
 /** A loaded scenario: values resolved against content, ready for a run. */
@@ -42,6 +50,8 @@ export interface Scenario {
   readonly seeds: readonly number[];
   /** Default week horizon, overridable by the command line. */
   readonly horizon: number;
+  /** Incident configuration; absent means the run advances with no incidents at all. */
+  readonly incidents?: ScenarioIncidents;
 }
 
 /** The scenario file as written, before its references are resolved. */
@@ -62,6 +72,13 @@ interface ScenarioFile {
   readonly seeds: readonly number[];
   /** Default week horizon for a no-argument run. */
   readonly horizon: number;
+  /** Incident ids to enable and their shared cadence; omitted disables incidents. */
+  readonly incidents?: {
+    /** Incident ids to enable, resolved against loaded content. */
+    readonly ids: readonly string[];
+    /** Chance in [0, 1] that an eligible week produces one incident. */
+    readonly cadence: number;
+  };
 }
 
 /**
@@ -114,6 +131,27 @@ export function loadScenario(path: string, content: SimContent): Scenario {
     fail(`declares seeds "${file.seeds.join(",")}"; expected distinct integers`);
   }
 
+  let incidents: Scenario["incidents"];
+  if (file.incidents !== undefined) {
+    const { ids, cadence } = file.incidents;
+    if (ids.length === 0) fail("declares incident configuration with no ids");
+    const incidentIds = new Set<string>();
+    const catalog: Incident[] = [];
+    for (const id of ids) {
+      if (incidentIds.has(id)) fail(`names incident "${id}" more than once`);
+      incidentIds.add(id);
+      const incident = content.incidents.get(id);
+      if (incident === undefined) fail(`names incident "${id}", which content does not define`);
+      else catalog.push(incident);
+    }
+    if (!Number.isFinite(cadence) || cadence < 0 || cadence > 1) {
+      fail(
+        `declares incident cadence "${String(cadence)}"; expected a finite number from 0 through 1`,
+      );
+    }
+    incidents = { catalog, cadence };
+  }
+
   return {
     id: file.id,
     org: { id: "house", name: "House", ...file.org },
@@ -123,5 +161,6 @@ export function loadScenario(path: string, content: SimContent): Scenario {
     masked: file.masked,
     seeds: file.seeds,
     horizon: file.horizon,
+    ...(incidents === undefined ? {} : { incidents }),
   };
 }

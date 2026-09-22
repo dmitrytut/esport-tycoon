@@ -1,0 +1,37 @@
+{
+  "id": "incidents-smoke",
+  "org": {
+    "money": 0,
+    "audience": 0,
+    "reputation": 10,
+    "slots": 5
+  },
+  "collective": {
+    "originId": "western-europe",
+    "size": 5,
+    "level": 1,
+    "minAge": 16,
+    "maxAge": 22
+  },
+  "activities": [
+    "ad-campaign",
+    "bootcamp",
+    "rest",
+    "scrim-block",
+    "stream-session",
+    "training-adaptability",
+    "training-cognitive",
+    "training-collective",
+    "training-composure",
+    "training-mechanical",
+    "training-presence"
+  ],
+  "blockWeeks": 4,
+  "masked": [],
+  "seeds": [1, 2, 3],
+  "horizon": 4,
+  "incidents": {
+    "ids": ["press-conference-own-goal", "sponsor-audit-surprise", "gear-malfunction-mid-scrim"],
+    "cadence": 1
+  }
+}

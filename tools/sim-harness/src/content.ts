@@ -6,7 +6,14 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { Activity, OriginProfile, SecondLanguage } from "@et/core";
+import type {
+  Activity,
+  Incident,
+  IncidentCategoryMultipliers,
+  IncidentTraitMultipliers,
+  OriginProfile,
+  SecondLanguage,
+} from "@et/core";
 
 /** Everything a run needs from `content/`, indexed by the id content declared. */
 export interface SimContent {
@@ -14,6 +21,18 @@ export interface SimContent {
   readonly activities: ReadonlyMap<string, Activity>;
   /** Origins by region id, ready for `generatePerformer`. */
   readonly origins: ReadonlyMap<string, OriginProfile>;
+  /** Incidents by id; a scenario names the subset it enables. */
+  readonly incidents: ReadonlyMap<string, Incident>;
+  /** Declared trait event-weight boosts by trait id, for the incident engine's weighting. */
+  readonly traitMultipliers: IncidentTraitMultipliers;
+}
+
+/** One trait file's fields the harness reads; only the incident weighting matters here. */
+interface TraitFile {
+  /** Trait id, matching the file name. */
+  readonly id: string;
+  /** Declared weight boost per incident category; absent means every category is 1. */
+  readonly eventWeightBoost?: IncidentCategoryMultipliers;
 }
 
 /** One name pool file: a list of given names or of handles. */
@@ -93,5 +112,20 @@ export function loadContent(contentRoot: string): SimContent {
     });
   }
 
-  return { activities, origins };
+  const incidents = new Map<string, Incident>();
+  for (const file of listJson(join(contentRoot, "events"))) {
+    const incident = readJson(join(contentRoot, "events", file)) as Incident;
+    if (incidents.has(incident.id)) {
+      throw new Error(`incident "${incident.id}" is declared more than once in content`);
+    }
+    incidents.set(incident.id, incident);
+  }
+
+  const traitMultipliers: Record<string, IncidentCategoryMultipliers> = {};
+  for (const file of listJson(join(contentRoot, "traits"))) {
+    const trait = readJson(join(contentRoot, "traits", file)) as TraitFile;
+    traitMultipliers[trait.id] = trait.eventWeightBoost ?? {};
+  }
+
+  return { activities, origins, incidents, traitMultipliers };
 }

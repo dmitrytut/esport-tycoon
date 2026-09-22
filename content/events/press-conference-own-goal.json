@@ -1,0 +1,39 @@
+{
+  "id": "press-conference-own-goal",
+  "category": "press",
+  "weight": 4,
+  "cooldownWeeks": 12,
+  "conditions": {
+    "energyBelow": 70,
+    "requiresTrait": ["streamer"],
+    "region": ["western-europe"],
+    "baseWeekKind": ["ordinary"]
+  },
+  "text": "{player} reaches the microphone before the media trainer reaches {player}.",
+  "choices": [
+    {
+      "id": "answer-live",
+      "label": "Answer live",
+      "detail": "The first sentence will decide whether this becomes a slogan or evidence.",
+      "outcome": {
+        "kind": "check",
+        "stat": "presence",
+        "difficulty": 24,
+        "successEffects": [{ "kind": "reputation", "amount": 3 }],
+        "failureEffects": [{ "kind": "reputation", "amount": -3 }]
+      }
+    },
+    {
+      "id": "defer-to-manager",
+      "label": "Defer to the manager",
+      "detail": "Safe, forgettable, and exactly what everyone expected.",
+      "outcome": {
+        "kind": "direct",
+        "effects": [
+          { "kind": "reputation", "amount": -1 },
+          { "kind": "morale", "amount": 2 }
+        ]
+      }
+    }
+  ]
+}

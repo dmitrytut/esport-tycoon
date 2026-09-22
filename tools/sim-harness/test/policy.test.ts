@@ -6,7 +6,7 @@ import { createRng, generatePerformer } from "@et/core";
 import { describe, expect, it } from "vitest";
 
 import { loadContent } from "../src/content.ts";
-import { planWeek } from "../src/policy.ts";
+import { chooseIncidentChoice, planWeek } from "../src/policy.ts";
 import { loadScenario } from "../src/scenario.ts";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
@@ -105,5 +105,32 @@ describe("policies", () => {
         planWeek(policy, 3, scenario.activities, members, 5),
       );
     }
+  });
+});
+
+describe("a policy's incident choice", () => {
+  const directOutcome = { kind: "direct", effects: [] } as const;
+
+  it("submits the first choice id in ascending code-point order", () => {
+    const choices = [
+      { id: "zulu", label: "Z", detail: "z", outcome: directOutcome },
+      { id: "alpha", label: "A", detail: "a", outcome: directOutcome },
+      { id: "mango", label: "M", detail: "m", outcome: directOutcome },
+    ];
+
+    expect(chooseIncidentChoice(choices)).toBe("alpha");
+  });
+
+  it("does not depend on the order choices arrive in", () => {
+    const choices = [
+      { id: "borrow-a-spare", label: "", detail: "", outcome: directOutcome },
+      { id: "power-through", label: "", detail: "", outcome: directOutcome },
+    ];
+
+    expect(chooseIncidentChoice(choices)).toBe(chooseIncidentChoice([...choices].reverse()));
+  });
+
+  it("refuses an incident with no choices", () => {
+    expect(() => chooseIncidentChoice([])).toThrow(/no choices/);
   });
 });

@@ -599,6 +599,53 @@ describe("resolveIncident", () => {
     expect(result.state.collective.members.find((m) => m.id === "bystander")).toBe(others[0]);
   });
 
+  it("applies stat, form, morale and reputation effects to their exact declared destinations", () => {
+    const mixedIncident: Incident = makeIncident("mixed-inc", {
+      cooldownWeeks: 0,
+      choices: [
+        {
+          id: "mixed-choice",
+          label: "Mixed",
+          detail: "One effect for each of the remaining aggregation routes.",
+          outcome: {
+            kind: "direct",
+            effects: [
+              { kind: "stat", stat: "mechanical", amount: 2 },
+              { kind: "form", amount: 1 },
+              { kind: "morale", amount: -3 },
+              { kind: "reputation", amount: 5 },
+            ],
+          },
+        },
+      ],
+    });
+    const target = makePerformer("solo", 50, 50);
+    const others = [makePerformer("bystander", 40, 40)];
+    const org = makeOrg(1_000, 5, 200);
+    const state = pendingRunState({
+      seed: 7,
+      week: 10,
+      incidentId: "mixed-inc",
+      target,
+      others,
+      org,
+    });
+
+    const result = resolveIncident({ state, catalog: [mixedIncident], choiceId: "mixed-choice" });
+
+    const movedTarget = result.state.collective.members.find((m) => m.id === "solo");
+    expect(movedTarget?.stats.mechanical).toBe(12);
+    expect(movedTarget?.state.form).toBe(1);
+    expect(movedTarget?.state.morale).toBe(47);
+    // Energy is untouched by this branch: only the declared routes moved.
+    expect(movedTarget?.state.energy).toBe(50);
+    expect(result.state.org.reputation).toBe(55);
+    // Money and audience are untouched by this branch.
+    expect(result.state.org.money).toBe(1_000);
+    expect(result.state.org.audience).toBe(200);
+    expect(result.state.collective.members.find((m) => m.id === "bystander")).toBe(others[0]);
+  });
+
   it("sums repeated fields before one clamped, one-decimal-rounded application, not two sequential ones", () => {
     const fractionalIncident: Incident = makeIncident("fraction-inc", {
       cooldownWeeks: 0,

@@ -4,14 +4,17 @@
  * invention (`openspec/changes/incident-engine/design.md`).
  *
  * This module declares the closed executable contract, the serializable lifecycle state,
- * pure target eligibility and cadence-gated weighted selection; resolution is a separate
- * cutover (tasks 2.5+).
+ * pure target eligibility, cadence-gated weighted selection and the one pure resolution
+ * transition that applies a choice, installs its cooldown and clears pending.
  */
 
 import type { Collective } from "./collective.ts";
-import type { Performer, StatKey } from "./performer.ts";
+import type { Org, OrgChange } from "./org.ts";
+import { applyOrgChange } from "./org.ts";
+import type { Performer, PerformerState, StatKey, Stats } from "./performer.ts";
+import { applyStatChange, applyStateChange } from "./performer.ts";
 import { createRng, restoreRng, type RngState } from "./rng.ts";
-import type { WeekKind } from "./week.ts";
+import type { RunState, WeekKind } from "./week.ts";
 
 /**
  * Opaque incident category id, validated against `content/schema/event.schema.json`'s enum
@@ -487,5 +490,251 @@ export function selectIncident(input: SelectIncidentInput): SelectIncidentResult
   return {
     state: { rng: rng.state(), pending: selected, cooldowns: state.cooldowns },
     selected,
+  };
+}
+
+/**
+ * Input to `resolveIncident`: the whole run, the validated catalog the pending incident's id
+ * must appear in, and the stable choice id the caller submitted. Resolution does not advance
+ * the week.
+ */
+export interface ResolveIncidentInput {
+  /** The run to resolve against; only its incident lifecycle, collective and org move. */
+  readonly state: RunState;
+  /** Every incident the caller allows; the pending incident id must be present here. */
+  readonly catalog: readonly Incident[];
+  /** The stable choice id submitted for the pending incident. */
+  readonly choiceId: string;
+}
+
+/**
+ * What resolving one choice produced: identity, outcome and the effects actually applied. A
+ * record distinct from `WeekResult` (design "Occurrence and resolution remain two results");
+ * resolution never rewrites a completed week to attach this.
+ */
+export interface IncidentResolution {
+  /** Which incident was resolved. */
+  readonly incidentId: string;
+  /** Which performer it targeted. */
+  readonly performerId: string;
+  /** The absolute week the incident occurred in, not the week it resolved in. */
+  readonly week: number;
+  /** The submitted choice id. */
+  readonly choiceId: string;
+  /** A direct choice always reports `direct`; a checked choice reports its resolved branch. */
+  readonly outcome: "direct" | "success" | "failure";
+  /** The chosen branch's effects, in the order the content declared them. */
+  readonly effects: readonly IncidentEffect[];
+  /** The d20 draw; present only when the choice was a stat check. */
+  readonly roll?: number;
+  /** Roll plus the target's current stat; present only when the choice was a stat check. */
+  readonly total?: number;
+}
+
+/** Result of `resolveIncident`: the continued run and what resolving this choice produced. */
+export interface ResolveIncidentResult {
+  /** The run after resolution: effects applied, cooldown installed, pending cleared. */
+  readonly state: RunState;
+  /** What resolving this choice produced. */
+  readonly resolution: IncidentResolution;
+}
+
+/** One resolved branch's effects, summed by destination, ready for one call per helper. */
+interface AggregatedEffects {
+  /** Performer energy/morale/form deltas; a field left at zero moves nothing. */
+  readonly state: Partial<PerformerState>;
+  /** Performer stat deltas, keyed by stat; a stat absent from the branch is omitted. */
+  readonly stats: Partial<Stats>;
+  /** Organization money/audience/reputation deltas; a field left at zero moves nothing. */
+  readonly org: OrgChange;
+}
+
+/**
+ * Sums one resolved branch's effects by destination: performer energy/morale/form, each stat
+ * key, and organization money/audience/reputation. Aggregating first means the existing
+ * mutation helpers clamp and round each destination exactly once (spec "Effects move only
+ * their declared owner").
+ */
+function aggregateEffects(effects: readonly IncidentEffect[]): AggregatedEffects {
+  const state: { energy: number; morale: number; form: number } = {
+    energy: 0,
+    morale: 0,
+    form: 0,
+  };
+  const stats: Partial<Record<StatKey, number>> = {};
+  const org: { money: number; audience: number; reputation: number } = {
+    money: 0,
+    audience: 0,
+    reputation: 0,
+  };
+  for (const effect of effects) {
+    switch (effect.kind) {
+      case "energy":
+        state.energy += effect.amount;
+        break;
+      case "morale":
+        state.morale += effect.amount;
+        break;
+      case "form":
+        state.form += effect.amount;
+        break;
+      case "stat":
+        stats[effect.stat] = (stats[effect.stat] ?? 0) + effect.amount;
+        break;
+      case "money":
+        org.money += effect.amount;
+        break;
+      case "audience":
+        org.audience += effect.amount;
+        break;
+      case "reputation":
+        org.reputation += effect.amount;
+        break;
+    }
+  }
+  return { state, stats, org };
+}
+
+/** One transition's continued collective and organization after applying its effects. */
+interface AppliedEffects {
+  /** The collective with the pending target moved, or the same reference when untouched. */
+  readonly collective: Collective;
+  /** The organization moved once, or the same reference when untouched. */
+  readonly org: Org;
+}
+
+/**
+ * Applies one aggregated branch: the pending target's energy, morale, form and stats move
+ * together through the existing mutation helpers, the organization moves once regardless of
+ * roster size, and every other performer keeps its original reference (spec "Effects move
+ * only their declared owner").
+ */
+function applyAggregatedEffects(
+  collective: Collective,
+  org: Org,
+  targetId: string,
+  aggregated: AggregatedEffects,
+): AppliedEffects {
+  const hasStateChange =
+    aggregated.state.energy !== 0 || aggregated.state.morale !== 0 || aggregated.state.form !== 0;
+  const hasStatsChange = Object.keys(aggregated.stats).length > 0;
+  const hasOrgChange =
+    aggregated.org.money !== 0 || aggregated.org.audience !== 0 || aggregated.org.reputation !== 0;
+
+  const members =
+    hasStateChange || hasStatsChange
+      ? collective.members.map((performer) => {
+          if (performer.id !== targetId) return performer;
+          const afterState = hasStateChange
+            ? applyStateChange(performer, aggregated.state)
+            : performer;
+          return hasStatsChange ? applyStatChange(afterState, aggregated.stats) : afterState;
+        })
+      : collective.members;
+
+  return {
+    collective: members === collective.members ? collective : { ...collective, members },
+    org: hasOrgChange ? applyOrgChange(org, aggregated.org) : org,
+  };
+}
+
+/**
+ * Installs or replaces this incident id's cooldown entry, eligible again at `week + N + 1`
+ * (spec "Cooldown is global per incident"), and keeps the canonical sorted order.
+ */
+function installCooldown(
+  cooldowns: readonly IncidentCooldown[],
+  incidentId: string,
+  eligibleWeek: number,
+): readonly IncidentCooldown[] {
+  return [
+    ...cooldowns.filter((cooldown) => cooldown.incidentId !== incidentId),
+    { incidentId, eligibleWeek },
+  ].sort((a, b) => compareIds(a.incidentId, b.incidentId));
+}
+
+/**
+ * The one public pure resolution transition (design "Resolution is one pure transition
+ * returning `{ state, resolution }`"). Validates, in order, that an incident is pending, that
+ * it exists in the catalog, that its target still exists, and that the submitted choice
+ * belongs to it — before any draw or mutation, so a rejection changes nothing. A direct
+ * choice applies its effects without a draw; a checked choice draws exactly one d20 from the
+ * incident stream and applies exactly one branch. Applying effects, installing the cooldown
+ * and clearing pending are written as one returned state, so resolving again sees no pending
+ * and cannot apply an effect twice or move the RNG.
+ */
+export function resolveIncident(input: ResolveIncidentInput): ResolveIncidentResult {
+  const { state, catalog, choiceId } = input;
+  const { pending } = state.incidents;
+  if (pending === null) {
+    throw new RangeError("resolveIncident: no incident is pending");
+  }
+  const incident = catalog.find((candidate) => candidate.id === pending.incidentId);
+  if (incident === undefined) {
+    throw new RangeError(
+      `resolveIncident: pending incident ${pending.incidentId} is not in the catalog`,
+    );
+  }
+  const target = state.collective.members.find((performer) => performer.id === pending.performerId);
+  if (target === undefined) {
+    throw new RangeError(
+      `resolveIncident: pending target ${pending.performerId} is not a member of the collective`,
+    );
+  }
+  const choice = incident.choices.find((candidate) => candidate.id === choiceId);
+  if (choice === undefined) {
+    throw new RangeError(
+      `resolveIncident: choice ${choiceId} does not belong to incident ${incident.id}`,
+    );
+  }
+
+  const incidentsSeed = createRng(state.seed).stream(INCIDENT_STREAM_NAME).seed;
+  const rng = restoreRng(incidentsSeed, state.incidents.rng);
+
+  let outcome: IncidentResolution["outcome"];
+  let effects: readonly IncidentEffect[];
+  let roll: number | undefined;
+  let total: number | undefined;
+  if (choice.outcome.kind === "direct") {
+    outcome = "direct";
+    effects = choice.outcome.effects;
+  } else {
+    const drawnRoll = rng.int(1, 20);
+    const drawnTotal = drawnRoll + target.stats[choice.outcome.stat];
+    const success = drawnTotal >= choice.outcome.difficulty;
+    outcome = success ? "success" : "failure";
+    effects = success ? choice.outcome.successEffects : choice.outcome.failureEffects;
+    roll = drawnRoll;
+    total = drawnTotal;
+  }
+
+  const aggregated = aggregateEffects(effects);
+  const { collective, org } = applyAggregatedEffects(
+    state.collective,
+    state.org,
+    pending.performerId,
+    aggregated,
+  );
+  const eligibleWeek = pending.week + incident.cooldownWeeks + 1;
+  const cooldowns = installCooldown(state.incidents.cooldowns, incident.id, eligibleWeek);
+
+  const resolution: IncidentResolution = {
+    incidentId: incident.id,
+    performerId: pending.performerId,
+    week: pending.week,
+    choiceId: choice.id,
+    outcome,
+    effects,
+    ...(roll !== undefined && total !== undefined ? { roll, total } : {}),
+  };
+
+  return {
+    state: {
+      ...state,
+      collective,
+      org,
+      incidents: { rng: rng.state(), pending: null, cooldowns },
+    },
+    resolution,
   };
 }

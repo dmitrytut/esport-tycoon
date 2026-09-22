@@ -12,9 +12,9 @@
 
 ## 3. Choice resolution and cooldown
 
-- [ ] 3.1 Implement direct and d20 stat-check resolution through one public pure transition; verify tests cover equality success, failure, the reported roll/total and no draw for a direct choice.
-- [ ] 3.2 Aggregate performer and organization effects by destination and apply them through existing mutation helpers; verify focused tests cover one-time organization effects, target isolation, clamping, one-decimal rounding and explicit choice-caused threshold crossings without delayed stop reasons.
-- [ ] 3.3 Install global cooldowns and clear pending atomically; verify tests cover zero and positive cooldown boundaries, another target during cooldown, invalid choices and exactly-once resolution without state or RNG movement on rejection.
+- [x] 3.1 Implement direct and d20 stat-check resolution through one public pure transition; verify tests cover equality success, failure, the reported roll/total and no draw for a direct choice.
+- [x] 3.2 Aggregate performer and organization effects by destination and apply them through existing mutation helpers; verify focused tests cover one-time organization effects, target isolation, clamping, one-decimal rounding and explicit choice-caused threshold crossings without delayed stop reasons.
+- [x] 3.3 Install global cooldowns and clear pending atomically; verify tests cover zero and positive cooldown boundaries, another target during cooldown, invalid choices and exactly-once resolution without state or RNG movement on rejection.
 
 ## 4. Week-loop integration
 

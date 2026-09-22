@@ -369,6 +369,42 @@ describe("selectIncident", () => {
     expect(reversed.state.rng).toEqual(forward.state.rng);
   });
 
+  it("canonicalizes multiplier summation before weighted incident selection", () => {
+    // 0.1 + 0.2 + 0.3 differs by one ULP when reversed. Large legal base weights
+    // amplify that difference across this seed's incident-selection boundary.
+    const members = [
+      { ...makePerformer("a-low"), traits: ["low"] },
+      { ...makePerformer("b-mid"), traits: ["mid"] },
+      { ...makePerformer("c-high"), traits: ["high"] },
+    ];
+    const catalog = [
+      makeIncident("a-sensitive", { weight: 1e16, category: "sensitive" }),
+      makeIncident("z-control", { weight: 3_507_956_279_061_864, category: "control" }),
+    ];
+    const input = baseSelectInput({
+      seed: 2,
+      state: createIncidentState(2),
+      collective: makeCollective(members),
+      catalog,
+      cadence: 1,
+      traitMultipliers: {
+        low: { sensitive: 0.1 },
+        mid: { sensitive: 0.2 },
+        high: { sensitive: 0.3 },
+      },
+    });
+
+    const forward = selectIncident(input);
+    const reversed = selectIncident({
+      ...input,
+      collective: makeCollective([...members].reverse()),
+    });
+
+    expect(forward.selected?.incidentId).toBe("a-sensitive");
+    expect(reversed.selected).toEqual(forward.selected);
+    expect(reversed.state.rng).toEqual(forward.state.rng);
+  });
+
   it("reproduces a pinned incident, performer and serialized rng continuation for a fixed seed", () => {
     const collective = makeCollective([
       { ...makePerformer("solo-target"), originId: "solo-land" },

@@ -300,11 +300,11 @@ function meetsConditions(
 }
 
 /**
- * The incident's eligible targets in the collective at the current week: every member whose
- * post-week state satisfies its conditions, unless a global cooldown for this incident id is
- * still active (spec "Eligibility is evaluated for one performer after the week", design
- * "Cooldown belongs to the incident id, not the target"). Pure: consumes no RNG, and neither
- * mutates nor reorders the caller's collective. Weighting and selection are separate cutovers.
+ * The incident's eligible targets at the current week, sorted by ascending stable id. Every
+ * returned member's post-week state satisfies the conditions unless a global cooldown for
+ * this incident id is still active (spec "Eligibility is evaluated for one performer after
+ * the week", design "Cooldown belongs to the incident id, not the target"). Pure: consumes
+ * no RNG, and neither mutates nor reorders the caller's collective.
  */
 export function eligibleTargetIds(input: EligibilityInput): readonly string[] {
   const { incident, collective, baseWeekKind, currentWeek, cooldowns } = input;
@@ -314,7 +314,8 @@ export function eligibleTargetIds(input: EligibilityInput): readonly string[] {
   if (onCooldown) return [];
   return collective.members
     .filter((performer) => meetsConditions(performer, incident.conditions, baseWeekKind))
-    .map((performer) => performer.id);
+    .map((performer) => performer.id)
+    .sort(compareIds);
 }
 
 /**
@@ -377,7 +378,7 @@ export interface SelectIncidentResult {
 interface IncidentCandidate {
   /** The candidate incident itself. */
   readonly incident: Incident;
-  /** Its eligible target ids, in collective order; sorted only right before a draw. */
+  /** Eligible target ids in the canonical order used for the mean and weighted draw. */
   readonly targetIds: readonly string[];
   /** Each eligible target's category multiplier, keyed by performer id. */
   readonly multipliers: Readonly<Record<string, number>>;
@@ -489,7 +490,7 @@ export function selectIncident(input: SelectIncidentInput): SelectIncidentResult
     throw new RangeError("weightedIndex returned an out-of-range incident index");
   }
 
-  const sortedTargetIds = chosen.targetIds.slice().sort(compareIds);
+  const sortedTargetIds = chosen.targetIds;
   const targetIndex = rng.weightedIndex(sortedTargetIds.map((id) => chosen.multipliers[id] ?? 0));
   const performerId = sortedTargetIds[targetIndex];
   if (performerId === undefined) {

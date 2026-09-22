@@ -293,11 +293,15 @@ describe("incident selection", () => {
   it("selects an incident and reports both its id and its target", () => {
     const state = makeState(makeCollective([makePerformer("solo")]));
 
-    const { result } = executeWeek(state, [], soloInput());
+    const { state: next, result } = executeWeek(state, [], soloInput());
 
     expect(result.reasons).toEqual([
       { kind: "incident-pending", incidentId: "brawl", performerId: "solo" },
     ]);
+    // The returned state's own incident lifecycle must carry the same identity, not just
+    // the week result: a caller resumes from `next`, not from `result.reasons`.
+    expect(next.incidents.pending).toEqual({ incidentId: "brawl", performerId: "solo", week: 0 });
+    expect(next.incidents.rng).not.toEqual(state.incidents.rng);
   });
 
   it("reads the base kind as quiet for eligibility while the final kind becomes ordinary", () => {

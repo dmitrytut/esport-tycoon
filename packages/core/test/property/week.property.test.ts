@@ -5,6 +5,7 @@ import { collectiveMorale } from "../../src/collective.ts";
 import type { IncidentInput } from "../../src/incident.ts";
 import { ENERGY_MAX, ENERGY_MIN, MORALE_MAX, MORALE_MIN } from "../../src/performer.ts";
 import { createRng } from "../../src/rng.ts";
+import type { SeasonCalendar } from "../../src/season.ts";
 import type {
   AdvanceOptions,
   AdvanceResult,
@@ -12,7 +13,12 @@ import type {
   StopReasonKind,
   WeekPlan,
 } from "../../src/week.ts";
-import { advance, executeWeek, UNMASKABLE_REASONS } from "../../src/week.ts";
+import {
+  advance,
+  executeWeek,
+  UNMASKABLE_REASONS,
+  WEEKLY_ENERGY_RECOVERY,
+} from "../../src/week.ts";
 import {
   makeActivity,
   makeCollective,
@@ -28,7 +34,29 @@ const runArb: fc.Arbitrary<[RunState, WeekPlan]> = runStateArb.chain((state) =>
   fc.tuple(fc.constant(state), planArb(state.collective.members.map((member) => member.id))),
 );
 
-/** Only the four maskable reasons: a mask over the other three is rejected by design. */
+const calendar = (startWeek: number, markings: readonly ("none" | "contest" | "series")[]) => ({
+  startWeek,
+  entries: markings.map((marking, relativeWeek) => ({
+    id: { kind: "season-entry" as const, season: 1, relativeWeek },
+    relativeWeek,
+    week: startWeek + relativeWeek,
+    marking,
+  })),
+});
+
+const unmarkedCalendar = (startWeek: number): SeasonCalendar =>
+  calendar(
+    startWeek,
+    Array.from({ length: 100 }, () => "none"),
+  );
+
+const advanceUnmarked = (
+  state: RunState,
+  plan: WeekPlan,
+  options: Omit<AdvanceOptions, "calendar"> = {},
+) => advance(state, plan, { calendar: unmarkedCalendar(state.week), ...options });
+
+/** Only the four maskable reasons: a mask over the other four is rejected by design. */
 const maskableArb = fc.constantFrom(
   ...([
     "activity-skipped",
@@ -40,16 +68,19 @@ const maskableArb = fc.constantFrom(
 
 const optionsArb: fc.Arbitrary<AdvanceOptions> = fc.record({
   sensitivity: fc.record({ masked: fc.uniqueArray(maskableArb, { maxLength: 4 }) }),
-  calendar: fc.array(fc.constantFrom("none" as const, "contest" as const, "series" as const), {
-    maxLength: 8,
-  }),
+  calendar: fc
+    .array(fc.constantFrom("none" as const, "contest" as const, "series" as const), {
+      minLength: 6,
+      maxLength: 12,
+    })
+    .map((markings) => calendar(0, markings)),
 });
 
 describe("the week loop: invariants", () => {
   it("never spends more slots than the pool holds", () => {
     fc.assert(
       fc.property(runArb, ([state, plan]) => {
-        for (const week of advance(state, plan).weeks) {
+        for (const week of advanceUnmarked(state, plan).weeks) {
           expect(week.slotsSpent).toBeGreaterThanOrEqual(0);
           expect(week.slotsSpent).toBeLessThanOrEqual(state.org.slots);
         }
@@ -60,7 +91,7 @@ describe("the week loop: invariants", () => {
   it("never lets energy or morale leave its scale", () => {
     fc.assert(
       fc.property(runArb, ([state, plan]) => {
-        for (const member of advance(state, plan).state.collective.members) {
+        for (const member of advanceUnmarked(state, plan).state.collective.members) {
           expect(member.state.energy).toBeGreaterThanOrEqual(ENERGY_MIN);
           expect(member.state.energy).toBeLessThanOrEqual(ENERGY_MAX);
           expect(member.state.morale).toBeGreaterThanOrEqual(MORALE_MIN);
@@ -73,7 +104,7 @@ describe("the week loop: invariants", () => {
   it("never lets audience fall below zero", () => {
     fc.assert(
       fc.property(runArb, ([state, plan]) => {
-        expect(advance(state, plan).state.org.audience).toBeGreaterThanOrEqual(0);
+        expect(advanceUnmarked(state, plan).state.org.audience).toBeGreaterThanOrEqual(0);
       }),
     );
   });
@@ -92,7 +123,7 @@ describe("the week loop: invariants", () => {
             makeCollective([makePerformer("member")]),
             makeOrg(0, 1, audience),
           );
-          const credited = executeWeek(state, [{ activity }]).state.org.money;
+          const credited = executeWeek(state, [{ activity }], { marking: "none" }).state.org.money;
 
           expect(credited).toBeGreaterThanOrEqual(0);
           expect(credited).toBeLessThanOrEqual(base);
@@ -119,7 +150,7 @@ describe("the week loop: invariants", () => {
   it("gives every simulated week exactly one kind", () => {
     fc.assert(
       fc.property(runArb, ([state, plan]) => {
-        const result = advance(state, plan);
+        const result = advanceUnmarked(state, plan);
         const { quiet, ordinary, contest, series } = result.kinds;
 
         expect(quiet + ordinary + contest + series).toBe(result.weeks.length);
@@ -130,7 +161,7 @@ describe("the week loop: invariants", () => {
   it("stops at the last week it simulated, and never for nothing", () => {
     fc.assert(
       fc.property(runArb, ([state, plan]) => {
-        const result = advance(state, plan);
+        const result = advanceUnmarked(state, plan);
         const last = result.weeks[result.weeks.length - 1];
 
         expect(result.stoppedAt).toBe(last?.week);
@@ -143,7 +174,7 @@ describe("the week loop: invariants", () => {
   it("refuses a mask over a reason the user may not miss", () => {
     fc.assert(
       fc.property(runArb, fc.constantFrom(...UNMASKABLE_REASONS), ([state, plan], kind) => {
-        expect(() => advance(state, plan, { sensitivity: { masked: [kind] } })).toThrow();
+        expect(() => advanceUnmarked(state, plan, { sensitivity: { masked: [kind] } })).toThrow();
       }),
     );
   });
@@ -162,7 +193,7 @@ describe("the week loop: determinism", () => {
     fc.assert(
       fc.property(runArb, seedArb, seedArb, ([state, plan], first, second) => {
         const runWith = (seed: number | string): AdvanceResult =>
-          advance({ ...state, seed, rng: createRng(seed).state() }, plan);
+          advanceUnmarked({ ...state, seed, rng: createRng(seed).state() }, plan);
 
         expect(runWith(first)).toEqual(runWith(first));
         expect(runWith(second)).toEqual(runWith(second));
@@ -193,7 +224,10 @@ describe("the week loop: incidents", () => {
   it("replays a whole block identically for identical inputs, incident selection included", () => {
     fc.assert(
       fc.property(runArb, incidentInputArb, ([state, plan], incidentInput) => {
-        const options: AdvanceOptions = { incidentInput };
+        const options: AdvanceOptions = {
+          calendar: unmarkedCalendar(state.week),
+          incidentInput,
+        };
 
         expect(advance(state, plan, options)).toEqual(advance(state, plan, options));
       }),
@@ -204,8 +238,11 @@ describe("the week loop: incidents", () => {
     fc.assert(
       fc.property(runArb, incidentInputArb, ([state, plan], incidentInput) => {
         const planned = plan.weeks[0] ?? [];
-        const withIncidents = executeWeek(state, planned, { incidentInput });
-        const without = executeWeek(state, planned, {});
+        const withIncidents = executeWeek(state, planned, {
+          marking: "none",
+          incidentInput,
+        });
+        const without = executeWeek(state, planned, { marking: "none" });
 
         expect(withIncidents.state.rng).toEqual(without.state.rng);
         expect(withIncidents.state.org).toEqual(without.state.org);
@@ -220,7 +257,7 @@ describe("the week loop: incidents", () => {
     fc.assert(
       fc.property(runArb, ([state, plan]) => {
         const planned = plan.weeks[0] ?? [];
-        const { state: next } = executeWeek(state, planned);
+        const { state: next } = executeWeek(state, planned, { marking: "none" });
 
         expect(next.incidents).toEqual(state.incidents);
       }),
@@ -231,14 +268,92 @@ describe("the week loop: incidents", () => {
     fc.assert(
       fc.property(runArb, incidentInputArb, ([state, plan], incidentInput) => {
         const planned = plan.weeks[0] ?? [];
-        const base = executeWeek(state, planned, { incidentInput });
+        const base = executeWeek(state, planned, { marking: "none", incidentInput });
         const widened: IncidentInput = {
           ...incidentInput,
           catalog: [...incidentInput.catalog, alwaysIneligibleIncident],
         };
-        const withExtra = executeWeek(state, planned, { incidentInput: widened });
+        const withExtra = executeWeek(state, planned, {
+          marking: "none",
+          incidentInput: widened,
+        });
 
         expect(withExtra).toEqual(base);
+      }),
+    );
+  });
+});
+
+describe("the week loop: season boundaries", () => {
+  it("never executes a week after the bounded calendar", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 500 }),
+        fc.integer({ min: 1, max: 4 }),
+        (startWeek, length) => {
+          const state = makeState(makeCollective([makePerformer("solo")]), makeOrg(), startWeek);
+          const plan: WeekPlan = { weeks: [[], [], [], []] };
+          const bounded = calendar(
+            startWeek,
+            Array.from({ length }, () => "none" as const),
+          );
+
+          const result = advance(state, plan, { calendar: bounded });
+
+          expect(result.state.week).toBeLessThanOrEqual(startWeek + length);
+          expect(result.weeks).toHaveLength(Math.min(length, plan.weeks.length));
+          if (length <= plan.weeks.length) {
+            expect(result.reasons.map((reason) => reason.kind)).toContain("season-ended");
+          }
+        },
+      ),
+    );
+  });
+
+  it("recovers exactly once on a final calendar entry", () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 85 }), (energy) => {
+        const state = makeState(makeCollective([makePerformer("solo", energy)]));
+        const result = advance(
+          state,
+          { weeks: [[], [], [], []] },
+          {
+            calendar: calendar(0, ["none"]),
+          },
+        );
+
+        expect(result.state.collective.members[0]?.state.energy).toBe(
+          energy + WEEKLY_ENERGY_RECOVERY,
+        );
+        expect(result.state.week).toBe(1);
+      }),
+    );
+  });
+
+  it("keeps coincident incident and season boundaries without moving the root stream", () => {
+    fc.assert(
+      fc.property(seedArb, (seed) => {
+        const original = makeState(makeCollective([makePerformer("solo")]));
+        const state = { ...original, seed, rng: createRng(seed).state() };
+        const result = advance(
+          state,
+          { weeks: [[], [], [], []] },
+          {
+            calendar: calendar(0, ["contest"]),
+            incidentInput: {
+              catalog: [makeIncident("anchor")],
+              cadence: 1,
+              traitMultipliers: {},
+            },
+          },
+        );
+
+        expect(result.reasons.map((reason) => reason.kind).sort()).toEqual([
+          "incident-pending",
+          "season-ended",
+        ]);
+        expect(result.state.rng).toEqual(state.rng);
+        expect(result.state.week).toBe(1);
       }),
     );
   });

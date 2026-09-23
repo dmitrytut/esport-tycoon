@@ -94,6 +94,36 @@ describe("content for a run", () => {
     expect(content.traitMultipliers.streamer).toEqual({ fame: 2.0, press: 1.5, health: 1.3 });
   });
 
+  it("loads the first playable season template exactly as declared", () => {
+    const template = loadContent(contentRoot).seasons.get("standard");
+
+    expect(template).toEqual({
+      id: "standard",
+      length: 24,
+      markings: {
+        contest: { min: 6, max: 8 },
+        series: { min: 2, max: 2 },
+      },
+    });
+  });
+
+  it("loads another valid season template without code changes", () => {
+    const root = copyOfContent();
+    writeFileSync(
+      join(root, "seasons/short.json"),
+      JSON.stringify({
+        id: "short",
+        length: 12,
+        markings: {
+          contest: { min: 3, max: 4 },
+          series: { min: 1, max: 1 },
+        },
+      }),
+    );
+
+    expect(loadContent(root).seasons.get("short")?.length).toBe(12);
+  });
+
   it("refuses a duplicate incident id", () => {
     const root = copyOfContent();
     const duplicate = readFileSync(join(root, "events/gear-malfunction-mid-scrim.json"), "utf8");

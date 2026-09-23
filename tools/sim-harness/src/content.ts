@@ -12,6 +12,7 @@ import type {
   IncidentCategoryMultipliers,
   IncidentTraitMultipliers,
   OriginProfile,
+  SeasonTemplate,
   SecondLanguage,
 } from "@et/core";
 
@@ -25,6 +26,8 @@ export interface SimContent {
   readonly incidents: ReadonlyMap<string, Incident>;
   /** Declared trait event-weight boosts by trait id, for the incident engine's weighting. */
   readonly traitMultipliers: IncidentTraitMultipliers;
+  /** Validated season templates by stable content id. */
+  readonly seasons: ReadonlyMap<string, SeasonTemplate>;
 }
 
 /** One trait file's fields the harness reads; only the incident weighting matters here. */
@@ -121,11 +124,17 @@ export function loadContent(contentRoot: string): SimContent {
     incidents.set(incident.id, incident);
   }
 
+  const seasons = new Map<string, SeasonTemplate>();
+  for (const file of listJson(join(contentRoot, "seasons"))) {
+    const template = readJson(join(contentRoot, "seasons", file)) as SeasonTemplate;
+    seasons.set(template.id, template);
+  }
+
   const traitMultipliers: Record<string, IncidentCategoryMultipliers> = {};
   for (const file of listJson(join(contentRoot, "traits"))) {
     const trait = readJson(join(contentRoot, "traits", file)) as TraitFile;
     traitMultipliers[trait.id] = trait.eventWeightBoost ?? {};
   }
 
-  return { activities, origins, incidents, traitMultipliers };
+  return { activities, origins, incidents, seasons, traitMultipliers };
 }

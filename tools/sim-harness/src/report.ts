@@ -51,6 +51,8 @@ export interface WeeklyReport extends RunSnapshot {
   readonly reasonKinds: readonly StopReasonKind[];
   /** Reasons in this week that the scenario did not mask. */
   readonly unmaskedReasons: number;
+  /** Whether this week returned control under the original planning-block grid. */
+  readonly returnedControl: boolean;
 }
 
 /** Stat movement over a run, summed across every member. */
@@ -103,6 +105,8 @@ export type IncidentConfig =
 export interface SeedReport {
   /** Seed that generated this run. */
   readonly seed: number;
+  /** Declared number of weeks in each planning block. */
+  readonly blockWeeks: number;
   /** Values before week zero. */
   readonly opening: RunSnapshot;
   /** Values after the horizon. */
@@ -125,7 +129,7 @@ export interface SeedReport {
   readonly reasonWeeks: Readonly<Partial<Record<StopReasonKind, readonly number[]>>>;
   /** Core week classifications over the horizon. */
   readonly kinds: WeekKindCounts;
-  /** Weeks carrying no unmasked reason. */
+  /** Weeks that block advancement passed without returning control to the player. */
   readonly uninterruptedWeeks: number;
   /** Uninterrupted weeks divided by advanced weeks. */
   readonly uninterruptedShare: number;
@@ -155,6 +159,8 @@ export interface MeanWeeklyReport extends RunSnapshot {
 
 /** Mean figures across a policy's declared seed set. */
 export interface MeanReport {
+  /** Declared number of weeks in each planning block. */
+  readonly blockWeeks: number;
   /** Mean opening values. */
   readonly opening: RunSnapshot;
   /** Mean closing values. */
@@ -215,6 +221,8 @@ export interface SimReport {
   readonly scenarioPath: string;
   /** Number of weeks advanced per run. */
   readonly horizon: number;
+  /** Declared number of weeks in each planning block. */
+  readonly blockWeeks: number;
   /** Seeds run under every selected policy. */
   readonly seeds: readonly number[];
   /** Reason kinds ignored only when counting interruptions. */
@@ -284,7 +292,11 @@ function collectiveStats(state: RunState): Readonly<Record<StatKey, number>> {
   });
 }
 
-function summarize(run: PolicyRun, masked: readonly StopReasonKind[]): SeedReport {
+function summarize(
+  run: PolicyRun,
+  masked: readonly StopReasonKind[],
+  blockWeeks: number,
+): SeedReport {
   const opening = snapshot(run.opening);
   const closing = snapshot(run.state);
   const openingStats = collectiveStats(run.opening);
@@ -354,6 +366,7 @@ function summarize(run: PolicyRun, masked: readonly StopReasonKind[]): SeedRepor
       })),
       reasonKinds: result.reasons.map((reason) => reason.kind),
       unmaskedReasons,
+      returnedControl: walked.returnedControl,
     });
     previous = current;
     if (walked.resolution !== undefined) {
@@ -374,9 +387,10 @@ function summarize(run: PolicyRun, masked: readonly StopReasonKind[]): SeedRepor
     }
   }
 
-  const uninterruptedWeeks = weekly.filter((week) => week.unmaskedReasons === 0).length;
+  const uninterruptedWeeks = weekly.filter((week) => !week.returnedControl).length;
   return {
     seed: run.seed,
+    blockWeeks,
     opening,
     closing,
     minimumBalance,
@@ -441,6 +455,7 @@ function meanWeekly(seeds: readonly SeedReport[]): readonly MeanWeeklyReport[] {
 function aggregate(seeds: readonly SeedReport[]): MeanReport {
   const byStat = statsFrom((key) => mean(seeds.map((seed) => seed.statGrowth.byStat[key])));
   return {
+    blockWeeks: seeds[0]?.blockWeeks ?? 0,
     opening: meanSnapshot(seeds.map((seed) => seed.opening)),
     closing: meanSnapshot(seeds.map((seed) => seed.closing)),
     minimumBalance: mean(seeds.map((seed) => seed.minimumBalance)),
@@ -486,7 +501,7 @@ export function buildReport(options: BuildReportOptions): SimReport {
       }
       const run = matches[0];
       if (run === undefined) throw new Error(`policy "${policy}" is missing seed ${seed}`);
-      return summarize(run, options.scenario.masked);
+      return summarize(run, options.scenario.masked, options.scenario.blockWeeks);
     });
     policies.push({ policy, seeds, mean: aggregate(seeds) });
   }
@@ -504,6 +519,7 @@ export function buildReport(options: BuildReportOptions): SimReport {
     scenario: options.scenario.id,
     scenarioPath: options.scenarioPath,
     horizon: options.horizon,
+    blockWeeks: options.scenario.blockWeeks,
     seeds: [...options.seeds],
     mask: [...options.scenario.masked],
     content: {
@@ -524,13 +540,13 @@ const formatNumber = (value: number): string =>
 export function renderReport(report: SimReport): string {
   const lines = [
     `Simulation: ${report.scenario} (${report.scenarioPath})`,
-    `horizon ${report.horizon} · seeds ${report.seeds.join(",")} · mask ${report.mask.join(",") || "none"}`,
+    `horizon ${report.horizon} · block ${report.blockWeeks} · seeds ${report.seeds.join(",")} · mask ${report.mask.join(",") || "none"}`,
     `content: activities ${report.content.activities} · regions ${report.content.regions} · incidents ${report.content.incidents}`,
     report.incidents.enabled
       ? `incidents: ${report.incidents.ids.join(",")} · cadence ${formatNumber(report.incidents.cadence)}`
       : "incidents: disabled",
     "",
-    "policy       seed  balance(open→close|min)  audience  energy  morale  stats  quiet  uninterrupted",
+    `policy       seed  balance(open→close|min)  audience  energy  morale  stats  quiet  uninterrupted(block ${report.blockWeeks})`,
   ];
   for (const policy of report.policies) {
     for (const seed of policy.seeds) {
@@ -557,7 +573,7 @@ export function renderReport(report: SimReport): string {
   }
   lines.push(
     "",
-    "quiet is the core's structural week kind; uninterrupted means the week had no unmasked reason.",
+    "quiet is the core's structural week kind; uninterrupted means the week passed without returning control.",
     `duration ${formatNumber(report.durationMs)} ms (measurement only)`,
   );
   return `${lines.join("\n")}\n`;

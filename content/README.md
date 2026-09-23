@@ -13,6 +13,7 @@ the `id`. Schemas live in `schema/`. Rules — `docs/adr/0003`.
 | `regions/` | regions and modifiers | `region.schema.json` |
 | `names/` | name and nickname pools by region | `name-pool.schema.json` |
 | `activities/` | what a slot of the week is spent on | `activity.schema.json` |
+| `seasons/` | season length and complete marked-week count ranges | `season.schema.json` |
 
 ## Language
 

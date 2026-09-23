@@ -9,11 +9,37 @@ import type { Org } from "../../src/org.ts";
 import type { Performer } from "../../src/performer.ts";
 import { normalizeState, STAT_KEYS } from "../../src/performer.ts";
 import { createRng } from "../../src/rng.ts";
+import type { SeasonTemplate } from "../../src/season.ts";
 import type { PlannedActivity, RunState, WeekPlan } from "../../src/week.ts";
 import { WEEK_PLAN_MAX_WEEKS, WEEK_PLAN_MIN_WEEKS } from "../../src/week.ts";
 
 /** Seeds accepted by `createRng`: both forms must behave the same way. */
 export const seedArb = fc.oneof(fc.integer({ min: 0, max: 0xffffffff }), fc.string());
+
+/** Valid season templates generated through the same count constraints as content validation. */
+export const seasonTemplateArb: fc.Arbitrary<SeasonTemplate> = fc
+  .integer({ min: 1, max: 30 })
+  .chain((length) =>
+    fc
+      .integer({ min: 0, max: length })
+      .chain((seriesMax) =>
+        fc.tuple(
+          fc.constant(seriesMax),
+          fc.integer({ min: 0, max: seriesMax }),
+          fc.integer({ min: 0, max: length - seriesMax }),
+        ),
+      )
+      .chain(([seriesMax, seriesMin, contestMax]) =>
+        fc.integer({ min: 0, max: contestMax }).map((contestMin): SeasonTemplate => ({
+          id: `generated-${length}-${seriesMin}-${seriesMax}-${contestMin}-${contestMax}`,
+          length,
+          markings: {
+            contest: { min: contestMin, max: contestMax },
+            series: { min: seriesMin, max: seriesMax },
+          },
+        })),
+      ),
+  );
 
 export const originArb: fc.Arbitrary<OriginProfile> = fc.record({
   id: fc.stringMatching(/^[a-z]{2,8}$/),

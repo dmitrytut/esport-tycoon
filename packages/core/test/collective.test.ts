@@ -34,7 +34,8 @@ describe("collective morale", () => {
       effects: [{ kind: "morale", amount: 6 }],
     });
 
-    const after = executeWeek(makeState(collective), [{ activity: lift }]).state.collective;
+    const after = executeWeek(makeState(collective), [{ activity: lift }], { marking: "none" })
+      .state.collective;
 
     expect(after.members.map((member) => member.state.morale)).toEqual([86, 86, 86, 86, 66]);
     expect(collectiveMorale(after)).toBe(before + 6);

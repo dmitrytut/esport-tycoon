@@ -20,6 +20,7 @@ import type { PerformerState, StatKey } from "./performer.ts";
 import { applyStatChange, applyStateChange, statsFrom } from "./performer.ts";
 import type { RngState } from "./rng.ts";
 import { restoreRng } from "./rng.ts";
+import type { SeasonCalendar, SeasonCalendarEntry } from "./season.ts";
 
 /** A block covers four to six weeks: shorter is not a plan, longer is not a decision. */
 export const WEEK_PLAN_MIN_WEEKS = 4;
@@ -110,6 +111,12 @@ export interface ContestAheadReason {
   readonly marking: "contest" | "series";
 }
 
+/** The final entry of the active season was advanced. Unmaskable. */
+export interface SeasonEndedReason {
+  /** Discriminator of the stop reason union. */
+  readonly kind: "season-ended";
+}
+
 /** An incident awaits a choice. The extension point for the incident system. Unmaskable. */
 export interface IncidentPendingReason {
   /** Discriminator of the stop reason union. */
@@ -131,17 +138,16 @@ export type StopReason =
   | MoraleThresholdReason
   | MoneyNegativeReason
   | ContestAheadReason
+  | SeasonEndedReason
   | IncidentPendingReason;
 
 /** The tag of a stop reason, which is what a sensitivity mask is written in terms of. */
 export type StopReasonKind = StopReason["kind"];
 
-/**
- * Three reasons no mask may suppress: the block is the user's own plan running out, an
- * incident is a pending decision, and a contested week ahead is the last chance to prepare.
- */
+/** Reasons no sensitivity mask may suppress because each returns a required decision boundary. */
 export const UNMASKABLE_REASONS: readonly StopReasonKind[] = [
   "block-ran-out",
+  "season-ended",
   "incident-pending",
   "contest-ahead",
 ];
@@ -152,16 +158,31 @@ export interface Sensitivity {
   readonly masked: readonly StopReasonKind[];
 }
 
-/** Everything advancing reads besides the plan. Every field has a default. */
+/** Inputs for exactly one week; its current marking is explicit and no calendar is inspected. */
+export interface ExecuteWeekOptions {
+  /** Marking of the week being executed. */
+  readonly marking: WeekMarking;
+  /** Energy threshold; a difficulty setting overrides it without a second mechanism. */
+  readonly energyThreshold?: number;
+  /** Morale threshold, same. */
+  readonly moraleThreshold?: number;
+  /**
+   * Explicit incident engine input; absent disables selection entirely and draws nothing
+   * from the incident RNG stream, so an existing run that never sets it is unaffected.
+   */
+  readonly incidentInput?: IncidentInput;
+}
+
+/** Inputs for block advancement, including its authoritative bounded season calendar. */
 export interface AdvanceOptions {
+  /** Materialized calendar that owns every week the block may advance. */
+  readonly calendar: SeasonCalendar;
   /** Which reasons are suppressed; absent means every reason stops the advance. */
   readonly sensitivity?: Sensitivity;
   /** Energy threshold; a difficulty setting overrides it without a second mechanism. */
   readonly energyThreshold?: number;
   /** Morale threshold, same. */
   readonly moraleThreshold?: number;
-  /** Marking per absolute week index. A week past the end of the list is unmarked. */
-  readonly calendar?: readonly WeekMarking[];
   /**
    * Explicit incident engine input; absent disables selection entirely and draws nothing
    * from the incident RNG stream, so an existing run that never sets it is unaffected.
@@ -294,6 +315,38 @@ function validateSensitivity(sensitivity: Sensitivity): void {
   }
 }
 
+/** Rejects malformed or drifting calendars before the first week mutates the run. */
+function validateCalendar(calendar: SeasonCalendar): void {
+  if (
+    Array.isArray(calendar) ||
+    !Number.isInteger(calendar.startWeek) ||
+    calendar.startWeek < 0 ||
+    !Array.isArray(calendar.entries) ||
+    calendar.entries.length === 0
+  ) {
+    throw new Error("advance: calendar must be a non-empty bounded season calendar");
+  }
+  for (let relativeWeek = 0; relativeWeek < calendar.entries.length; relativeWeek += 1) {
+    const entry = calendar.entries[relativeWeek];
+    if (
+      entry === undefined ||
+      entry.relativeWeek !== relativeWeek ||
+      entry.week !== calendar.startWeek + relativeWeek
+    ) {
+      throw new Error("advance: calendar entries must be complete and chronologically ordered");
+    }
+  }
+}
+
+/** Resolves a current week inside the validated calendar; lookahead uses direct indexing. */
+function calendarEntryAt(calendar: SeasonCalendar, week: number): SeasonCalendarEntry {
+  const entry = calendar.entries[week - calendar.startWeek];
+  if (entry === undefined) {
+    throw new RangeError(`advance: week ${week} is outside the active season calendar`);
+  }
+  return entry;
+}
+
 /**
  * The kind of a week, from that week's own marking, spending and reasons. Reads nothing
  * about earlier weeks and nothing about the distribution so far: the 40/35/20/5 split of
@@ -315,12 +368,15 @@ export function classifyWeek(
  * the week produced. Work is paid for with the energy the performer arrived with, so
  * recovery lands after the activities and not before them.
  *
- * The block-ran-out reason is not produced here — one week does not know about the block.
+ * Boundary reasons are supplied only by block advancement; a public one-week call has no
+ * block or season lookahead of its own.
  */
-export function executeWeek(
+function executeWeekWith(
   state: RunState,
   planned: readonly PlannedActivity[],
-  options: AdvanceOptions = {},
+  marking: WeekMarking,
+  options: ExecuteWeekOptions | AdvanceOptions,
+  boundaryReasons: readonly StopReason[] = [],
 ): WeekOutcome {
   if (state.incidents.pending !== null) {
     throw new Error(
@@ -466,11 +522,10 @@ export function executeWeek(
   if (openingMoney >= 0 && org.money < 0) {
     reasons.push({ kind: "money-negative", balance: org.money });
   }
-  const ahead = options.calendar?.[state.week + 1] ?? "none";
-  if (ahead !== "none") reasons.push({ kind: "contest-ahead", marking: ahead });
+  reasons.push(...boundaryReasons);
 
   const slotsSpent = state.org.slots - slotsLeft;
-  const marking = options.calendar?.[state.week] ?? "none";
+  // The current marking is explicit; one-week execution never reads a season calendar.
   // The base kind reads every reason produced so far but not the incident itself, so a
   // selected incident's own conditions see the week as it stood before selection
   // (`design.md` "Selection happens after activities, recovery and non-incident reasons").
@@ -515,22 +570,29 @@ export function executeWeek(
   };
 }
 
+/** Advances exactly one week from an explicit marking without owning a season calendar. */
+export function executeWeek(
+  state: RunState,
+  planned: readonly PlannedActivity[],
+  options: ExecuteWeekOptions,
+): WeekOutcome {
+  return executeWeekWith(state, planned, options.marking, options);
+}
+
 /**
  * Walks the block week after week without the user and stops at the end of the first week
  * that produced an unmasked reason. A masked reason stays in that week's result: it simply
  * does not stop the advance. The last week of a block always produces `block-ran-out`, so
  * the walk terminates whatever the mask says.
  */
-export function advance(
-  state: RunState,
-  plan: WeekPlan,
-  options: AdvanceOptions = {},
-): AdvanceResult {
+export function advance(state: RunState, plan: WeekPlan, options: AdvanceOptions): AdvanceResult {
   if (state.incidents.pending !== null) {
     throw new Error(
       "advance: an incident is already pending and must be resolved before advancing",
     );
   }
+  validateCalendar(options.calendar);
+  calendarEntryAt(options.calendar, state.week);
   validateWeekPlan(plan, state.collective);
   if (options.sensitivity !== undefined) validateSensitivity(options.sensitivity);
   const masked = new Set<StopReasonKind>(options.sensitivity?.masked ?? []);
@@ -541,17 +603,26 @@ export function advance(
   let reasons: readonly StopReason[] = [];
 
   for (let index = 0; index < plan.weeks.length; index += 1) {
-    const outcome = executeWeek(current, plan.weeks[index] ?? [], options);
-    current = outcome.state;
-    let result = outcome.result;
-    if (index === plan.weeks.length - 1) {
-      const withBlock = [...result.reasons, BLOCK_RAN_OUT];
-      result = {
-        ...result,
-        reasons: withBlock,
-        kind: classifyWeek(options.calendar?.[result.week] ?? "none", result.slotsSpent, withBlock),
-      };
+    const entry = calendarEntryAt(options.calendar, current.week);
+    const relativeWeek = entry.relativeWeek;
+    const next = options.calendar.entries[relativeWeek + 1];
+    const boundaryReasons: StopReason[] = [];
+    if (next !== undefined && next.marking !== "none") {
+      boundaryReasons.push({ kind: "contest-ahead", marking: next.marking });
     }
+    if (relativeWeek === options.calendar.entries.length - 1) {
+      boundaryReasons.push({ kind: "season-ended" });
+    }
+    if (index === plan.weeks.length - 1) boundaryReasons.push(BLOCK_RAN_OUT);
+    const outcome = executeWeekWith(
+      current,
+      plan.weeks[index] ?? [],
+      entry.marking,
+      options,
+      boundaryReasons,
+    );
+    current = outcome.state;
+    const result = outcome.result;
     weeks.push(result);
     if (result.reasons.some((reason) => !masked.has(reason.kind))) {
       stoppedAt = result.week;

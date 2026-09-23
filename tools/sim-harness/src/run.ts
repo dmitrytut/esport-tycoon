@@ -136,12 +136,14 @@ export function walkBlock(
 
   const walked: WalkedWeek[] = [];
   let current = state;
-  for (const planned of plan.weeks) {
+  for (let index = 0; index < plan.weeks.length; index += 1) {
     if (walked.length >= limit) break;
+    const planned = plan.weeks[index];
+    if (planned === undefined) throw new Error(`walkBlock: plan has no week ${index}`);
     const outcome = executeWeek(
       current,
       planned,
-      incidentInput === undefined ? {} : { incidentInput },
+      incidentInput === undefined ? { marking: "none" } : { marking: "none", incidentInput },
     );
     current = outcome.state;
 
@@ -171,7 +173,9 @@ export function walkBlock(
     walked.push({
       result: outcome.result,
       state: current,
-      returnedControl: outcome.result.reasons.some((reason) => !masked.includes(reason.kind)),
+      returnedControl:
+        index === plan.weeks.length - 1 ||
+        outcome.result.reasons.some((reason) => !masked.includes(reason.kind)),
       planned,
       ...(resolution === undefined ? {} : { resolution }),
     });

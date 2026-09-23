@@ -35,7 +35,15 @@ function run(contentRoot: string): RunResult {
 function sandbox(): string {
   const root = mkdtempSync(join(tmpdir(), "et-content-"));
   cpSync(join(repoRoot, "content/schema"), join(root, "schema"), { recursive: true });
-  for (const dir of ["disciplines", "traits", "events", "regions", "names", "activities"]) {
+  for (const dir of [
+    "disciplines",
+    "traits",
+    "events",
+    "regions",
+    "names",
+    "activities",
+    "seasons",
+  ]) {
     mkdirSync(join(root, dir), { recursive: true });
   }
   return root;
@@ -61,6 +69,14 @@ const activity = {
     { kind: "stat", stat: "collective", amount: 0.8 },
     { kind: "morale", amount: 10 },
   ],
+};
+const season = {
+  id: "standard",
+  length: 24,
+  markings: {
+    contest: { min: 6, max: 8 },
+    series: { min: 2, max: 2 },
+  },
 };
 const incidentChoices = [
   {
@@ -570,5 +586,51 @@ describe("content validator (ADR 0003)", () => {
     const result = run(root);
     expect(result.code).toBe(1);
     expect(result.output).toContain("[stat, energy, morale, money, audience, reputation]");
+  });
+
+  it("accepts and counts a complete season template", () => {
+    const root = fresh();
+    put(root, "seasons/standard.json", season);
+
+    const result = run(root);
+    expect(result.code).toBe(0);
+    expect(result.output).toContain("seasons: 1");
+  });
+
+  it.each([
+    ["a non-positive length", { ...season, length: 0 }],
+    [
+      "a missing marking range",
+      { id: season.id, length: season.length, markings: { contest: season.markings.contest } },
+    ],
+    [
+      "a non-integer range value",
+      {
+        ...season,
+        markings: { ...season.markings, contest: { ...season.markings.contest, min: 6.5 } },
+      },
+    ],
+    [
+      "a reversed range",
+      {
+        ...season,
+        markings: { ...season.markings, contest: { min: 9, max: 8 } },
+      },
+    ],
+    [
+      "maximum markings beyond the season",
+      {
+        ...season,
+        length: 10,
+        markings: { contest: { min: 0, max: 8 }, series: { min: 0, max: 3 } },
+      },
+    ],
+  ])("rejects %s", (_label, invalid) => {
+    const root = fresh();
+    put(root, "seasons/standard.json", invalid);
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/seasons/standard.json");
   });
 });

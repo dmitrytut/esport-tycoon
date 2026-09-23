@@ -1,13 +1,19 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { collectiveMorale, executeWeek, STAT_KEYS, validateWeekPlan } from "@et/core";
+import {
+  collectiveMorale,
+  executeWeek,
+  STAT_KEYS,
+  validateWeekPlan,
+  type WeekPlan,
+} from "@et/core";
 import { describe, expect, it } from "vitest";
 
 import { loadContent } from "../src/content.ts";
 import { buildReport, renderReport } from "../src/report.ts";
 import type { PolicyRun, WalkedWeek } from "../src/run.ts";
-import { openingState, planBlock, runPolicy } from "../src/run.ts";
+import { openingState, planBlock, runPolicy, walkBlock } from "../src/run.ts";
 import type { Scenario } from "../src/scenario.ts";
 import { loadScenario } from "../src/scenario.ts";
 
@@ -36,6 +42,33 @@ function reportOf(from: Scenario, horizon: number, seeds: readonly number[] = [1
   });
 }
 
+function quietReportOf(blockWeeks: 4 | 6) {
+  const from: Scenario = { ...scenario, blockWeeks, masked: [] };
+  const opening = openingState(from, content, 1);
+  const weeks: WalkedWeek[] = [];
+  let state = opening;
+  while (weeks.length < 24) {
+    const plan: WeekPlan = {
+      weeks: Array.from({ length: blockWeeks }, () => []),
+    };
+    const block = walkBlock(state, plan, [], 24 - weeks.length);
+    weeks.push(...block);
+    const last = block[block.length - 1];
+    if (last === undefined) throw new Error("quiet block advanced no week");
+    state = last.state;
+  }
+  const run: PolicyRun = { policy: "money", seed: 1, opening, weeks, state };
+  return buildReport({
+    scenario: from,
+    scenarioPath,
+    horizon: 24,
+    seeds: [1],
+    content,
+    runs: [run],
+    durationMs: 12,
+  });
+}
+
 describe("the report", () => {
   it("states what produced it", () => {
     const text = renderReport(reportOf(scenario, 8));
@@ -45,6 +78,7 @@ describe("the report", () => {
     expect(text).toContain("seeds");
     expect(text).toContain("mask");
     expect(text).toContain("activities 11");
+    expect(text).toContain(`block ${scenario.blockWeeks}`);
     for (const policy of ["money", "development", "balanced"]) expect(text).toContain(policy);
   });
 
@@ -60,15 +94,16 @@ describe("the report", () => {
     expect(text).toContain("uninterrupted");
   });
 
-  it("counts an uninterrupted week from the week's own reasons", () => {
+  it("counts uninterrupted weeks from actual return points", () => {
     const report = reportOf(scenario, 12);
 
     for (const policy of report.policies) {
       for (const seed of policy.seeds) {
-        const byReasons = seed.weekly.filter((week) => week.unmaskedReasons === 0).length;
+        const uninterrupted = seed.weekly.filter((week) => !week.returnedControl).length;
 
-        expect(seed.uninterruptedWeeks).toBe(byReasons);
-        expect(seed.uninterruptedShare).toBeCloseTo(byReasons / seed.weekly.length, 10);
+        expect(seed.blockWeeks).toBe(scenario.blockWeeks);
+        expect(seed.uninterruptedWeeks).toBe(uninterrupted);
+        expect(seed.uninterruptedShare).toBeCloseTo(uninterrupted / seed.weekly.length, 10);
       }
     }
   });
@@ -82,28 +117,31 @@ describe("the report", () => {
     expect(reasons).not.toContain("block-ran-out");
   });
 
-  it("does not score the same horizon by the block length alone", () => {
-    const short = reportOf(scenario, 12).policies[0]?.seeds[0];
-    const long = reportOf({ ...scenario, blockWeeks: 6 }, 12).policies[0]?.seeds[0];
+  it("reports block length with 18 versus 20 uninterrupted quiet weeks", () => {
+    const short = quietReportOf(4).policies[0]?.seeds[0];
+    const long = quietReportOf(6).policies[0]?.seeds[0];
     if (short === undefined || long === undefined) throw new Error("the report is empty");
 
-    const counted = (seed: typeof short): number =>
-      seed.weekly.filter((week) => week.unmaskedReasons === 0).length;
-
-    expect(short.uninterruptedWeeks).toBe(counted(short));
-    expect(long.uninterruptedWeeks).toBe(counted(long));
+    expect(short.blockWeeks).toBe(4);
+    expect(short.uninterruptedWeeks).toBe(18);
+    expect(long.blockWeeks).toBe(6);
+    expect(long.uninterruptedWeeks).toBe(20);
+    expect(short.kinds).toEqual(long.kinds);
   });
 
-  it("records a masked reason and leaves the week uninterrupted", () => {
+  it("records a masked reason without treating it as unmasked", () => {
     const masked = { ...scenario, masked: ["energy-threshold"] as const };
     const report = reportOf(masked, 24);
     const seed = report.policies.find((policy) => policy.policy === "development")?.seeds[0];
     if (seed === undefined) throw new Error("the report is empty");
 
     expect(seed.reasons["energy-threshold"]).toBeGreaterThan(0);
-    for (const week of seed.weekly) {
-      if (week.unmaskedReasons === 0) continue;
-      expect(week.reasonKinds).not.toEqual(["energy-threshold"]);
+    const energyWeeks = seed.weekly.filter((week) => week.reasonKinds.includes("energy-threshold"));
+    expect(energyWeeks.length).toBeGreaterThan(0);
+    for (const week of energyWeeks) {
+      expect(week.unmaskedReasons).toBe(
+        week.reasonKinds.filter((kind) => kind !== "energy-threshold").length,
+      );
     }
   });
 
@@ -129,7 +167,7 @@ describe("the report", () => {
     for (let index = 0; index < 4; index += 1) {
       const planned = plan.weeks[index];
       if (planned === undefined) throw new Error(`the direct plan has no week ${index}`);
-      state = executeWeek(state, planned).state;
+      state = executeWeek(state, planned, { marking: "none" }).state;
       const observed = seed.weekly[index];
       if (observed === undefined) throw new Error(`the report has no week ${index}`);
       const meanEnergy =

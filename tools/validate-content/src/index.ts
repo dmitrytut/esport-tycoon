@@ -42,6 +42,7 @@ const TYPES: Record<string, string> = {
   regions: "region.schema.json",
   names: "name-pool.schema.json",
   activities: "activity.schema.json",
+  seasons: "season.schema.json",
 };
 
 /** One content file already parsed: enough to validate it and to report where the error is. */
@@ -161,6 +162,34 @@ const checkKeys = (
 
 for (const entity of entities) {
   const data = entity.data;
+  if (entity.type === "seasons") {
+    const markings = data["markings"] as Record<string, Record<string, unknown>> | undefined;
+    const contest = markings?.["contest"];
+    const series = markings?.["series"];
+    const length = data["length"];
+    if (
+      typeof contest?.["min"] === "number" &&
+      typeof contest["max"] === "number" &&
+      contest["min"] > contest["max"]
+    ) {
+      fail(entity.file, "markings.contest.min must not exceed markings.contest.max");
+    }
+    if (
+      typeof series?.["min"] === "number" &&
+      typeof series["max"] === "number" &&
+      series["min"] > series["max"]
+    ) {
+      fail(entity.file, "markings.series.min must not exceed markings.series.max");
+    }
+    if (
+      typeof length === "number" &&
+      typeof contest?.["max"] === "number" &&
+      typeof series?.["max"] === "number" &&
+      contest["max"] + series["max"] > length
+    ) {
+      fail(entity.file, "maximum contest and series markings must fit within season length");
+    }
+  }
 
   if (entity.type === "events") {
     const conditions = (data["conditions"] ?? {}) as Record<string, unknown>;

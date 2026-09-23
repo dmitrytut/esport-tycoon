@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Season template",
+  "type": "object",
+  "required": ["id", "length", "markings"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "length": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "number of weeks materialized for this season format"
+    },
+    "markings": {
+      "type": "object",
+      "required": ["contest", "series"],
+      "additionalProperties": false,
+      "properties": {
+        "contest": { "$ref": "#/$defs/countRange" },
+        "series": { "$ref": "#/$defs/countRange" }
+      }
+    }
+  },
+  "$defs": {
+    "countRange": {
+      "type": "object",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

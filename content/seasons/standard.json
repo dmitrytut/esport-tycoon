@@ -1,0 +1,14 @@
+{
+  "id": "standard",
+  "length": 24,
+  "markings": {
+    "contest": {
+      "min": 6,
+      "max": 8
+    },
+    "series": {
+      "min": 2,
+      "max": 2
+    }
+  }
+}

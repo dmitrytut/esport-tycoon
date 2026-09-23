@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { advance, resolveIncident } from "@et/core";
+import { advance, resolveIncident, type WeekPlan } from "@et/core";
 import { describe, expect, it } from "vitest";
 
 import { loadContent } from "../src/content.ts";
@@ -16,6 +16,16 @@ const smokeScenario = loadScenario(
   join(repoRoot, "tools/sim-harness/scenarios/incidents-smoke.json"),
   content,
 );
+
+const unmarkedCalendar = (startWeek: number) => ({
+  startWeek,
+  entries: Array.from({ length: 100 }, (_, relativeWeek) => ({
+    id: { kind: "season-entry" as const, season: 1, relativeWeek },
+    relativeWeek,
+    week: startWeek + relativeWeek,
+    marking: "none" as const,
+  })),
+});
 
 describe("the horizon walk", () => {
   it("advances exactly the horizon when it is a whole number of blocks", () => {
@@ -63,12 +73,96 @@ describe("the horizon walk", () => {
     expect(() => runPolicy(empty, content, "development", 1, 4)).toThrow(/needs a member/);
   });
 
+  it("keeps a masked reason uninterrupted before the declared block boundary", () => {
+    const opening = openingState(scenario, content, 3);
+    const activity = content.activities.get("ad-campaign");
+    if (activity === undefined) throw new Error("ad-campaign content is missing");
+    const state = {
+      ...opening,
+      collective: {
+        ...opening.collective,
+        members: opening.collective.members.map((member) => ({
+          ...member,
+          state: { ...member.state, energy: 100, morale: 32 },
+        })),
+      },
+    };
+    const plan: WeekPlan = { weeks: [[], [{ activity }], [], []] };
+
+    const walked = walkBlock(state, plan, ["morale-threshold"], 4);
+
+    expect(walked[1]?.result.reasons.map((reason) => reason.kind)).toContain("morale-threshold");
+    expect(walked.map((week) => week.returnedControl)).toEqual([false, false, false, true]);
+  });
+
+  it("keeps an early return and the original block-final return", () => {
+    const opening = openingState(scenario, content, 3);
+    const activity = content.activities.get("ad-campaign");
+    if (activity === undefined) throw new Error("ad-campaign content is missing");
+    const state = {
+      ...opening,
+      collective: {
+        ...opening.collective,
+        members: opening.collective.members.map((member) => ({
+          ...member,
+          state: { ...member.state, energy: 100, morale: 32 },
+        })),
+      },
+    };
+    const plan: WeekPlan = { weeks: [[], [{ activity }], [], []] };
+
+    const walked = walkBlock(state, plan, [], 4);
+
+    expect(walked.map((week) => week.returnedControl)).toEqual([false, true, false, true]);
+  });
+
+  it("does not invent a return when the reporting horizon truncates a block", () => {
+    const state = openingState(scenario, content, 3);
+    const plan: WeekPlan = { weeks: [[], [], [], []] };
+
+    const walked = walkBlock(state, plan, [], 2);
+
+    expect(walked.map((week) => week.returnedControl)).toEqual([false, false]);
+  });
+
+  it("marks every declared block-final week as a return", () => {
+    const run = runPolicy(scenario, content, "money", 3, 24);
+
+    for (const index of [3, 7, 11, 15, 19, 23]) {
+      expect(run.weeks[index]?.returnedControl).toBe(true);
+    }
+  });
+
+  it("reports 18 versus 20 uninterrupted quiet weeks for four- and six-week blocks", () => {
+    const uninterrupted = (blockWeeks: number): number => {
+      let state = openingState(scenario, content, 3);
+      let count = 0;
+      for (let elapsed = 0; elapsed < 24; elapsed += blockWeeks) {
+        const plan: WeekPlan = {
+          weeks: Array.from({ length: blockWeeks }, () => []),
+        };
+        const walked = walkBlock(state, plan, [], blockWeeks);
+        count += walked.filter((week) => !week.returnedControl).length;
+        const last = walked[walked.length - 1];
+        if (last === undefined) throw new Error("quiet block advanced no week");
+        state = last.state;
+      }
+      return count;
+    };
+
+    expect(uninterrupted(4)).toBe(18);
+    expect(uninterrupted(6)).toBe(20);
+  });
+
   it("produces exactly what advancing the block produces", () => {
     const state = openingState(scenario, content, 3);
     const plan = planBlock(scenario, "money", state);
 
     const walked = walkBlock(state, plan, scenario.masked, plan.weeks.length);
-    const advanced = advance(state, plan, { sensitivity: { masked: scenario.masked } });
+    const advanced = advance(state, plan, {
+      calendar: unmarkedCalendar(state.week),
+      sensitivity: { masked: scenario.masked },
+    });
 
     const stopIndex = advanced.weeks.length - 1;
     expect(walked.slice(0, advanced.weeks.length).map((week) => week.result)).toEqual(
@@ -96,6 +190,7 @@ describe("incident resolution inside the walk", () => {
 
     const walked = walkBlock(state, plan, smokeScenario.masked, plan.weeks.length, incidentInput);
     const advanced = advance(state, plan, {
+      calendar: unmarkedCalendar(state.week),
       sensitivity: { masked: smokeScenario.masked },
       incidentInput,
     });

@@ -7,7 +7,9 @@ import { createRng } from "../../src/rng.ts";
 import { executeWeek } from "../../src/week.ts";
 import { paramsArb, performerArb, runStateArb, seedArb } from "./arbitraries.ts";
 
-const positiveScaleArb = fc.double({ min: 0.1, max: 10, noNaN: true });
+// Bounded below so the product of three scales stays representable on the one-tenth grid: a
+// quote that rounds away is rejected input, exercised by the unit scenario instead.
+const positiveScaleArb = fc.double({ min: 0.5, max: 10, noNaN: true });
 
 describe("engagement quotation properties", () => {
   it("is deterministic, finite, positive and on the one-tenth grid", () => {

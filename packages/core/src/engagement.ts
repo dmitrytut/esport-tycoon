@@ -132,9 +132,17 @@ export function quoteWeeklyRate(input: RateQuoteInput): number {
     Math.round(
       input.baseWeeklyRate * profile * input.originRateScale * input.disciplineRateScale * 10,
     ) / 10;
-  // The money grid's smallest positive value is the floor: an engagement rate may never be zero.
-  return Math.max(0.1, rounded);
+  // A rate that rounds away to nothing is a broken input, not a free performer: the engagement
+  // invariant needs a positive rate, so say so here instead of quietly quoting the grid's floor.
+  if (rounded <= 0) {
+    throw new Error("weekly rate rounds to zero: the base rate or a scale is too small to price");
+  }
+  return rounded;
 }
+
+/** Stable code-point order over engagement ids; every charged or expiring list is built with it. */
+export const byEngagementId = (left: Engagement, right: Engagement): number =>
+  left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
 
 const rejectPendingIncident = (state: RunState, operation: string): void => {
   if (state.incidents.pending !== null) {
@@ -192,13 +200,13 @@ export function terminateEngagement(input: TerminateEngagementInput): RunState {
   if (current === undefined) {
     throw new Error(`terminateEngagement: engagement "${input.engagementId}" is not stored`);
   }
-  if (input.state.collective.members.length <= 1) {
-    throw new Error("terminateEngagement: the collective's last engagement cannot be terminated");
-  }
   if (!input.state.collective.members.some((member) => member.id === current.performerId)) {
     throw new Error(
       `terminateEngagement: performer "${current.performerId}" is not in the collective`,
     );
+  }
+  if (input.state.collective.members.length <= 1) {
+    throw new Error("terminateEngagement: the collective's last engagement cannot be terminated");
   }
   return {
     ...input.state,
@@ -218,7 +226,7 @@ export function engagementExpenseAt(input: EngagementValidationInput): Engagemen
       (engagement) =>
         engagement.startsAtWeek <= input.week && input.week < engagement.endsBeforeWeek,
     )
-    .toSorted((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+    .toSorted(byEngagementId);
   let totalTenths = 0;
   for (const engagement of active) totalTenths += Math.round(engagement.weeklyRate * 10);
   return {

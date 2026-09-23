@@ -14,6 +14,7 @@ import type { Activity } from "./activity.ts";
 import type { Collective } from "./collective.ts";
 import { participantsOf } from "./collective.ts";
 import {
+  byEngagementId,
   type Engagement,
   type EngagementExpense,
   engagementExpenseAt,
@@ -556,7 +557,7 @@ function executeWeekWith(
   }
   const expiringEngagements = state.engagements
     .filter((engagement) => engagement.endsBeforeWeek === state.week + 1)
-    .toSorted((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+    .toSorted(byEngagementId);
   for (const engagement of expiringEngagements) {
     reasons.push({
       kind: "engagement-expired",
@@ -600,9 +601,7 @@ function executeWeekWith(
   return {
     state: {
       ...state,
-      engagements: state.engagements.toSorted((left, right) =>
-        left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
-      ),
+      engagements: state.engagements.toSorted(byEngagementId),
       org,
       collective,
       week: state.week + 1,

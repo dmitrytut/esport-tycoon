@@ -163,6 +163,15 @@ describe("weekly-rate quotation", () => {
     ).toBe(12.3);
   });
 
+  it("rejects inputs whose quote rounds away instead of quoting a floor", () => {
+    const performer = { ...makePerformer("tiny"), stats: statsFrom(() => 1) };
+    const quote = (baseWeeklyRate: number): number =>
+      quoteWeeklyRate({ performer, baseWeeklyRate, originRateScale: 0.7, disciplineRateScale: 1 });
+
+    expect(() => quote(0.01)).toThrow(/rounds to zero/);
+    expect(quote(2) / quote(1)).toBe(2);
+  });
+
   it("ignores age, hidden fields, traits and floating state", () => {
     const performer = makePerformer("stable");
     const changed = {

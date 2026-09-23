@@ -610,9 +610,13 @@ export function renderReport(report: SimReport): string {
           `${String(seed.kinds.quiet).padStart(5)}  ` +
           `${seed.uninterruptedWeeks}/${seed.weekly.length}`,
       );
+      // Every per-week value core exposes, so the human form carries the same series as the
+      // machine form instead of a partial one a reader would have to open the JSON to finish.
       for (const week of seed.weekly) {
         lines.push(
-          `    week ${week.week} expense ${formatNumber(week.engagementExpense)} · negative weeks ${formatNumber(week.consecutiveNegativeWeeks)}`,
+          `    week ${week.week} expense ${formatNumber(week.engagementExpense)} · negative weeks ${formatNumber(week.consecutiveNegativeWeeks)}` +
+            ` · balance ${formatNumber(week.balance)} · audience ${formatNumber(week.audience)}` +
+            ` · energy ${formatNumber(week.meanEnergy)} · morale ${formatNumber(week.collectiveMorale)}`,
         );
       }
       for (const entry of seed.incidents) {

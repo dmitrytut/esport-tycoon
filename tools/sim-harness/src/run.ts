@@ -88,8 +88,10 @@ export function openingState(scenario: Scenario, content: SimContent, seed: numb
     scenario.collective.originId,
     scenario.disciplineId,
   );
+  // Charged ids are ordered by code point, so the index is padded: an unpadded "p10" would
+  // sort before "p2" as soon as a scenario generates more than ten members.
   const engagements = members.map((performer, index) => ({
-    id: `engagement-p${index}`,
+    id: `engagement-p${String(index).padStart(2, "0")}`,
     performerId: performer.id,
     collectiveId: collective.id,
     weeklyRate: quoteWeeklyRate({ performer, ...rateInputs }),

@@ -735,7 +735,7 @@ describe("resolveIncident", () => {
     expect(result.state.collective.members.find((m) => m.id === "other")).toBe(others[0]);
   });
 
-  it("reports a choice-caused money crossing without inventing a stop reason", () => {
+  it("reports a choice-caused money crossing without inventing a stop reason or extra state field", () => {
     const debtIncident: Incident = makeIncident("debt-inc", {
       cooldownWeeks: 0,
       choices: [
@@ -756,6 +756,17 @@ describe("resolveIncident", () => {
     expect(result.resolution.effects).toEqual([{ kind: "money", amount: -100 }]);
     expect(result.state.org.money).toBe(-100);
     expect(result.resolution).not.toHaveProperty("reasons");
+    expect(Object.keys(result.state).sort()).toEqual([
+      "collective",
+      "consecutiveNegativeWeeks",
+      "engagements",
+      "incidents",
+      "org",
+      "rng",
+      "seed",
+      "week",
+    ]);
+    expect(result.state.consecutiveNegativeWeeks).toBe(state.consecutiveNegativeWeeks);
   });
 
   it("installs a zero cooldown eligible the very next week", () => {

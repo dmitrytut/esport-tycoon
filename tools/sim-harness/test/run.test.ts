@@ -43,7 +43,7 @@ describe("the opening run", () => {
     expect(opening.engagements).toHaveLength(opening.collective.members.length);
     for (const [index, member] of opening.collective.members.entries()) {
       expect(opening.engagements[index]).toEqual({
-        id: `engagement-p${index}`,
+        id: `engagement-p${String(index).padStart(2, "0")}`,
         performerId: member.id,
         collectiveId: opening.collective.id,
         weeklyRate: quoteWeeklyRate({ performer: member, ...inputs }),
@@ -74,6 +74,7 @@ describe("the opening run", () => {
     expect(openingState(scenario, content, 9)).toEqual(openingState(scenario, content, 9));
   });
 });
+
 describe("the horizon walk", () => {
   it("advances exactly the horizon when it is a whole number of blocks", () => {
     const run = runPolicy(scenario, content, "development", 1, 24);

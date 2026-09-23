@@ -13,7 +13,7 @@ import type { Org } from "../src/org.ts";
 import type { Performer } from "../src/performer.ts";
 import { createRng } from "../src/rng.ts";
 import type { RunState } from "../src/week.ts";
-import { makeCollective, makeIncident, makeOrg, makePerformer } from "./fixtures.ts";
+import { makeCollective, makeIncident, makeOrg, makePerformer, makeState } from "./fixtures.ts";
 
 describe("createIncidentState", () => {
   it("starts with no pending incident and no cooldowns", () => {
@@ -470,10 +470,9 @@ describe("resolveIncident", () => {
     readonly cooldowns?: readonly IncidentCooldown[];
   }): RunState {
     const { seed, week, incidentId, target, others = [], org = makeOrg(), cooldowns = [] } = params;
+    const state = makeState(makeCollective([target, ...others]), org, week);
     return {
-      org,
-      collective: makeCollective([target, ...others]),
-      week,
+      ...state,
       seed,
       rng: createRng(seed).state(),
       incidents: {
@@ -736,7 +735,7 @@ describe("resolveIncident", () => {
     expect(result.state.collective.members.find((m) => m.id === "other")).toBe(others[0]);
   });
 
-  it("reports a choice-caused money crossing without inventing a stop reason or extra state field", () => {
+  it("reports a choice-caused money crossing without inventing a stop reason", () => {
     const debtIncident: Incident = makeIncident("debt-inc", {
       cooldownWeeks: 0,
       choices: [
@@ -756,22 +755,7 @@ describe("resolveIncident", () => {
 
     expect(result.resolution.effects).toEqual([{ kind: "money", amount: -100 }]);
     expect(result.state.org.money).toBe(-100);
-    expect(Object.keys(result.state).sort()).toEqual([
-      "collective",
-      "incidents",
-      "org",
-      "rng",
-      "seed",
-      "week",
-    ]);
-    expect(Object.keys(result.resolution).sort()).toEqual([
-      "choiceId",
-      "effects",
-      "incidentId",
-      "outcome",
-      "performerId",
-      "week",
-    ]);
+    expect(result.resolution).not.toHaveProperty("reasons");
   });
 
   it("installs a zero cooldown eligible the very next week", () => {

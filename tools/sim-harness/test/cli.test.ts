@@ -78,6 +78,14 @@ describe("the simulation command line", () => {
     expect(result.stderr).toMatch(/policy.*omniscient/i);
   });
 
+  it("rejects an effective horizon beyond the declared opening terms", () => {
+    const result = run(["--weeks", "25"]);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toMatch(/horizon 25.*duration 24/i);
+  });
+
   it("produces identical game data on identical invocations", () => {
     const args = ["--policy", "balanced", "--seeds", "17,19", "--weeks", "8"];
     const first = jsonRun(args);

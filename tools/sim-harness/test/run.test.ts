@@ -1,10 +1,17 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { advance, resolveIncident, type WeekPlan } from "@et/core";
+import {
+  advance,
+  createRng,
+  generatePerformer,
+  quoteWeeklyRate,
+  resolveIncident,
+  type WeekPlan,
+} from "@et/core";
 import { describe, expect, it } from "vitest";
 
-import { loadContent } from "../src/content.ts";
+import { loadContent, resolveRateInputs } from "../src/content.ts";
 import { chooseIncidentChoice } from "../src/policy.ts";
 import { incidentInputFor, openingState, planBlock, runPolicy, walkBlock } from "../src/run.ts";
 import { loadScenario } from "../src/scenario.ts";
@@ -27,6 +34,46 @@ const unmarkedCalendar = (startWeek: number) => ({
   })),
 });
 
+describe("the opening run", () => {
+  it("materializes stable week-zero terms from core quotations without another draw", () => {
+    const seed = 17;
+    const opening = openingState(scenario, content, seed);
+    const inputs = resolveRateInputs(content, scenario.collective.originId, scenario.disciplineId);
+
+    expect(opening.engagements).toHaveLength(opening.collective.members.length);
+    for (const [index, member] of opening.collective.members.entries()) {
+      expect(opening.engagements[index]).toEqual({
+        id: `engagement-p${index}`,
+        performerId: member.id,
+        collectiveId: opening.collective.id,
+        weeklyRate: quoteWeeklyRate({ performer: member, ...inputs }),
+        startsAtWeek: 0,
+        endsBeforeWeek: scenario.engagementDuration,
+      });
+    }
+
+    const origin = content.origins.get(scenario.collective.originId);
+    if (origin === undefined) throw new Error("scenario origin is missing");
+    const rng = createRng(seed);
+    for (let index = 0; index < scenario.collective.size; index += 1) {
+      generatePerformer(rng, {
+        origin,
+        level: scenario.collective.level,
+        minAge: scenario.collective.minAge,
+        maxAge: scenario.collective.maxAge,
+      });
+    }
+    expect(opening.rng).toEqual(rng.state());
+  });
+
+  it("opens identically for every policy and reproduces the same seed", () => {
+    const money = runPolicy(scenario, content, "money", 9, 1);
+    const development = runPolicy(scenario, content, "development", 9, 1);
+
+    expect(money.opening).toEqual(development.opening);
+    expect(openingState(scenario, content, 9)).toEqual(openingState(scenario, content, 9));
+  });
+});
 describe("the horizon walk", () => {
   it("advances exactly the horizon when it is a whole number of blocks", () => {
     const run = runPolicy(scenario, content, "development", 1, 24);
@@ -79,6 +126,7 @@ describe("the horizon walk", () => {
     if (activity === undefined) throw new Error("ad-campaign content is missing");
     const state = {
       ...opening,
+      org: { ...opening.org, money: 100_000 },
       collective: {
         ...opening.collective,
         members: opening.collective.members.map((member) => ({
@@ -101,6 +149,7 @@ describe("the horizon walk", () => {
     if (activity === undefined) throw new Error("ad-campaign content is missing");
     const state = {
       ...opening,
+      org: { ...opening.org, money: 100_000 },
       collective: {
         ...opening.collective,
         members: opening.collective.members.map((member) => ({
@@ -117,7 +166,8 @@ describe("the horizon walk", () => {
   });
 
   it("does not invent a return when the reporting horizon truncates a block", () => {
-    const state = openingState(scenario, content, 3);
+    const opening = openingState(scenario, content, 3);
+    const state = { ...opening, org: { ...opening.org, money: 100_000 } };
     const plan: WeekPlan = { weeks: [[], [], [], []] };
 
     const walked = walkBlock(state, plan, [], 2);
@@ -135,7 +185,8 @@ describe("the horizon walk", () => {
 
   it("reports 18 versus 20 uninterrupted quiet weeks for four- and six-week blocks", () => {
     const uninterrupted = (blockWeeks: number): number => {
-      let state = openingState(scenario, content, 3);
+      const opening = openingState(scenario, content, 3);
+      let state = { ...opening, org: { ...opening.org, money: 100_000 } };
       let count = 0;
       for (let elapsed = 0; elapsed < 24; elapsed += blockWeeks) {
         const plan: WeekPlan = {

@@ -11,7 +11,14 @@ import {
 } from "../src/season.ts";
 import type { RunState, WeekPlan } from "../src/week.ts";
 import { advance } from "../src/week.ts";
-import { makeActivity, makeCollective, makeOrg, makePerformer, makeState } from "./fixtures.ts";
+import {
+  makeActivity,
+  makeCollective,
+  makeEngagement,
+  makeOrg,
+  makePerformer,
+  makeState,
+} from "./fixtures.ts";
 
 const fixedTemplate: SeasonTemplate = {
   id: "fixed",
@@ -331,7 +338,11 @@ describe("season lifecycle", () => {
   });
 
   it("preserves the run and resets only season-owned fields at an explicit next season", () => {
-    const run = makeState(makeCollective([makePerformer("solo", 37, 42)]), makeOrg(12_345, 5, 678));
+    const initial = makeState(
+      makeCollective([makePerformer("solo", 37, 42)]),
+      makeOrg(-100, 5, 678),
+    );
+    const run = { ...initial, consecutiveNegativeWeeks: 2 };
     const completed = advanceSeason(run, activeSeason(run), emptyPlan);
     if (completed.season.kind !== "completed") throw new Error("season must be complete");
     const completedSeason = completed.season;
@@ -377,5 +388,50 @@ describe("season lifecycle", () => {
     expect(next.season.facts).toEqual([]);
     expect(next.runState.collective.members[0]?.age).toBe(run.collective.members[0]?.age);
     expect(next.runState.rng).toEqual(completed.runState.rng);
+    expect(next.runState.engagements).toEqual(completed.runState.engagements);
+    expect(next.runState.consecutiveNegativeWeeks).toBe(
+      completed.runState.consecutiveNegativeWeeks,
+    );
+  });
+
+  it("holds the boundary for a final-week expiration with incident-first rejection", () => {
+    const initial = makeState(makeCollective([makePerformer("solo")]));
+    const run: RunState = {
+      ...initial,
+      engagements: [
+        makeEngagement("solo", initial.collective.id, {
+          id: "term-solo",
+          startsAtWeek: 0,
+          endsBeforeWeek: 4,
+          weeklyRate: 10,
+        }),
+      ],
+    };
+    const completed = advanceSeason(run, activeSeason(run), emptyPlan);
+    if (completed.season.kind !== "completed") throw new Error("season must be complete");
+    const beforeRun = structuredClone(completed.runState);
+    const beforeSeason = structuredClone(completed.season);
+    const input = {
+      runState: completed.runState,
+      season: completed.season,
+      template: allNoneTemplate,
+      goal: { kind: "minimum-contest-wins" as const, target: 0 },
+    };
+
+    expect(() =>
+      startNextSeason({
+        ...input,
+        runState: {
+          ...completed.runState,
+          incidents: {
+            ...completed.runState.incidents,
+            pending: { incidentId: "pending", performerId: "solo", week: 3 },
+          },
+        },
+      }),
+    ).toThrow(/pending/);
+    expect(() => startNextSeason(input)).toThrow(/cover.*week 4/i);
+    expect(completed.runState).toEqual(beforeRun);
+    expect(completed.season).toEqual(beforeSeason);
   });
 });

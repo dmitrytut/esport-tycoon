@@ -1,5 +1,6 @@
 import type { Activity } from "../src/activity.ts";
 import type { Collective } from "../src/collective.ts";
+import type { Engagement } from "../src/engagement.ts";
 import type { Incident } from "../src/incident.ts";
 import { createIncidentState } from "../src/incident.ts";
 import type { Org } from "../src/org.ts";
@@ -51,6 +52,28 @@ export function makeIncident(id: string, fields: Partial<Incident> = {}): Incide
   };
 }
 
+/** Current terms for one test performer, valid for every ordinary fixture week. */
+export function makeEngagement(
+  performerId: string,
+  collectiveId = "first",
+  fields: Partial<Engagement> = {},
+): Engagement {
+  return {
+    id: `engagement-${performerId}`,
+    performerId,
+    collectiveId,
+    weeklyRate: 1,
+    startsAtWeek: 0,
+    endsBeforeWeek: 1_000,
+    ...fields,
+  };
+}
+
+/** Valid current terms for every member of a test collective. */
+export function makeEngagements(collective: Collective): readonly Engagement[] {
+  return collective.members.map((member) => makeEngagement(member.id, collective.id));
+}
+
 /** An org with money to lose, no audience and the act-one slot pool. */
 export function makeOrg(money = 10_000, slots: number = ACT_ONE_SLOTS, audience = 0): Org {
   return { id: "house", name: "House", money, audience, reputation: 50, slots };
@@ -61,7 +84,9 @@ export function makeState(collective: Collective, org: Org = makeOrg(), week = 0
   return {
     org,
     collective,
+    engagements: makeEngagements(collective),
     week,
+    consecutiveNegativeWeeks: 0,
     seed: 42,
     rng: createRng(42).state(),
     incidents: createIncidentState(42),

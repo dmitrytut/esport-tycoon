@@ -13,6 +13,12 @@
 import type { Activity } from "./activity.ts";
 import type { Collective } from "./collective.ts";
 import { participantsOf } from "./collective.ts";
+import {
+  type Engagement,
+  type EngagementExpense,
+  engagementExpenseAt,
+  validateEngagements,
+} from "./engagement.ts";
 import { type IncidentInput, type IncidentState, selectIncident } from "./incident.ts";
 import type { Org } from "./org.ts";
 import { applyOrgChange, reach } from "./org.ts";
@@ -117,6 +123,16 @@ export interface SeasonEndedReason {
   readonly kind: "season-ended";
 }
 
+/** A current engagement reached its exclusive boundary after its last paid week. Unmaskable. */
+export interface EngagementExpiredReason {
+  /** Discriminator of the stop reason union. */
+  readonly kind: "engagement-expired";
+  /** The term that ended. */
+  readonly engagementId: string;
+  /** The performer whose next week is now uncovered. */
+  readonly performerId: string;
+}
+
 /** An incident awaits a choice. The extension point for the incident system. Unmaskable. */
 export interface IncidentPendingReason {
   /** Discriminator of the stop reason union. */
@@ -139,6 +155,7 @@ export type StopReason =
   | MoneyNegativeReason
   | ContestAheadReason
   | SeasonEndedReason
+  | EngagementExpiredReason
   | IncidentPendingReason;
 
 /** The tag of a stop reason, which is what a sensitivity mask is written in terms of. */
@@ -148,6 +165,7 @@ export type StopReasonKind = StopReason["kind"];
 export const UNMASKABLE_REASONS: readonly StopReasonKind[] = [
   "block-ran-out",
   "season-ended",
+  "engagement-expired",
   "incident-pending",
   "contest-ahead",
 ];
@@ -196,8 +214,12 @@ export interface RunState {
   readonly org: Org;
   /** The people a plan is written for. */
   readonly collective: Collective;
+  /** Materialized current engagement terms for every collective member. */
+  readonly engagements: readonly Engagement[];
   /** Absolute index of the next week to simulate; the first week of a run is 0. */
   readonly week: number;
+  /** Consecutive completed weeks whose final balance was negative. */
+  readonly consecutiveNegativeWeeks: number;
   /** Root seed of the run's stream. */
   readonly seed: number | string;
   /** Continuation of that stream. */
@@ -236,6 +258,8 @@ export interface WeekResult {
   readonly executed: readonly ExecutedActivity[];
   /** Activities that were dropped, in the order they were planned. */
   readonly skipped: readonly SkippedActivity[];
+  /** Canonical evidence for the recurring engagement debit applied this week. */
+  readonly engagementExpense: EngagementExpense;
   /** Every reason this week produced, masked ones included: nothing is lost. */
   readonly reasons: readonly StopReason[];
 }
@@ -304,7 +328,7 @@ export function validateWeekPlan(plan: WeekPlan, collective: Collective): void {
 }
 
 /**
- * Rejects a mask that hides one of the three reasons the user is never allowed to miss.
+ * Rejects a mask that hides a reason listed in `UNMASKABLE_REASONS`.
  * Checked before the first week, like the plan: a mistuned mask must not cost a run.
  */
 function validateSensitivity(sensitivity: Sensitivity): void {
@@ -383,6 +407,11 @@ function executeWeekWith(
       "executeWeek: an incident is already pending and must be resolved before another week runs",
     );
   }
+  const engagementExpense = engagementExpenseAt({
+    collective: state.collective,
+    engagements: state.engagements,
+    week: state.week,
+  });
   const energyThreshold = options.energyThreshold ?? DEFAULT_ENERGY_THRESHOLD;
   const moraleThreshold = options.moraleThreshold ?? DEFAULT_MORALE_THRESHOLD;
   // The root stream draws nothing here: activity effects are declared numbers and incidents
@@ -493,6 +522,9 @@ function executeWeekWith(
     ),
   };
 
+  org = applyOrgChange(org, { money: -engagementExpense.total });
+  const consecutiveNegativeWeeks = org.money < 0 ? state.consecutiveNegativeWeeks + 1 : 0;
+
   const reasons: StopReason[] = [];
   for (const dropped of skipped) {
     reasons.push({
@@ -521,6 +553,16 @@ function executeWeekWith(
   }
   if (openingMoney >= 0 && org.money < 0) {
     reasons.push({ kind: "money-negative", balance: org.money });
+  }
+  const expiringEngagements = state.engagements
+    .filter((engagement) => engagement.endsBeforeWeek === state.week + 1)
+    .toSorted((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+  for (const engagement of expiringEngagements) {
+    reasons.push({
+      kind: "engagement-expired",
+      engagementId: engagement.id,
+      performerId: engagement.performerId,
+    });
   }
   reasons.push(...boundaryReasons);
 
@@ -556,7 +598,18 @@ function executeWeekWith(
   }
 
   return {
-    state: { ...state, org, collective, week: state.week + 1, rng: rng.state(), incidents },
+    state: {
+      ...state,
+      engagements: state.engagements.toSorted((left, right) =>
+        left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+      ),
+      org,
+      collective,
+      week: state.week + 1,
+      consecutiveNegativeWeeks,
+      rng: rng.state(),
+      incidents,
+    },
     result: {
       week: state.week,
       // Reclassified with the incident reason included, so a base-quiet week that selected
@@ -566,6 +619,7 @@ function executeWeekWith(
       executed,
       skipped,
       reasons,
+      engagementExpense,
     },
   };
 }
@@ -591,6 +645,11 @@ export function advance(state: RunState, plan: WeekPlan, options: AdvanceOptions
       "advance: an incident is already pending and must be resolved before advancing",
     );
   }
+  validateEngagements({
+    collective: state.collective,
+    engagements: state.engagements,
+    week: state.week,
+  });
   validateCalendar(options.calendar);
   calendarEntryAt(options.calendar, state.week);
   validateWeekPlan(plan, state.collective);

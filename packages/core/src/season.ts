@@ -1,3 +1,4 @@
+import { validateEngagements } from "./engagement.ts";
 import type { RngState } from "./rng.ts";
 import { restoreRng } from "./rng.ts";
 import type {
@@ -401,6 +402,11 @@ export function startNextSeason(input: StartNextSeasonInput): StartNextSeasonRes
   if (input.runState.incidents.pending !== null) {
     throw new Error("startNextSeason: pending incident must be resolved first");
   }
+  validateEngagements({
+    collective: input.runState.collective,
+    engagements: input.runState.engagements,
+    week: input.runState.week,
+  });
   const expectedWeek = input.season.startWeek + input.season.position;
   if (input.runState.week !== expectedWeek) {
     throw new Error(

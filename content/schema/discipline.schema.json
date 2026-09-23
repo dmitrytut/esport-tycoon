@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Discipline",
   "type": "object",
-  "required": ["id", "name", "rosterSize", "statWeights", "contest"],
+  "required": ["id", "name", "rosterSize", "statWeights", "contest", "economy"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -78,8 +78,13 @@
     },
     "economy": {
       "type": "object",
+      "required": ["baseWeeklyRate", "salaryScale"],
       "additionalProperties": false,
       "properties": {
+        "baseWeeklyRate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
         "prizeScale": {
           "type": "number"
         },
@@ -87,7 +92,8 @@
           "type": "number"
         },
         "salaryScale": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       }
     },

@@ -38,6 +38,10 @@ export interface Scenario {
   readonly id: string;
   /** Opening values of the org, without the identity fields a run supplies. */
   readonly org: Org;
+  /** Discipline whose economy inputs quote every opening engagement. */
+  readonly disciplineId: string;
+  /** Number of weeks covered by every opening engagement. */
+  readonly engagementDuration: number;
   /** What the collective is generated from. */
   readonly collective: CollectiveSpec;
   /** The activities a policy may plan, in the order the scenario declared them. */
@@ -60,6 +64,10 @@ interface ScenarioFile {
   readonly id: string;
   /** Opening money, audience, reputation and slot pool. */
   readonly org: Pick<Org, "money" | "audience" | "reputation" | "slots">;
+  /** Discipline id used for opening rate quotations. */
+  readonly disciplineId: string;
+  /** Length of each opening engagement from week zero. */
+  readonly engagementDuration: number;
   /** Generation parameters of the collective. */
   readonly collective: CollectiveSpec;
   /** Activity ids in play. */
@@ -103,6 +111,14 @@ export function loadScenario(path: string, content: SimContent): Scenario {
 
   if (!content.origins.has(file.collective.originId)) {
     fail(`generates from origin "${file.collective.originId}", which no region defines`);
+  }
+  if (!content.disciplineRates.has(file.disciplineId)) {
+    fail(`names discipline "${String(file.disciplineId)}", which content does not define`);
+  }
+  if (!Number.isSafeInteger(file.engagementDuration) || file.engagementDuration <= 0) {
+    fail(
+      `declares engagement duration "${String(file.engagementDuration)}"; expected a positive integer`,
+    );
   }
 
   const activities: Activity[] = [];
@@ -152,9 +168,11 @@ export function loadScenario(path: string, content: SimContent): Scenario {
     incidents = { catalog, cadence };
   }
 
-  return {
+  const scenario: Scenario = {
     id: file.id,
     org: { id: "house", name: "House", ...file.org },
+    disciplineId: file.disciplineId,
+    engagementDuration: file.engagementDuration,
     collective: file.collective,
     activities,
     blockWeeks: file.blockWeeks,
@@ -163,4 +181,18 @@ export function loadScenario(path: string, content: SimContent): Scenario {
     horizon: file.horizon,
     ...(incidents === undefined ? {} : { incidents }),
   };
+  validateScenarioHorizon(scenario, scenario.horizon);
+  return scenario;
+}
+
+/** Rejects a run horizon whose opening terms would expire before the requested walk completes. */
+export function validateScenarioHorizon(scenario: Scenario, horizon: number): void {
+  if (!Number.isSafeInteger(horizon) || horizon <= 0) {
+    throw new Error(`scenario "${scenario.id}": effective horizon must be a positive integer`);
+  }
+  if (horizon > scenario.engagementDuration) {
+    throw new Error(
+      `scenario "${scenario.id}": effective horizon ${horizon} exceeds engagement duration ${scenario.engagementDuration}`,
+    );
+  }
 }

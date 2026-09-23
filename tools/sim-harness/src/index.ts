@@ -8,7 +8,7 @@ import { loadContent } from "./content.ts";
 import { POLICY_NAMES, type PolicyName } from "./policy.ts";
 import { buildReport, renderReport } from "./report.ts";
 import { runPolicy } from "./run.ts";
-import { loadScenario } from "./scenario.ts";
+import { loadScenario, validateScenarioHorizon } from "./scenario.ts";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const defaultScenario = join(repoRoot, "tools/sim-harness/scenarios/act-one.json");
@@ -114,6 +114,7 @@ export function main(args: readonly string[]): string {
   const policies = options.policies.length === 0 ? POLICY_NAMES : options.policies;
   const seeds = options.seeds ?? scenario.seeds;
   const horizon = options.horizon ?? scenario.horizon;
+  validateScenarioHorizon(scenario, horizon);
 
   const startedAt = performance.now();
   const runs = policies.flatMap((policy) =>

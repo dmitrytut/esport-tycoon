@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { loadContent } from "../src/content.ts";
+import { loadContent, resolveRateInputs } from "../src/content.ts";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const contentRoot = join(repoRoot, "content");
@@ -51,6 +51,24 @@ describe("content for a run", () => {
       "sv",
       "da",
     ]);
+  });
+
+  it("resolves neutral rate inputs from region and discipline content", () => {
+    const content = loadContent(contentRoot);
+
+    expect(resolveRateInputs(content, "western-europe", "tactical-shooter")).toEqual({
+      baseWeeklyRate: 1,
+      originRateScale: 1.35,
+      disciplineRateScale: 1,
+    });
+  });
+
+  it("refuses an unknown discipline when resolving rate inputs", () => {
+    const content = loadContent(contentRoot);
+
+    expect(() => resolveRateInputs(content, "western-europe", "missing")).toThrow(
+      /discipline "missing"/,
+    );
   });
 
   it("refuses a region whose name pool is missing", () => {

@@ -35,6 +35,7 @@ describe("core determinism", () => {
   it("has modules to check", () => {
     expect(files.length).toBeGreaterThan(0);
     expect(files).toContain("season.ts");
+    expect(files).toContain("engagement.ts");
   });
 
   for (const file of files) {

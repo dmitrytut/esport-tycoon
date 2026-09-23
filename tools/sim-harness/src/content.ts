@@ -12,6 +12,7 @@ import type {
   IncidentCategoryMultipliers,
   IncidentTraitMultipliers,
   OriginProfile,
+  RateInputs,
   SeasonTemplate,
   SecondLanguage,
 } from "@et/core";
@@ -22,12 +23,26 @@ export interface SimContent {
   readonly activities: ReadonlyMap<string, Activity>;
   /** Origins by region id, ready for `generatePerformer`. */
   readonly origins: ReadonlyMap<string, OriginProfile>;
+  /** Relative rate scale by origin id, mapped from region content without a fallback. */
+  readonly originRateScales: ReadonlyMap<string, number>;
+  /** Absolute and relative rate inputs by discipline id. */
+  readonly disciplineRates: ReadonlyMap<string, DisciplineRateProfile>;
   /** Incidents by id; a scenario names the subset it enables. */
   readonly incidents: ReadonlyMap<string, Incident>;
   /** Declared trait event-weight boosts by trait id, for the incident engine's weighting. */
   readonly traitMultipliers: IncidentTraitMultipliers;
   /** Validated season templates by stable content id. */
   readonly seasons: ReadonlyMap<string, SeasonTemplate>;
+}
+
+/** Neutral rate inputs one discipline contributes to a generated engagement quote. */
+export interface DisciplineRateProfile {
+  /** Stable discipline content id. */
+  readonly id: string;
+  /** Absolute weekly money magnitude. */
+  readonly baseWeeklyRate: number;
+  /** Discipline-relative rate multiplier. */
+  readonly rateScale: number;
 }
 
 /** One trait file's fields the harness reads; only the incident weighting matters here. */
@@ -48,6 +63,14 @@ interface NamePool {
   readonly values: readonly string[];
 }
 
+/** Region modifiers needed by generation and engagement quotation. */
+interface RegionModifiers {
+  /** Relative talent multiplier consumed by generation; absent means neutral. */
+  readonly talentDensity?: number;
+  /** Required positive rate scale consumed by engagement quotation. */
+  readonly salaryScale: number;
+}
+
 /** One region file, in the shape an origin is built from. */
 interface Region {
   /** Region id, matching the file name. */
@@ -56,11 +79,30 @@ interface Region {
   readonly language: string;
   /** Additional languages with the chance of speaking them. */
   readonly secondLanguages?: readonly SecondLanguage[];
-  /** Region modifiers; only the talent density reaches core. */
-  readonly modifiers?: { readonly talentDensity?: number };
+  /** Region modifiers consumed by generation and engagement quotation. */
+  readonly modifiers: RegionModifiers;
   /** Name pool ids this region draws from. */
   readonly namePools?: readonly string[];
 }
+
+/** One discipline file's economy fields needed by engagement quotation. */
+interface Discipline {
+  /** Discipline id, matching the file name. */
+  readonly id: string;
+  /** Economy block carrying the rate inputs a quote needs. */
+  readonly economy: {
+    /** Absolute weekly money magnitude before any relative scale. */
+    readonly baseWeeklyRate: number;
+    /** Discipline-relative rate multiplier. */
+    readonly salaryScale: number;
+  };
+}
+
+const positive = (value: number, label: string): number => {
+  if (!Number.isFinite(value) || value <= 0)
+    throw new Error(`${label} must be finite and positive`);
+  return value;
+};
 
 const readJson = (path: string): unknown => JSON.parse(readFileSync(path, "utf8"));
 
@@ -87,6 +129,23 @@ export function loadContent(contentRoot: string): SimContent {
     pools.set(pool.id, pool);
   }
 
+  const disciplineRates = new Map<string, DisciplineRateProfile>();
+  for (const file of listJson(join(contentRoot, "disciplines"))) {
+    const discipline = readJson(join(contentRoot, "disciplines", file)) as Discipline;
+    disciplineRates.set(discipline.id, {
+      id: discipline.id,
+      baseWeeklyRate: positive(
+        discipline.economy.baseWeeklyRate,
+        `discipline "${discipline.id}" base weekly rate`,
+      ),
+      rateScale: positive(
+        discipline.economy.salaryScale,
+        `discipline "${discipline.id}" rate scale`,
+      ),
+    });
+  }
+
+  const originRateScales = new Map<string, number>();
   const origins = new Map<string, OriginProfile>();
   for (const file of listJson(join(contentRoot, "regions"))) {
     const region = readJson(join(contentRoot, "regions", file)) as Region;
@@ -109,10 +168,14 @@ export function loadContent(contentRoot: string): SimContent {
       id: region.id,
       language: region.language,
       secondLanguages: region.secondLanguages ?? [],
-      talentDensity: region.modifiers?.talentDensity ?? 1,
+      talentDensity: region.modifiers.talentDensity ?? 1,
       givenNames,
       handles,
     });
+    originRateScales.set(
+      region.id,
+      positive(region.modifiers.salaryScale, `region "${region.id}" rate scale`),
+    );
   }
 
   const incidents = new Map<string, Incident>();
@@ -136,5 +199,30 @@ export function loadContent(contentRoot: string): SimContent {
     traitMultipliers[trait.id] = trait.eventWeightBoost ?? {};
   }
 
-  return { activities, origins, incidents, seasons, traitMultipliers };
+  return {
+    activities,
+    origins,
+    originRateScales,
+    disciplineRates,
+    incidents,
+    seasons,
+    traitMultipliers,
+  };
+}
+
+/** Resolves all neutral rate inputs for one origin and discipline selection. */
+export function resolveRateInputs(
+  content: SimContent,
+  originId: string,
+  disciplineId: string,
+): RateInputs {
+  const originRateScale = content.originRateScales.get(originId);
+  if (originRateScale === undefined) throw new Error(`origin "${originId}" is not loaded`);
+  const discipline = content.disciplineRates.get(disciplineId);
+  if (discipline === undefined) throw new Error(`discipline "${disciplineId}" is not loaded`);
+  return {
+    baseWeeklyRate: discipline.baseWeeklyRate,
+    originRateScale,
+    disciplineRateScale: discipline.rateScale,
+  };
 }

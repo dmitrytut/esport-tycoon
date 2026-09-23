@@ -1,0 +1,1494 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "esport-tycoon",
+    "languages": ["TypeScript", "JavaScript"],
+    "frameworks": ["Vitest", "fast-check"],
+    "description": "A deterministic esports organization management simulation in which the player develops a performer collective, plans weekly activities, handles incidents, manages organization resources, and progresses through marked seasons.",
+    "analyzedAt": "2026-09-23T10:53:29.753709+00:00",
+    "gitCommitHash": "3ad309c9c30015cb6dd0dc19b3277bc3af4af4b7"
+  },
+  "nodes": [
+    {
+      "id": "domain:talent-management",
+      "type": "domain",
+      "name": "Talent Management",
+      "summary": "This domain creates and represents the performers who make up a collective, including their six skills, age curve, languages, traits, and changing energy, morale, and form. It also provides stable information fog so player-facing observations reveal bounded ranges instead of exact hidden ratings.",
+      "tags": ["performers", "collectives", "scouting", "development"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "Performer",
+          "PerformerState",
+          "Stats",
+          "OriginProfile",
+          "TraitOption",
+          "Collective",
+          "Observation"
+        ],
+        "businessRules": [
+          "Performer generation draws all randomness from an injected deterministic RNG and consumes stats in a fixed order.",
+          "Stat and floating-state values are normalized to their declared bounds; performer state changes cannot escape those scales.",
+          "An observed stat range must contain the true value and remains stable for the same performer, stat, and observation quality.",
+          "Collective morale combines the group mean with the worst member so one unhappy performer is visible without wholly defining the group."
+        ],
+        "crossDomainInteractions": [
+          "Weekly Operations selects activity participants from the collective and changes performer state.",
+          "Incident Management targets eligible performers and can change their stats, energy, morale, or form.",
+          "Simulation and Content Operations supplies origin profiles and reproducible seeds used to generate collectives."
+        ]
+      }
+    },
+    {
+      "id": "domain:weekly-operations",
+      "type": "domain",
+      "name": "Weekly Operations",
+      "summary": "This domain is the deterministic time loop of a run: a finite pool of weekly attention slots is spent on planned activities, participants pay energy, and effects land on people or the organization. Multi-week advancement keeps executing weeks until the plan runs out or a decision-worthy stop condition occurs.",
+      "tags": ["week", "planning", "activities", "determinism"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "RunState",
+          "WeekPlan",
+          "PlannedActivity",
+          "Activity",
+          "WeekMarking",
+          "StopReason",
+          "SkipCause"
+        ],
+        "businessRules": [
+          "A week is a pure transition of the supplied state, plan, activity mask, season calendar, and RNG stream.",
+          "Activities spend the organization slot pool, apply only to their declared participants, charge energy, and apply their closed-union effects.",
+          "Threshold stops occur only on a downward crossing measured from the start of the current week.",
+          "Advancement stops when something requires a decision rather than silently continuing through it."
+        ],
+        "crossDomainInteractions": [
+          "Talent Management supplies the collective and receives activity and recovery changes.",
+          "Organization Economy supplies the weekly slot pool and receives money, audience, and reputation effects.",
+          "Incident Management can interrupt advancement with a pending incident.",
+          "Season Calendar provides each week marking and delegates active-season time progression to this domain."
+        ]
+      }
+    },
+    {
+      "id": "domain:incident-management",
+      "type": "domain",
+      "name": "Incident Management",
+      "summary": "This domain turns authored incident content into deterministic interruptions with an eligible target, presented choices, consequences, and cooldowns. Selection and resolution are pure state transitions so a run can pause on a pending incident and replay the same outcome from serialized state.",
+      "tags": ["incidents", "choices", "cooldowns", "determinism"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "Incident",
+          "IncidentConditions",
+          "IncidentState",
+          "IncidentCooldown",
+          "IncidentChoice",
+          "IncidentEffect"
+        ],
+        "businessRules": [
+          "Only targets satisfying incident eligibility conditions may be selected.",
+          "Incident selection is cadence-gated, weighted, and driven by the injected RNG rather than caller choice.",
+          "Resolving an incident applies exactly the selected choice effects, installs its cooldown, and clears the pending incident.",
+          "Incident effects are restricted to declared performer-state, stat, form, and organization-money effect kinds."
+        ],
+        "crossDomainInteractions": [
+          "Weekly Operations evaluates incident selection while advancing and stops when an incident needs a choice.",
+          "Talent Management provides candidate targets and receives performer consequences.",
+          "Organization Economy receives incident money consequences.",
+          "Simulation and Content Operations loads authored incidents and their category and trait multipliers."
+        ]
+      }
+    },
+    {
+      "id": "domain:organization-economy",
+      "type": "domain",
+      "name": "Organization Economy",
+      "summary": "This domain owns the organization ledger and attention capacity: money, audience, reputation, and the weekly slot pool. It applies declared deltas while clamping bounded measures and converts audience size into scaled reach for audience-sensitive outcomes.",
+      "tags": ["organization", "economy", "audience", "reputation"],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entities": ["Org", "OrgChange", "Money", "Audience", "Reputation", "WeeklySlots", "Reach"],
+        "businessRules": [
+          "The organization ledger is kept separate from the performer collective because financial and people state have different failure modes.",
+          "Money changes by the exact declared amount, including positive and negative deltas.",
+          "Reputation stays on the inclusive 0 to 100 scale.",
+          "Audience-scaled income reaches half of its declared base at the configured half-reach audience threshold."
+        ],
+        "crossDomainInteractions": [
+          "Weekly Operations spends organization slots and applies money, audience, and reputation activity effects.",
+          "Incident Management can apply money consequences from a selected choice."
+        ]
+      }
+    },
+    {
+      "id": "domain:season-calendar",
+      "type": "domain",
+      "name": "Season Calendar",
+      "summary": "This domain builds and advances a marked season calendar from a season template, tracks an active or completed season, and evaluates season goals from recorded contest facts. It also owns the explicit transition from a completed season into the next season so calendar generation and RNG continuation remain deterministic.",
+      "tags": ["season", "calendar", "goals", "lifecycle"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "SeasonTemplate",
+          "SeasonCalendar",
+          "SeasonCalendarEntry",
+          "Season",
+          "ActiveSeason",
+          "CompletedSeason",
+          "SeasonGoal",
+          "ContestFact"
+        ],
+        "businessRules": [
+          "Calendar markings are allocated within the inclusive ranges declared by the season template.",
+          "Season progression preserves the run RNG state so the same state and plan replay the same calendar and weekly results.",
+          "A minimum-contest-wins goal is evaluated from contest facts recorded against the season.",
+          "Starting the next season is a separate lifecycle transition from completing the current season."
+        ],
+        "crossDomainInteractions": [
+          "Weekly Operations consumes the generated calendar markings and executes the weeks advanced by an active season.",
+          "Simulation and Content Operations validates and loads season templates as typed inputs, while season execution remains owned by core consumers."
+        ]
+      }
+    },
+    {
+      "id": "domain:simulation-content-operations",
+      "type": "domain",
+      "name": "Simulation and Content Operations",
+      "summary": "This domain provides the headless simulation harness and the repository content gate around the pure core. The shared loader reads authored activities, incidents, origins, and season templates into typed inputs; the week-horizon harness consumes the first three, while season templates remain available to core season consumers.",
+      "tags": ["simulation", "content", "validation", "tooling"],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entities": [
+          "SimContent",
+          "Scenario",
+          "Policy",
+          "SimulationRun",
+          "SimulationReport",
+          "ContentSchema"
+        ],
+        "businessRules": [
+          "The core reads no files; the harness is responsible for turning the content tree into typed core inputs.",
+          "Simulation runs are driven by explicit scenarios, policies, and seeds so results can be reproduced.",
+          "Authored content remains data under the content tree rather than executable game logic.",
+          "The content validation command checks schemas and referential integrity before content is accepted."
+        ],
+        "crossDomainInteractions": [
+          "It supplies activities and origin profiles to Talent Management and Weekly Operations.",
+          "It supplies incident definitions and weighting multipliers to Incident Management.",
+          "It supplies season templates to Season Calendar and reports deterministic run outcomes."
+        ]
+      }
+    },
+    {
+      "id": "flow:generate-performer",
+      "type": "flow",
+      "name": "Generate Performer",
+      "summary": "Creates one deterministic performer profile from an origin, generation parameters, trait options, and an injected RNG.",
+      "tags": ["generation", "performer", "rng"],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "generatePerformer(rng, params)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:generate-performer:read-origin-profile",
+      "type": "step",
+      "name": "Read Origin Profile",
+      "summary": "Use the supplied origin profile for names, handles, primary language, second-language chances, and talent density.",
+      "tags": ["origin", "content"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/generate.ts"
+    },
+    {
+      "id": "step:generate-performer:draw-performer-identity",
+      "type": "step",
+      "name": "Draw Performer Identity",
+      "summary": "Choose the performer identity fields from the supplied origin data through the injected RNG.",
+      "tags": ["identity", "rng"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/generate.ts"
+    },
+    {
+      "id": "step:generate-performer:generate-bounded-stats",
+      "type": "step",
+      "name": "Generate Bounded Stats",
+      "summary": "Generate the six ordered skills and normalize them to the performer stat scale.",
+      "tags": ["stats", "bounds"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/generate.ts"
+    },
+    {
+      "id": "step:generate-performer:finalize-performer-state",
+      "type": "step",
+      "name": "Finalize Performer State",
+      "summary": "Return the performer with generated traits, languages, hidden values, and bounded floating state.",
+      "tags": ["performer", "state"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/generate.ts"
+    },
+    {
+      "id": "flow:observe-performer",
+      "type": "flow",
+      "name": "Observe Performer",
+      "summary": "Produces stable, bounded stat ranges that communicate uncertainty without exposing a performer’s exact hidden values.",
+      "tags": ["scouting", "information-fog", "observation"],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "observe(performer, quality)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:observe-performer:clamp-observation-quality",
+      "type": "step",
+      "name": "Clamp Observation Quality",
+      "summary": "Normalize the requested observation quality to the supported range.",
+      "tags": ["quality", "bounds"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/observe.ts"
+    },
+    {
+      "id": "step:observe-performer:derive-stable-stat-error",
+      "type": "step",
+      "name": "Derive Stable Stat Error",
+      "summary": "Derive per-stat uncertainty from the performer seed and stat key so repeated views do not reroll information.",
+      "tags": ["determinism", "fog"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/observe.ts"
+    },
+    {
+      "id": "step:observe-performer:return-truth-containing-ranges",
+      "type": "step",
+      "name": "Return Truth-Containing Ranges",
+      "summary": "Return bounded ranges for all observed skills, each guaranteed to contain the true value.",
+      "tags": ["ranges", "scouting"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/observe.ts"
+    },
+    {
+      "id": "flow:execute-week-plan",
+      "type": "flow",
+      "name": "Execute Week Plan",
+      "summary": "Executes the activities assigned to one week, spending attention slots and applying participant and organization consequences.",
+      "tags": ["week", "activities", "execution"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "executeWeek(state, planned, options)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:execute-week-plan:read-week-marking",
+      "type": "step",
+      "name": "Read Week Marking",
+      "summary": "Resolve the current calendar marking and week kind supplied for this week.",
+      "tags": ["calendar", "week-kind"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:execute-week-plan:recover-performer-energy",
+      "type": "step",
+      "name": "Recover Performer Energy",
+      "summary": "Apply the declared weekly energy recovery before planned work is evaluated.",
+      "tags": ["energy", "recovery"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:execute-week-plan:evaluate-planned-activities",
+      "type": "step",
+      "name": "Evaluate Planned Activities",
+      "summary": "Walk the planned activity block and determine whether slots, targets, and energy allow each item to run.",
+      "tags": ["plan", "eligibility"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:execute-week-plan:spend-slots-and-energy",
+      "type": "step",
+      "name": "Spend Slots and Energy",
+      "summary": "Charge the organization slot pool and the participating performers for each activity that runs.",
+      "tags": ["slots", "energy"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:execute-week-plan:apply-activity-effects",
+      "type": "step",
+      "name": "Apply Activity Effects",
+      "summary": "Apply declared stat, energy, morale, money, audience, or reputation effects to the appropriate targets.",
+      "tags": ["effects", "state-transition"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:execute-week-plan:return-week-result",
+      "type": "step",
+      "name": "Return Week Result",
+      "summary": "Return the updated run state together with executed or skipped activity outcomes and any stop reason.",
+      "tags": ["result", "stop-reason"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "flow:advance-weekly-run",
+      "type": "flow",
+      "name": "Advance Weekly Run",
+      "summary": "Walks successive weeks under one plan until advancement reaches a player-decision boundary or exhausts the planned block.",
+      "tags": ["advance", "stop-reasons", "determinism"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "advance(state, plan, options)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:advance-weekly-run:restore-run-rng",
+      "type": "step",
+      "name": "Restore Run RNG",
+      "summary": "Restore the deterministic random stream carried by the serialized run state.",
+      "tags": ["rng", "serialization"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:advance-weekly-run:execute-current-week",
+      "type": "step",
+      "name": "Execute Current Week",
+      "summary": "Run the current week against the supplied plan, mask, and season calendar.",
+      "tags": ["week", "execution"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:advance-weekly-run:evaluate-threshold-crossings",
+      "type": "step",
+      "name": "Evaluate Threshold Crossings",
+      "summary": "Compare week-start and week-end energy and morale to detect configured downward crossings.",
+      "tags": ["threshold", "energy", "morale"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:advance-weekly-run:evaluate-decision-stops",
+      "type": "step",
+      "name": "Evaluate Decision Stops",
+      "summary": "Stop for an incident, threshold, skipped activity, exhausted block, or other declared reason that needs attention.",
+      "tags": ["stop-reason", "decision"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "step:advance-weekly-run:continue-or-return",
+      "type": "step",
+      "name": "Continue or Return",
+      "summary": "Advance to another week only when no decision stop has fired; otherwise return the updated state and reason.",
+      "tags": ["loop", "result"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/week.ts"
+    },
+    {
+      "id": "flow:select-weekly-incident",
+      "type": "flow",
+      "name": "Select Weekly Incident",
+      "summary": "Chooses whether an authored incident becomes pending this week and deterministically selects its eligible target.",
+      "tags": ["selection", "eligibility", "weighted-choice"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "selectIncident(input)",
+        "entryType": "event"
+      }
+    },
+    {
+      "id": "step:select-weekly-incident:check-cadence-gate",
+      "type": "step",
+      "name": "Check Cadence Gate",
+      "summary": "Determine whether the incident cadence permits a selection attempt in the current week.",
+      "tags": ["cadence", "gate"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "step:select-weekly-incident:filter-active-cooldowns",
+      "type": "step",
+      "name": "Filter Active Cooldowns",
+      "summary": "Exclude incident candidates that remain blocked by their installed cooldown.",
+      "tags": ["cooldown", "filter"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "step:select-weekly-incident:find-eligible-targets",
+      "type": "step",
+      "name": "Find Eligible Targets",
+      "summary": "Evaluate incident conditions against the collective and return only eligible performer identifiers.",
+      "tags": ["eligibility", "targets"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "step:select-weekly-incident:weight-incident-candidates",
+      "type": "step",
+      "name": "Weight Incident Candidates",
+      "summary": "Apply authored base weights together with category and trait multipliers.",
+      "tags": ["weights", "traits"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "step:select-weekly-incident:install-pending-incident",
+      "type": "step",
+      "name": "Install Pending Incident",
+      "summary": "Use the incident RNG stream to choose the candidate and target and persist them as the pending interruption.",
+      "tags": ["rng", "pending-state"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "flow:resolve-pending-incident",
+      "type": "flow",
+      "name": "Resolve Pending Incident",
+      "summary": "Applies the selected choice of a pending incident, records its cooldown, and resumes the run without caller-invented consequences.",
+      "tags": ["resolution", "choice", "effects"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "resolveIncident(input)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:resolve-pending-incident:validate-pending-choice",
+      "type": "step",
+      "name": "Validate Pending Choice",
+      "summary": "Resolve the requested choice against the currently pending authored incident and target.",
+      "tags": ["choice", "pending-state"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "step:resolve-pending-incident:apply-performer-consequences",
+      "type": "step",
+      "name": "Apply Performer Consequences",
+      "summary": "Apply declared stat, energy, morale, or form effects to the targeted performer or collective.",
+      "tags": ["performer", "effects"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "step:resolve-pending-incident:apply-money-consequences",
+      "type": "step",
+      "name": "Apply Money Consequences",
+      "summary": "Apply any declared money effect to the organization ledger.",
+      "tags": ["money", "organization"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "step:resolve-pending-incident:set-cooldown-and-clear-pending",
+      "type": "step",
+      "name": "Set Cooldown and Clear Pending",
+      "summary": "Install the incident cooldown and clear the pending interruption in the returned run state.",
+      "tags": ["cooldown", "lifecycle"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/incident.ts"
+    },
+    {
+      "id": "flow:apply-organization-change",
+      "type": "flow",
+      "name": "Apply Organization Change",
+      "summary": "Applies a declared money, audience, reputation, or slot change to the organization ledger.",
+      "tags": ["ledger", "resources", "state-change"],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "applyOrgChange(org, change)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:apply-organization-change:read-declared-deltas",
+      "type": "step",
+      "name": "Read Declared Deltas",
+      "summary": "Read the resource changes carried by the organization change value.",
+      "tags": ["deltas", "ledger"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/org.ts"
+    },
+    {
+      "id": "step:apply-organization-change:change-money-balance",
+      "type": "step",
+      "name": "Change Money Balance",
+      "summary": "Move the balance by the exact positive or negative money amount.",
+      "tags": ["money", "balance"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/org.ts"
+    },
+    {
+      "id": "step:apply-organization-change:change-audience-and-reputation",
+      "type": "step",
+      "name": "Change Audience and Reputation",
+      "summary": "Apply audience and reputation deltas while keeping bounded measures within their supported scales.",
+      "tags": ["audience", "reputation"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/org.ts"
+    },
+    {
+      "id": "step:apply-organization-change:return-updated-organization",
+      "type": "step",
+      "name": "Return Updated Organization",
+      "summary": "Return a new organization value with its updated ledger and attention capacity.",
+      "tags": ["organization", "state"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/org.ts"
+    },
+    {
+      "id": "flow:calculate-scaled-reach",
+      "type": "flow",
+      "name": "Calculate Audience-Scaled Reach",
+      "summary": "Converts the organization audience into the reach multiplier used for audience-sensitive income or effects.",
+      "tags": ["audience", "reach", "scaling"],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "reach(org)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:calculate-scaled-reach:read-audience",
+      "type": "step",
+      "name": "Read Audience",
+      "summary": "Read the current organization audience used by the scaling rule.",
+      "tags": ["audience"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/org.ts"
+    },
+    {
+      "id": "step:calculate-scaled-reach:apply-half-reach-curve",
+      "type": "step",
+      "name": "Apply Half-Reach Curve",
+      "summary": "Apply the configured curve whose half point is the declared audience half-reach constant.",
+      "tags": ["curve", "scaling"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/org.ts"
+    },
+    {
+      "id": "step:calculate-scaled-reach:return-reach-factor",
+      "type": "step",
+      "name": "Return Reach Factor",
+      "summary": "Return the deterministic multiplier for the caller’s audience-scaled outcome.",
+      "tags": ["reach", "result"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/org.ts"
+    },
+    {
+      "id": "flow:start-season",
+      "type": "flow",
+      "name": "Start Season",
+      "summary": "Creates the first active season and its deterministic marked calendar from a season template and run RNG state.",
+      "tags": ["season", "calendar", "start"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "startSeason(input)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:start-season:read-season-template",
+      "type": "step",
+      "name": "Read Season Template",
+      "summary": "Read the season length, marking ranges, and goal configuration from the supplied template.",
+      "tags": ["template", "configuration"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:start-season:restore-calendar-rng",
+      "type": "step",
+      "name": "Restore Calendar RNG",
+      "summary": "Restore the deterministic RNG state used to allocate the season calendar.",
+      "tags": ["rng", "determinism"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:start-season:allocate-week-markings",
+      "type": "step",
+      "name": "Allocate Week Markings",
+      "summary": "Assign marked week kinds within the inclusive count ranges declared by the template.",
+      "tags": ["calendar", "markings"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:start-season:create-active-season",
+      "type": "step",
+      "name": "Create Active Season",
+      "summary": "Return an active season with its calendar, current position, goal state, and continued RNG state.",
+      "tags": ["active-season", "state"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "flow:advance-season",
+      "type": "flow",
+      "name": "Advance Active Season",
+      "summary": "Advances an active season through weekly operations and transitions it to completed when its calendar is exhausted.",
+      "tags": ["season", "advance", "weekly-loop"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "advanceSeason(runState, season, plan, options)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:advance-season:read-active-calendar-position",
+      "type": "step",
+      "name": "Read Active Calendar Position",
+      "summary": "Read the active season’s current calendar entry and accumulated week-kind counts.",
+      "tags": ["calendar", "position"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:advance-season:delegate-week-advancement",
+      "type": "step",
+      "name": "Delegate Week Advancement",
+      "summary": "Call weekly advancement with the season calendar, run state, plan, and options.",
+      "tags": ["week", "delegation"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:advance-season:capture-advance-result",
+      "type": "step",
+      "name": "Capture Advance Result",
+      "summary": "Store the returned run state, stop reason, and deterministic RNG continuation.",
+      "tags": ["result", "rng"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:advance-season:update-season-progress",
+      "type": "step",
+      "name": "Update Season Progress",
+      "summary": "Advance the season cursor and week-kind accounting for each completed calendar week.",
+      "tags": ["progress", "counts"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:advance-season:complete-or-return-active",
+      "type": "step",
+      "name": "Complete or Return Active Season",
+      "summary": "Return an updated active season unless the final calendar week was consumed, in which case return a completed season.",
+      "tags": ["completion", "lifecycle"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "flow:record-season-contest-fact",
+      "type": "flow",
+      "name": "Record Season Contest Fact",
+      "summary": "Records a contest result against the active season so its minimum-wins goal can be evaluated from explicit facts.",
+      "tags": ["contest", "goal", "facts"],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "recordSeasonContestFact(season, fact)",
+        "entryType": "event"
+      }
+    },
+    {
+      "id": "step:record-season-contest-fact:accept-contest-fact",
+      "type": "step",
+      "name": "Accept Contest Fact",
+      "summary": "Accept the declared contest outcome for the current season.",
+      "tags": ["contest", "fact"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:record-season-contest-fact:update-win-accounting",
+      "type": "step",
+      "name": "Update Win Accounting",
+      "summary": "Update the season facts used by the minimum-contest-wins goal.",
+      "tags": ["wins", "goal"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:record-season-contest-fact:return-season-with-fact",
+      "type": "step",
+      "name": "Return Season with Fact",
+      "summary": "Return the season state with the contest fact preserved for later completion evaluation.",
+      "tags": ["season", "state"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "flow:start-next-season",
+      "type": "flow",
+      "name": "Start Next Season",
+      "summary": "Transitions from a completed season to a new active season using the next template while preserving deterministic lifecycle state.",
+      "tags": ["next-season", "lifecycle", "calendar"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "startNextSeason(input)",
+        "entryType": "manual"
+      }
+    },
+    {
+      "id": "step:start-next-season:require-completed-season",
+      "type": "step",
+      "name": "Require Completed Season",
+      "summary": "Use the completed season lifecycle state as the source for the next-season transition.",
+      "tags": ["completed-season", "precondition"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:start-next-season:carry-forward-rng-state",
+      "type": "step",
+      "name": "Carry Forward RNG State",
+      "summary": "Restore the RNG continuation stored by the completed season.",
+      "tags": ["rng", "continuity"],
+      "complexity": "moderate",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:start-next-season:read-next-template",
+      "type": "step",
+      "name": "Read Next Template",
+      "summary": "Read the next season’s marking ranges and goal configuration.",
+      "tags": ["template", "next-season"],
+      "complexity": "simple",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:start-next-season:generate-next-calendar",
+      "type": "step",
+      "name": "Generate Next Calendar",
+      "summary": "Deterministically allocate the next season calendar from the carried RNG state.",
+      "tags": ["calendar", "generation"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "step:start-next-season:return-next-active-season",
+      "type": "step",
+      "name": "Return Next Active Season",
+      "summary": "Return the newly active season with reset progress and its own goal tracking.",
+      "tags": ["active-season", "lifecycle"],
+      "complexity": "complex",
+      "filePath": "packages/core/src/season.ts"
+    },
+    {
+      "id": "flow:run-deterministic-simulation",
+      "type": "flow",
+      "name": "Run Deterministic Simulation",
+      "summary": "Runs a headless scenario under a selected planning policy and produces a reproducible report from typed repository content.",
+      "tags": ["simulation", "scenario", "policy", "report"],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "pnpm sim",
+        "entryType": "cli"
+      }
+    },
+    {
+      "id": "step:run-deterministic-simulation:load-typed-content",
+      "type": "step",
+      "name": "Load Typed Content",
+      "summary": "Read activities, origins, incidents, multipliers, and season templates from the repository content tree.",
+      "tags": ["content", "loading"],
+      "complexity": "moderate",
+      "filePath": "tools/sim-harness/src/content.ts"
+    },
+    {
+      "id": "step:run-deterministic-simulation:build-scenario",
+      "type": "step",
+      "name": "Build Scenario",
+      "summary": "Use the scenario module to assemble the starting collective, organization, run state, and seed inputs.",
+      "tags": ["scenario", "initial-state"],
+      "complexity": "complex",
+      "filePath": "tools/sim-harness/src/scenario.ts"
+    },
+    {
+      "id": "step:run-deterministic-simulation:select-planning-policy",
+      "type": "step",
+      "name": "Select Planning Policy",
+      "summary": "Use the policy module to choose the deterministic weekly plans supplied to the core.",
+      "tags": ["policy", "planning"],
+      "complexity": "complex",
+      "filePath": "tools/sim-harness/src/policy.ts"
+    },
+    {
+      "id": "step:run-deterministic-simulation:execute-headless-run",
+      "type": "step",
+      "name": "Execute Headless Run",
+      "summary": "Use the run module to drive weekly and season transitions without a UI shell.",
+      "tags": ["run", "headless"],
+      "complexity": "complex",
+      "filePath": "tools/sim-harness/src/run.ts"
+    },
+    {
+      "id": "step:run-deterministic-simulation:emit-simulation-report",
+      "type": "step",
+      "name": "Emit Simulation Report",
+      "summary": "Use the report module to present the resulting deterministic simulation outcomes.",
+      "tags": ["report", "outcomes"],
+      "complexity": "moderate",
+      "filePath": "tools/sim-harness/src/report.ts"
+    },
+    {
+      "id": "flow:validate-content-tree",
+      "type": "flow",
+      "name": "Validate Content Tree",
+      "summary": "Runs the repository content gate so authored data satisfies its schemas and cross-file references before simulation or gameplay consumes it.",
+      "tags": ["content", "validation", "schema"],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "pnpm validate:content",
+        "entryType": "cli"
+      }
+    },
+    {
+      "id": "step:validate-content-tree:discover-content-files",
+      "type": "step",
+      "name": "Discover Content Files",
+      "summary": "Enumerate authored data under the repository content tree.",
+      "tags": ["content", "files"],
+      "complexity": "simple",
+      "filePath": "tools/validate-content/src/index.ts"
+    },
+    {
+      "id": "step:validate-content-tree:validate-against-schemas",
+      "type": "step",
+      "name": "Validate Against Schemas",
+      "summary": "Check each content document against the applicable content schema.",
+      "tags": ["schema", "validation"],
+      "complexity": "moderate",
+      "filePath": "tools/validate-content/src/index.ts"
+    },
+    {
+      "id": "step:validate-content-tree:check-referential-integrity",
+      "type": "step",
+      "name": "Check Referential Integrity",
+      "summary": "Verify that identifiers and references across content documents resolve consistently.",
+      "tags": ["references", "integrity"],
+      "complexity": "complex",
+      "filePath": "tools/validate-content/src/index.ts"
+    },
+    {
+      "id": "step:validate-content-tree:report-validation-result",
+      "type": "step",
+      "name": "Report Validation Result",
+      "summary": "Exit successfully only when the content set passes the validation gate and report actionable failures otherwise.",
+      "tags": ["result", "gate"],
+      "complexity": "moderate",
+      "filePath": "tools/validate-content/src/index.ts"
+    }
+  ],
+  "edges": [
+    {
+      "source": "domain:talent-management",
+      "target": "flow:generate-performer",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:generate-performer",
+      "target": "step:generate-performer:read-origin-profile",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:generate-performer",
+      "target": "step:generate-performer:draw-performer-identity",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:generate-performer",
+      "target": "step:generate-performer:generate-bounded-stats",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:generate-performer",
+      "target": "step:generate-performer:finalize-performer-state",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "domain:talent-management",
+      "target": "flow:observe-performer",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:observe-performer",
+      "target": "step:observe-performer:clamp-observation-quality",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:observe-performer",
+      "target": "step:observe-performer:derive-stable-stat-error",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:observe-performer",
+      "target": "step:observe-performer:return-truth-containing-ranges",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "domain:weekly-operations",
+      "target": "flow:execute-week-plan",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:execute-week-plan",
+      "target": "step:execute-week-plan:read-week-marking",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:execute-week-plan",
+      "target": "step:execute-week-plan:recover-performer-energy",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:execute-week-plan",
+      "target": "step:execute-week-plan:evaluate-planned-activities",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:execute-week-plan",
+      "target": "step:execute-week-plan:spend-slots-and-energy",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:execute-week-plan",
+      "target": "step:execute-week-plan:apply-activity-effects",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "flow:execute-week-plan",
+      "target": "step:execute-week-plan:return-week-result",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:weekly-operations",
+      "target": "flow:advance-weekly-run",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:advance-weekly-run",
+      "target": "step:advance-weekly-run:restore-run-rng",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:advance-weekly-run",
+      "target": "step:advance-weekly-run:execute-current-week",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:advance-weekly-run",
+      "target": "step:advance-weekly-run:evaluate-threshold-crossings",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:advance-weekly-run",
+      "target": "step:advance-weekly-run:evaluate-decision-stops",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:advance-weekly-run",
+      "target": "step:advance-weekly-run:continue-or-return",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "domain:incident-management",
+      "target": "flow:select-weekly-incident",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:select-weekly-incident",
+      "target": "step:select-weekly-incident:check-cadence-gate",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:select-weekly-incident",
+      "target": "step:select-weekly-incident:filter-active-cooldowns",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:select-weekly-incident",
+      "target": "step:select-weekly-incident:find-eligible-targets",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:select-weekly-incident",
+      "target": "step:select-weekly-incident:weight-incident-candidates",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:select-weekly-incident",
+      "target": "step:select-weekly-incident:install-pending-incident",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "domain:incident-management",
+      "target": "flow:resolve-pending-incident",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:resolve-pending-incident",
+      "target": "step:resolve-pending-incident:validate-pending-choice",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:resolve-pending-incident",
+      "target": "step:resolve-pending-incident:apply-performer-consequences",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:resolve-pending-incident",
+      "target": "step:resolve-pending-incident:apply-money-consequences",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:resolve-pending-incident",
+      "target": "step:resolve-pending-incident:set-cooldown-and-clear-pending",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "domain:organization-economy",
+      "target": "flow:apply-organization-change",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:apply-organization-change",
+      "target": "step:apply-organization-change:read-declared-deltas",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:apply-organization-change",
+      "target": "step:apply-organization-change:change-money-balance",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:apply-organization-change",
+      "target": "step:apply-organization-change:change-audience-and-reputation",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:apply-organization-change",
+      "target": "step:apply-organization-change:return-updated-organization",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "domain:organization-economy",
+      "target": "flow:calculate-scaled-reach",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:calculate-scaled-reach",
+      "target": "step:calculate-scaled-reach:read-audience",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:calculate-scaled-reach",
+      "target": "step:calculate-scaled-reach:apply-half-reach-curve",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:calculate-scaled-reach",
+      "target": "step:calculate-scaled-reach:return-reach-factor",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "domain:season-calendar",
+      "target": "flow:start-season",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:start-season",
+      "target": "step:start-season:read-season-template",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:start-season",
+      "target": "step:start-season:restore-calendar-rng",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:start-season",
+      "target": "step:start-season:allocate-week-markings",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:start-season",
+      "target": "step:start-season:create-active-season",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "domain:season-calendar",
+      "target": "flow:advance-season",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:advance-season",
+      "target": "step:advance-season:read-active-calendar-position",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:advance-season",
+      "target": "step:advance-season:delegate-week-advancement",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:advance-season",
+      "target": "step:advance-season:capture-advance-result",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:advance-season",
+      "target": "step:advance-season:update-season-progress",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:advance-season",
+      "target": "step:advance-season:complete-or-return-active",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "domain:season-calendar",
+      "target": "flow:record-season-contest-fact",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:record-season-contest-fact",
+      "target": "step:record-season-contest-fact:accept-contest-fact",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:record-season-contest-fact",
+      "target": "step:record-season-contest-fact:update-win-accounting",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:record-season-contest-fact",
+      "target": "step:record-season-contest-fact:return-season-with-fact",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "domain:season-calendar",
+      "target": "flow:start-next-season",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:start-next-season",
+      "target": "step:start-next-season:require-completed-season",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:start-next-season",
+      "target": "step:start-next-season:carry-forward-rng-state",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:start-next-season",
+      "target": "step:start-next-season:read-next-template",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:start-next-season",
+      "target": "step:start-next-season:generate-next-calendar",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:start-next-season",
+      "target": "step:start-next-season:return-next-active-season",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "domain:simulation-content-operations",
+      "target": "flow:run-deterministic-simulation",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:run-deterministic-simulation",
+      "target": "step:run-deterministic-simulation:load-typed-content",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:run-deterministic-simulation",
+      "target": "step:run-deterministic-simulation:build-scenario",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:run-deterministic-simulation",
+      "target": "step:run-deterministic-simulation:select-planning-policy",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:run-deterministic-simulation",
+      "target": "step:run-deterministic-simulation:execute-headless-run",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:run-deterministic-simulation",
+      "target": "step:run-deterministic-simulation:emit-simulation-report",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "domain:simulation-content-operations",
+      "target": "flow:validate-content-tree",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "flow:validate-content-tree",
+      "target": "step:validate-content-tree:discover-content-files",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.1
+    },
+    {
+      "source": "flow:validate-content-tree",
+      "target": "step:validate-content-tree:validate-against-schemas",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:validate-content-tree",
+      "target": "step:validate-content-tree:check-referential-integrity",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:validate-content-tree",
+      "target": "step:validate-content-tree:report-validation-result",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "domain:talent-management",
+      "target": "domain:weekly-operations",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Collectives and performer state are the participants and mutable people state of weekly activities.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:weekly-operations",
+      "target": "domain:organization-economy",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Weekly activities spend attention slots and apply money, audience, and reputation effects to the organization.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:weekly-operations",
+      "target": "domain:incident-management",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Week advancement evaluates deterministic incident selection and stops when a pending incident requires a choice.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:incident-management",
+      "target": "domain:talent-management",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Incident eligibility selects performer targets and resolved choices can change their skills or floating state.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:incident-management",
+      "target": "domain:organization-economy",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Incident choices can apply authored money consequences to the organization ledger.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:season-calendar",
+      "target": "domain:weekly-operations",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "An active season supplies the marked calendar to weekly advancement and consumes the resulting progress and stop reasons.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:simulation-content-operations",
+      "target": "domain:talent-management",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "The harness loads origin profiles and supplies seeded inputs for reproducible performer and collective generation.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:simulation-content-operations",
+      "target": "domain:weekly-operations",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Scenarios and policies drive the pure weekly loop with typed activities and explicit seeds.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:simulation-content-operations",
+      "target": "domain:incident-management",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Authored incident definitions and weighting multipliers are loaded as typed inputs for incident selection and resolution.",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:simulation-content-operations",
+      "target": "domain:season-calendar",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "The shared content loader exposes validated season templates; the week-horizon harness does not execute the season lifecycle.",
+      "weight": 0.6
+    }
+  ],
+  "layers": [],
+  "tour": []
+}

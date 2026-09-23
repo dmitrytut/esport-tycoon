@@ -9,3 +9,6 @@ coverage/
 
 # Local code-review artifacts: notes, checklists, findings. Never committed.
 .reviews/
+
+# Local pnpm content-addressable cache; pnpm recreates it from the lockfile.
+.pnpm-store/

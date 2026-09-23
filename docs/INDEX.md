@@ -16,6 +16,7 @@ matching file: they give a short digest and an ADR number, not a retelling of th
 | Work on the contest | `design/match.md`, `design/disciplines.md`, `specs/0004-match-engine.md` (stub) | world, economy |
 | Work on the weekly or season cycle | `design/week.md`, `design/loops.md`, `openspec/specs/week-loop/`, `openspec/specs/season-calendar/`, `openspec/specs/activity-catalog/` | contest |
 | Balance the economy | `design/week.md` (activities section), `design/failure.md`, `specs/0002-sim-harness.md` (stub) | tone, onboarding |
+| Work on recurring engagement cost | `design/world.md`, `design/player.md` §5.5, `openspec/specs/engagement-economy/`, `content/schema/discipline.schema.json` | contest, onboarding |
 | Add a discipline | `design/disciplines.md`, `content/schema/discipline.schema.json`, `adr/0001` | — |
 | Add a region | `design/world.md`, `content/schema/region.schema.json` | — |
 | Write any text the player will see | `design/tone.md`, `adr/0007` | code, engine |

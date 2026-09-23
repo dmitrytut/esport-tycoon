@@ -59,6 +59,27 @@ const trait = {
   description: "Sleeps at dawn, plays at night.",
 };
 const region = { id: "nordics", name: "Nordics", language: "sv", modifiers: { salaryScale: 1 } };
+const discipline = {
+  id: "tactical-shooter",
+  name: "Tactical Shooter",
+  rosterSize: 5,
+  statWeights: {
+    mechanical: 3,
+    cognitive: 1,
+    collective: 2,
+    composure: 3,
+  },
+  contest: {
+    format: "bo3",
+    momentumMeans: "tempo control",
+    tally: "rounds",
+    columns: ["Kills", "Deaths"],
+  },
+  economy: {
+    baseWeeklyRate: 1,
+    salaryScale: 1,
+  },
+};
 const activity = {
   id: "bootcamp",
   name: "Bootcamp",
@@ -151,6 +172,35 @@ describe("content validator (ADR 0003)", () => {
   it("catches a schema violation", () => {
     const root = fresh();
     put(root, "traits/night-owl.json", { ...trait, polarity: "chaotic" });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("schema");
+  });
+
+  it.each([
+    ["a missing base weekly rate", { salaryScale: 1 }],
+    ["a zero base weekly rate", { baseWeeklyRate: 0, salaryScale: 1 }],
+    ["a negative base weekly rate", { baseWeeklyRate: -1, salaryScale: 1 }],
+    ["a missing discipline salary scale", { baseWeeklyRate: 1 }],
+    ["a zero discipline salary scale", { baseWeeklyRate: 1, salaryScale: 0 }],
+    ["a negative discipline salary scale", { baseWeeklyRate: 1, salaryScale: -1 }],
+  ])("rejects %s", (_label, economy) => {
+    const root = fresh();
+    put(root, "disciplines/tactical-shooter.json", { ...discipline, economy });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("schema");
+  });
+
+  it.each([
+    ["a missing region salary scale", {}],
+    ["a zero region salary scale", { salaryScale: 0 }],
+    ["a negative region salary scale", { salaryScale: -1 }],
+  ])("rejects %s", (_label, modifiers) => {
+    const root = fresh();
+    put(root, "regions/nordics.json", { ...region, modifiers });
 
     const result = run(root);
     expect(result.code).toBe(1);

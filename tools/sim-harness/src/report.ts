@@ -9,6 +9,7 @@ import type {
 import { collectiveMorale, STAT_KEYS, statsFrom } from "@et/core";
 
 import type { SimContent } from "./content.ts";
+import { resolveRateInputs } from "./content.ts";
 import { POLICY_NAMES, type PolicyName } from "./policy.ts";
 import type { PolicyRun } from "./run.ts";
 import type { Scenario } from "./scenario.ts";
@@ -23,6 +24,8 @@ export interface RunSnapshot {
   readonly collectiveMorale: number;
   /** Arithmetic mean of member energy, or zero for an empty collective. */
   readonly meanEnergy: number;
+  /** Completed weeks ending below zero without an intervening non-negative close. */
+  readonly consecutiveNegativeWeeks: number;
 }
 
 /** One skipped activity in the weekly series. */
@@ -41,6 +44,8 @@ export interface WeeklyReport extends RunSnapshot {
   readonly kind: keyof WeekKindCounts;
   /** Change from the balance immediately before this week. */
   readonly balanceDelta: number;
+  /** Recurring engagement expense reported by core for this completed week. */
+  readonly engagementExpense: number;
   /** Change from the audience immediately before this week. */
   readonly audienceDelta: number;
   /** Activity ids the core says executed. */
@@ -111,6 +116,8 @@ export interface SeedReport {
   readonly opening: RunSnapshot;
   /** Values after the horizon. */
   readonly closing: RunSnapshot;
+  /** Sum of core-produced recurring expense across the reported horizon. */
+  readonly totalEngagementExpense: number;
   /** Lowest balance observed, including the opening state. */
   readonly minimumBalance: number;
   /** First week leaving that balance, or null when the opening value was the minimum. */
@@ -151,6 +158,8 @@ export interface MeanWeeklyReport extends RunSnapshot {
   readonly week: number;
   /** Mean balance movement during the week. */
   readonly balanceDelta: number;
+  /** Mean recurring engagement expense reported by core for this week. */
+  readonly engagementExpense: number;
   /** Mean audience movement during the week. */
   readonly audienceDelta: number;
   /** Mean number of unmasked reasons in the week. */
@@ -165,6 +174,8 @@ export interface MeanReport {
   readonly opening: RunSnapshot;
   /** Mean closing values. */
   readonly closing: RunSnapshot;
+  /** Mean total core-produced recurring expense across seeds. */
+  readonly totalEngagementExpense: number;
   /** Mean of each seed's minimum balance. */
   readonly minimumBalance: number;
   /** Mean collective stat movement. */
@@ -213,6 +224,19 @@ export interface ContentProvenance {
   readonly incidents: number;
 }
 
+/** Scenario economy inputs that produced every opening engagement. */
+export interface OpeningProvenance {
+  /** Region selected for generation and its rate scale. */
+  readonly originId: string;
+  readonly originRateScale: number;
+  /** Discipline selected for quotation and its absolute and relative rate inputs. */
+  readonly disciplineId: string;
+  readonly baseWeeklyRate: number;
+  readonly disciplineRateScale: number;
+  /** Exclusive week boundary shared by opening terms. */
+  readonly engagementDuration: number;
+}
+
 /** One complete, serializable simulation report. */
 export interface SimReport {
   /** Scenario id declared by the input file. */
@@ -227,6 +251,8 @@ export interface SimReport {
   readonly seeds: readonly number[];
   /** Reason kinds ignored only when counting interruptions. */
   readonly mask: readonly StopReasonKind[];
+  /** Region, discipline and term inputs used to materialize opening engagements. */
+  readonly opening: OpeningProvenance;
   /** Size of the loaded content set. */
   readonly content: ContentProvenance;
   /** Policy results and cross-seed means. */
@@ -271,6 +297,7 @@ function snapshot(state: RunState): RunSnapshot {
     collectiveMorale: collectiveMorale(state.collective),
     meanEnergy:
       state.collective.members.length === 0 ? 0 : energy / state.collective.members.length,
+    consecutiveNegativeWeeks: state.consecutiveNegativeWeeks,
   };
 }
 
@@ -328,10 +355,12 @@ function summarize(
   let previous = opening;
   let minimumBalance = opening.balance;
   let minimumBalanceWeek: number | null = null;
+  let totalEngagementExpenseTenths = 0;
 
   for (const walked of run.weeks) {
     const current = snapshot(walked.state);
     const result = walked.result;
+    totalEngagementExpenseTenths += Math.round(result.engagementExpense.total * 10);
     const unmaskedReasons = result.reasons.filter((reason) => !masked.includes(reason.kind)).length;
     for (const activity of result.executed) increment(executed, activity.activityId);
     for (const skipped of result.skipped) {
@@ -354,11 +383,13 @@ function summarize(
       week: result.week,
       kind: result.kind,
       balance: current.balance,
+      engagementExpense: result.engagementExpense.total,
       balanceDelta: current.balance - previous.balance,
       audience: current.audience,
       audienceDelta: current.audience - previous.audience,
       collectiveMorale: current.collectiveMorale,
       meanEnergy: current.meanEnergy,
+      consecutiveNegativeWeeks: current.consecutiveNegativeWeeks,
       executed: result.executed.map((activity) => activity.activityId),
       skipped: result.skipped.map((skipped) => ({
         activityId: skipped.activityId,
@@ -393,6 +424,7 @@ function summarize(
     blockWeeks,
     opening,
     closing,
+    totalEngagementExpense: totalEngagementExpenseTenths / 10,
     minimumBalance,
     minimumBalanceWeek,
     statGrowth: { total: statTotal, byStat },
@@ -418,6 +450,7 @@ function meanSnapshot(snapshots: readonly RunSnapshot[]): RunSnapshot {
     audience: mean(snapshots.map((value) => value.audience)),
     collectiveMorale: mean(snapshots.map((value) => value.collectiveMorale)),
     meanEnergy: mean(snapshots.map((value) => value.meanEnergy)),
+    consecutiveNegativeWeeks: mean(snapshots.map((value) => value.consecutiveNegativeWeeks)),
   };
 }
 
@@ -442,10 +475,12 @@ function meanWeekly(seeds: readonly SeedReport[]): readonly MeanWeeklyReport[] {
       week: first.week,
       balance: mean(values.map((value) => value.balance)),
       balanceDelta: mean(values.map((value) => value.balanceDelta)),
+      engagementExpense: mean(values.map((value) => value.engagementExpense)),
       audience: mean(values.map((value) => value.audience)),
       audienceDelta: mean(values.map((value) => value.audienceDelta)),
       collectiveMorale: mean(values.map((value) => value.collectiveMorale)),
       meanEnergy: mean(values.map((value) => value.meanEnergy)),
+      consecutiveNegativeWeeks: mean(values.map((value) => value.consecutiveNegativeWeeks)),
       unmaskedReasons: mean(values.map((value) => value.unmaskedReasons)),
     });
   }
@@ -458,6 +493,7 @@ function aggregate(seeds: readonly SeedReport[]): MeanReport {
     blockWeeks: seeds[0]?.blockWeeks ?? 0,
     opening: meanSnapshot(seeds.map((seed) => seed.opening)),
     closing: meanSnapshot(seeds.map((seed) => seed.closing)),
+    totalEngagementExpense: mean(seeds.map((seed) => seed.totalEngagementExpense)),
     minimumBalance: mean(seeds.map((seed) => seed.minimumBalance)),
     statGrowth: { total: mean(seeds.map((seed) => seed.statGrowth.total)), byStat },
     executed: meanRecords(seeds.map((seed) => seed.executed)),
@@ -515,6 +551,11 @@ export function buildReport(options: BuildReportOptions): SimReport {
           cadence: options.scenario.incidents.cadence,
         };
 
+  const rateInputs = resolveRateInputs(
+    options.content,
+    options.scenario.collective.originId,
+    options.scenario.disciplineId,
+  );
   return {
     scenario: options.scenario.id,
     scenarioPath: options.scenarioPath,
@@ -522,6 +563,12 @@ export function buildReport(options: BuildReportOptions): SimReport {
     blockWeeks: options.scenario.blockWeeks,
     seeds: [...options.seeds],
     mask: [...options.scenario.masked],
+    opening: {
+      originId: options.scenario.collective.originId,
+      disciplineId: options.scenario.disciplineId,
+      engagementDuration: options.scenario.engagementDuration,
+      ...rateInputs,
+    },
     content: {
       activities: options.content.activities.size,
       regions: options.content.origins.size,
@@ -542,17 +589,20 @@ export function renderReport(report: SimReport): string {
     `Simulation: ${report.scenario} (${report.scenarioPath})`,
     `horizon ${report.horizon} · block ${report.blockWeeks} · seeds ${report.seeds.join(",")} · mask ${report.mask.join(",") || "none"}`,
     `content: activities ${report.content.activities} · regions ${report.content.regions} · incidents ${report.content.incidents}`,
+    `opening: region ${report.opening.originId} · discipline ${report.opening.disciplineId} · base rate ${formatNumber(report.opening.baseWeeklyRate)} · origin scale ${formatNumber(report.opening.originRateScale)} · discipline scale ${formatNumber(report.opening.disciplineRateScale)} · term ${report.opening.engagementDuration} weeks`,
     report.incidents.enabled
       ? `incidents: ${report.incidents.ids.join(",")} · cadence ${formatNumber(report.incidents.cadence)}`
       : "incidents: disabled",
     "",
-    `policy       seed  balance(open→close|min)  audience  energy  morale  stats  quiet  uninterrupted(block ${report.blockWeeks})`,
+    `policy       seed  balance(open→close|min)  expense  negative  audience  energy  morale  stats  quiet  uninterrupted(block ${report.blockWeeks})`,
   ];
   for (const policy of report.policies) {
     for (const seed of policy.seeds) {
       lines.push(
         `${policy.policy.padEnd(12)} ${String(seed.seed).padStart(4)}  ` +
           `${formatNumber(seed.opening.balance)}→${formatNumber(seed.closing.balance)}|${formatNumber(seed.minimumBalance)}  ` +
+          `${formatNumber(seed.totalEngagementExpense).padStart(7)}  ` +
+          `${String(seed.closing.consecutiveNegativeWeeks).padStart(8)}  ` +
           `${formatNumber(seed.closing.audience).padStart(8)}  ` +
           `${formatNumber(seed.closing.meanEnergy).padStart(6)}  ` +
           `${formatNumber(seed.closing.collectiveMorale).padStart(6)}  ` +
@@ -560,6 +610,15 @@ export function renderReport(report: SimReport): string {
           `${String(seed.kinds.quiet).padStart(5)}  ` +
           `${seed.uninterruptedWeeks}/${seed.weekly.length}`,
       );
+      // Every per-week value core exposes, so the human form carries the same series as the
+      // machine form instead of a partial one a reader would have to open the JSON to finish.
+      for (const week of seed.weekly) {
+        lines.push(
+          `    week ${week.week} expense ${formatNumber(week.engagementExpense)} · negative weeks ${formatNumber(week.consecutiveNegativeWeeks)}` +
+            ` · balance ${formatNumber(week.balance)} · audience ${formatNumber(week.audience)}` +
+            ` · energy ${formatNumber(week.meanEnergy)} · morale ${formatNumber(week.collectiveMorale)}`,
+        );
+      }
       for (const entry of seed.incidents) {
         const check =
           entry.roll !== undefined && entry.total !== undefined

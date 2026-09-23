@@ -17,6 +17,7 @@ import {
 } from "../../src/performer.ts";
 import { createRng } from "../../src/rng.ts";
 import type { RunState } from "../../src/week.ts";
+import { makeEngagements } from "../fixtures.ts";
 import { collectiveArb, orgArb, seedArb } from "./arbitraries.ts";
 
 /** An amount large enough to push a bounded value past either edge of its scale. */
@@ -73,7 +74,9 @@ const pendingScenarioArb: fc.Arbitrary<{
     const state: RunState = {
       org,
       collective,
+      engagements: makeEngagements(collective),
       week,
+      consecutiveNegativeWeeks: 0,
       seed,
       rng: createRng(seed).state(),
       incidents: {

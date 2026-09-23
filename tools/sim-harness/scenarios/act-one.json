@@ -6,6 +6,8 @@
     "reputation": 10,
     "slots": 5
   },
+  "disciplineId": "tactical-shooter",
+  "engagementDuration": 24,
   "collective": {
     "originId": "western-europe",
     "size": 5,

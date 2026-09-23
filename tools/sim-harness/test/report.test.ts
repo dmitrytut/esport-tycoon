@@ -44,7 +44,11 @@ function reportOf(from: Scenario, horizon: number, seeds: readonly number[] = [1
 
 function quietReportOf(blockWeeks: 4 | 6) {
   const from: Scenario = { ...scenario, blockWeeks, masked: [] };
-  const opening = openingState(from, content, 1);
+  const generatedOpening = openingState(from, content, 1);
+  const opening = {
+    ...generatedOpening,
+    org: { ...generatedOpening.org, money: 100_000 },
+  };
   const weeks: WalkedWeek[] = [];
   let state = opening;
   while (weeks.length < 24) {
@@ -80,6 +84,19 @@ describe("the report", () => {
     expect(text).toContain("activities 11");
     expect(text).toContain(`block ${scenario.blockWeeks}`);
     for (const policy of ["money", "development", "balanced"]) expect(text).toContain(policy);
+    expect(text).toContain(`region ${scenario.collective.originId}`);
+    expect(text).toContain(`discipline ${scenario.disciplineId}`);
+    expect(text).toContain("base rate 1");
+    expect(text).toContain(`term ${scenario.engagementDuration} weeks`);
+    const report = reportOf(scenario, 8);
+    expect(report.opening).toEqual({
+      originId: "western-europe",
+      disciplineId: "tactical-shooter",
+      baseWeeklyRate: 1,
+      originRateScale: 1.35,
+      disciplineRateScale: 1,
+      engagementDuration: 24,
+    });
   });
 
   it("keeps the quiet weeks and the uninterrupted weeks apart", () => {
@@ -155,6 +172,34 @@ describe("the report", () => {
     expect(JSON.stringify(report)).not.toMatch(/moneyBy|perActivityMoney|incomeBy/);
   });
 
+  it("keeps total recurring expense on the one-tenth money grid", () => {
+    const run = runPolicy(scenario, content, "money", 1, 3);
+    const adjusted: PolicyRun = {
+      ...run,
+      weeks: run.weeks.map((week) => ({
+        ...week,
+        result: {
+          ...week.result,
+          engagementExpense: {
+            ...week.result.engagementExpense,
+            total: 43.3,
+          },
+        },
+      })),
+    };
+    const report = buildReport({
+      scenario,
+      scenarioPath,
+      horizon: 3,
+      seeds: [1],
+      content,
+      runs: [adjusted],
+      durationMs: 0,
+    });
+
+    expect(report.policies[0]?.seeds[0]?.totalEngagementExpense).toBe(129.9);
+  });
+
   it("matches figures observed in a direct core walk", () => {
     const seed = reportOf(scenario, 4).policies.find((policy) => policy.policy === "balanced")
       ?.seeds[0];
@@ -164,10 +209,13 @@ describe("the report", () => {
     const plan = planBlock(scenario, "balanced", opening);
     validateWeekPlan(plan, opening.collective);
     let state = opening;
+    let totalExpense = 0;
     for (let index = 0; index < 4; index += 1) {
       const planned = plan.weeks[index];
       if (planned === undefined) throw new Error(`the direct plan has no week ${index}`);
-      state = executeWeek(state, planned, { marking: "none" }).state;
+      const outcome = executeWeek(state, planned, { marking: "none" });
+      state = outcome.state;
+      totalExpense += outcome.result.engagementExpense.total;
       const observed = seed.weekly[index];
       if (observed === undefined) throw new Error(`the report has no week ${index}`);
       const meanEnergy =
@@ -178,7 +226,11 @@ describe("the report", () => {
       expect(observed.audience).toBe(state.org.audience);
       expect(observed.meanEnergy).toBe(meanEnergy);
       expect(observed.collectiveMorale).toBe(collectiveMorale(state.collective));
+      expect(observed.engagementExpense).toBe(outcome.result.engagementExpense.total);
+      expect(observed.consecutiveNegativeWeeks).toBe(state.consecutiveNegativeWeeks);
     }
+    expect(seed.totalEngagementExpense).toBe(totalExpense);
+    expect(renderReport(reportOf(scenario, 4))).toMatch(/week 0 expense .*negative weeks 1/);
 
     for (const key of STAT_KEYS) {
       let expected = 0;
@@ -246,6 +298,7 @@ describe("incident configuration and occurrence in the report", () => {
         slotsSpent: 0,
         executed: [],
         skipped: [],
+        engagementExpense: { engagementIds: [], total: 0 },
         reasons: [],
       },
       state: opening,

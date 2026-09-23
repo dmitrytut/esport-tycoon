@@ -12,6 +12,7 @@ import { createRng } from "../../src/rng.ts";
 import type { SeasonTemplate } from "../../src/season.ts";
 import type { PlannedActivity, RunState, WeekPlan } from "../../src/week.ts";
 import { WEEK_PLAN_MAX_WEEKS, WEEK_PLAN_MIN_WEEKS } from "../../src/week.ts";
+import { makeEngagements } from "../fixtures.ts";
 
 /** Seeds accepted by `createRng`: both forms must behave the same way. */
 export const seedArb = fc.oneof(fc.integer({ min: 0, max: 0xffffffff }), fc.string());
@@ -187,7 +188,9 @@ export const runStateArb: fc.Arbitrary<RunState> = fc
   .map(([collective, org, seed]) => ({
     org,
     collective,
+    engagements: makeEngagements(collective),
     week: 0,
+    consecutiveNegativeWeeks: 0,
     seed,
     rng: createRng(seed).state(),
     incidents: createIncidentState(seed),

@@ -28,6 +28,8 @@ function scenarioWith(changes: Record<string, unknown>): string {
     JSON.stringify({
       id: "broken",
       org: { money: 0, audience: 0, reputation: 10, slots: 5 },
+      disciplineId: "tactical-shooter",
+      engagementDuration: 24,
       collective: { originId: "western-europe", size: 5, level: 1, minAge: 16, maxAge: 22 },
       activities: ["rest"],
       blockWeeks: 4,
@@ -51,6 +53,26 @@ describe("a run's scenario", () => {
     expect(scenario.masked).toEqual([]);
     expect(scenario.seeds).toEqual([1, 2, 3, 4, 5]);
     expect(scenario.horizon).toBe(24);
+    expect(scenario.disciplineId).toBe("tactical-shooter");
+    expect(scenario.engagementDuration).toBe(24);
+  });
+
+  it("refuses an unknown discipline before generation", () => {
+    const path = scenarioWith({ disciplineId: "ghost-discipline" });
+
+    expect(() => loadScenario(path, content)).toThrow(/ghost-discipline/);
+  });
+
+  it.each([0, -1, 1.5])("refuses invalid engagement duration %s", (engagementDuration) => {
+    const path = scenarioWith({ engagementDuration });
+
+    expect(() => loadScenario(path, content)).toThrow(/engagement duration/i);
+  });
+
+  it("refuses a declared horizon longer than the opening term", () => {
+    const path = scenarioWith({ engagementDuration: 23 });
+
+    expect(() => loadScenario(path, content)).toThrow(/horizon 24.*duration 23/i);
   });
 
   it("refuses an activity the content tree does not define", () => {

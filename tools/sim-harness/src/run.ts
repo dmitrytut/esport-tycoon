@@ -16,6 +16,7 @@ import {
   type IncidentInput,
   type IncidentResolution,
   type PlannedActivity,
+  quoteWeeklyRate,
   resolveIncident,
   type RunState,
   type StopReasonKind,
@@ -25,6 +26,7 @@ import {
 } from "@et/core";
 
 import type { SimContent } from "./content.ts";
+import { resolveRateInputs } from "./content.ts";
 import { chooseIncidentChoice, planWeek, type PolicyName } from "./policy.ts";
 import type { Scenario } from "./scenario.ts";
 
@@ -80,10 +82,29 @@ export function openingState(scenario: Scenario, content: SimContent, seed: numb
     members.push({ ...performer, id: `p${index}` });
   }
 
+  const collective = { id: "first", name: "First", members };
+  const rateInputs = resolveRateInputs(
+    content,
+    scenario.collective.originId,
+    scenario.disciplineId,
+  );
+  // Charged ids are ordered by code point, so the index is padded: an unpadded "p10" would
+  // sort before "p2" as soon as a scenario generates more than ten members.
+  const engagements = members.map((performer, index) => ({
+    id: `engagement-p${String(index).padStart(2, "0")}`,
+    performerId: performer.id,
+    collectiveId: collective.id,
+    weeklyRate: quoteWeeklyRate({ performer, ...rateInputs }),
+    startsAtWeek: 0,
+    endsBeforeWeek: scenario.engagementDuration,
+  }));
+
   return {
     org: scenario.org,
-    collective: { id: "first", name: "First", members },
+    collective,
+    engagements,
     week: 0,
+    consecutiveNegativeWeeks: 0,
     seed,
     rng: rng.state(),
     incidents: createIncidentState(seed),

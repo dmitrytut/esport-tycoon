@@ -45,10 +45,12 @@
     },
     "modifiers": {
       "type": "object",
+      "required": ["salaryScale"],
       "additionalProperties": false,
       "properties": {
         "salaryScale": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "talentDensity": {
           "type": "number"

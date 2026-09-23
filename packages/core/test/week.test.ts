@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { IncidentInput } from "../src/incident.ts";
-import { createIncidentState } from "../src/incident.ts";
+import { createIncidentState, resolveIncident } from "../src/incident.ts";
 import type { SeasonCalendar } from "../src/season.ts";
 import type { AdvanceOptions, RunState, StopReasonKind, WeekPlan } from "../src/week.ts";
 import { advance, executeWeek, WEEKLY_ENERGY_RECOVERY } from "../src/week.ts";
 import {
   makeActivity,
   makeCollective,
+  makeEngagement,
   makeIncident,
   makeOrg,
   makePerformer,
@@ -137,7 +138,7 @@ describe("effects", () => {
     expect(first?.stats.collective).toBe(10.5);
     expect(first?.state.morale).toBe(74);
     expect(first?.state.energy).toBe(80 - 10 + WEEKLY_ENERGY_RECOVERY);
-    expect(outcome.state.org.money).toBe(10_100);
+    expect(outcome.state.org.money).toBe(10_095);
     expect(outcome.state.org.reputation).toBe(53);
   });
 
@@ -148,7 +149,7 @@ describe("effects", () => {
     });
     const state = makeState(makeCollective(five()), makeOrg(10_000, 5, 50_000));
 
-    expect(executeWeek(state, [{ activity }], { marking: "none" }).state.org.money).toBe(10_400);
+    expect(executeWeek(state, [{ activity }], { marking: "none" }).state.org.money).toBe(10_395);
   });
 
   it("scales audience-driven money by the current reach", () => {
@@ -160,11 +161,11 @@ describe("effects", () => {
     const established = makeState(makeCollective(five()), makeOrg(10_000, 5, 50_000));
 
     expect(executeWeek(unknown, [{ activity: stream }], { marking: "none" }).state.org.money).toBe(
-      10_000,
+      9_995,
     );
     expect(
       executeWeek(established, [{ activity: stream }], { marking: "none" }).state.org.money,
-    ).toBe(12_500);
+    ).toBe(12_495);
   });
 
   it("keeps a finite high-audience payout below its base after money normalization", () => {
@@ -174,7 +175,7 @@ describe("effects", () => {
     });
     const state = makeState(makeCollective(five()), makeOrg(0, 5, 1_000_000_000));
 
-    expect(executeWeek(state, [{ activity }], { marking: "none" }).state.org.money).toBe(0.9);
+    expect(executeWeek(state, [{ activity }], { marking: "none" }).state.org.money).toBe(-4.1);
   });
 
   it("uses audience gained earlier in the same week for later income", () => {
@@ -193,7 +194,7 @@ describe("effects", () => {
     });
 
     expect(outcome.state.org.audience).toBe(50_400);
-    expect(outcome.state.org.money).toBe(12_510);
+    expect(outcome.state.org.money).toBe(12_505);
   });
 
   it("moves audience once rather than once per participant", () => {
@@ -308,9 +309,9 @@ describe("stop reasons", () => {
     const first = executeWeek(state, [{ activity: bill }], { marking: "none" });
     const second = executeWeek(first.state, [{ activity: bill }], { marking: "none" });
 
-    expect(first.state.org.money).toBe(-150);
+    expect(first.state.org.money).toBe(-155);
     expect(kindsOf(first.result.reasons)).toContain("money-negative");
-    expect(second.state.org.money).toBe(-400);
+    expect(second.state.org.money).toBe(-410);
     expect(kindsOf(second.result.reasons)).not.toContain("money-negative");
   });
 
@@ -639,5 +640,180 @@ describe("bounded season calendar", () => {
     expect(() =>
       Reflect.apply(advance, undefined, [state, emptyWeeks(4), { calendar: ["none"] }]),
     ).toThrow(/calendar/);
+  });
+});
+
+describe("recurring engagement settlement", () => {
+  const stateWithRates = (
+    rates: readonly number[],
+    money: number,
+    consecutiveNegativeWeeks = 0,
+  ): RunState => {
+    const members = rates.map((_rate, index) => makePerformer(String.fromCharCode(97 + index)));
+    const state = makeState(makeCollective(members), makeOrg(money));
+    return {
+      ...state,
+      engagements: rates.map((weeklyRate, index) =>
+        makeEngagement(members[index]?.id ?? "missing", state.collective.id, {
+          id: index === 0 ? "z-engagement" : index === 1 ? "a-engagement" : "m-engagement",
+          weeklyRate,
+        }),
+      ),
+      consecutiveNegativeWeeks,
+    };
+  };
+
+  it("applies same-week activity income before the recurring expense", () => {
+    const state = stateWithRates([40], 0);
+    const income = makeActivity({
+      id: "income",
+      effects: [{ kind: "money", amount: 50, scale: "flat" }],
+    });
+
+    const outcome = executeWeek(state, [{ activity: income }], { marking: "none" });
+
+    expect(outcome.state.org.money).toBe(10);
+    expect(outcome.result.engagementExpense).toEqual({
+      engagementIds: ["z-engagement"],
+      total: 40,
+    });
+  });
+
+  it("charges ordered active ids and integer-tenth totals exactly once", () => {
+    const outcome = executeWeek(stateWithRates([10.1, 20.2, 30.3], 100), [], {
+      marking: "none",
+    });
+
+    expect(outcome.state.org.money).toBe(39.4);
+    expect(outcome.result.engagementExpense).toEqual({
+      engagementIds: ["a-engagement", "m-engagement", "z-engagement"],
+      total: 60.6,
+    });
+  });
+
+  it("starts, advances and resets the completed negative-week series", () => {
+    const first = executeWeek(stateWithRates([20], 10), [], { marking: "none" });
+    expect(first.state.consecutiveNegativeWeeks).toBe(1);
+    expect(kindsOf(first.result.reasons)).toContain("money-negative");
+
+    const continuing = executeWeek({ ...first.state, consecutiveNegativeWeeks: 2 }, [], {
+      marking: "none",
+    });
+    expect(continuing.state.consecutiveNegativeWeeks).toBe(3);
+    expect(kindsOf(continuing.result.reasons)).not.toContain("money-negative");
+
+    const reset = executeWeek(stateWithRates([10], 10, 4), [], { marking: "none" });
+    expect(reset.state.org.money).toBe(0);
+    expect(reset.state.consecutiveNegativeWeeks).toBe(0);
+  });
+
+  it("keeps a completed week's expense and negative count after incident money resolves", () => {
+    const incident = makeIncident("cash", {
+      choices: [
+        {
+          id: "accept",
+          label: "Accept",
+          detail: "Take the money.",
+          outcome: { kind: "direct", effects: [{ kind: "money", amount: 20 }] },
+        },
+      ],
+    });
+    const week = executeWeek(stateWithRates([10], 0), [], {
+      marking: "none",
+      incidentInput: { catalog: [incident], cadence: 1, traitMultipliers: {} },
+    });
+
+    const resolved = resolveIncident({
+      state: week.state,
+      catalog: [incident],
+      choiceId: "accept",
+    });
+    expect(week.result.engagementExpense.total).toBe(10);
+    expect(week.state.consecutiveNegativeWeeks).toBe(1);
+    expect(resolved.state.org.money).toBe(10);
+    expect(resolved.state.consecutiveNegativeWeeks).toBe(1);
+  });
+});
+
+describe("engagement expiration", () => {
+  const expiringState = (endsBeforeWeek: number, week = 0): RunState => {
+    const collective = makeCollective([makePerformer("a")]);
+    const state = makeState(collective, makeOrg(100), week);
+    return {
+      ...state,
+      engagements: [
+        makeEngagement("a", collective.id, {
+          id: "term-a",
+          startsAtWeek: 0,
+          endsBeforeWeek,
+          weeklyRate: 10,
+        }),
+      ],
+    };
+  };
+
+  it("charges the last covered week and stops after advancing it exactly once", () => {
+    const result = advanceUnmarked(expiringState(2), emptyWeeks(4));
+
+    expect(result.weeks).toHaveLength(2);
+    expect(result.weeks.map((week) => week.engagementExpense.total)).toEqual([10, 10]);
+    expect(result.state.org.money).toBe(80);
+    expect(result.state.week).toBe(2);
+    expect(result.reasons).toContainEqual({
+      kind: "engagement-expired",
+      engagementId: "term-a",
+      performerId: "a",
+    });
+  });
+
+  it("rejects the uncovered following week before plan validation without changing state", () => {
+    const stopped = advanceUnmarked(expiringState(1), emptyWeeks(4));
+    const before = structuredClone(stopped.state);
+
+    expect(() => advanceUnmarked(stopped.state, emptyWeeks(3))).toThrow(/cover.*week 1/i);
+    expect(stopped.state).toEqual(before);
+    expect(stopped.state.org.money).toBe(90);
+  });
+
+  it("preserves coincident expiration, season and incident reasons", () => {
+    const result = advance(expiringState(1), emptyWeeks(4), {
+      calendar: calendar(0, ["none"]),
+      incidentInput: {
+        catalog: [makeIncident("brawl")],
+        cadence: 1,
+        traitMultipliers: {},
+      },
+    });
+
+    expect(kindsOf(result.reasons)).toEqual([
+      "engagement-expired",
+      "incident-pending",
+      "season-ended",
+    ]);
+  });
+
+  it("rejects masking an engagement expiration", () => {
+    expect(() =>
+      advanceUnmarked(expiringState(1), emptyWeeks(4), {
+        sensitivity: { masked: ["engagement-expired"] },
+      }),
+    ).toThrow(/cannot be masked/);
+  });
+
+  it("reports expiring terms in code-point id order regardless of input order", () => {
+    const collective = makeCollective([makePerformer("upper"), makePerformer("lower")]);
+    const state = makeState(collective);
+    const engagements = [
+      makeEngagement("lower", collective.id, { id: "a", endsBeforeWeek: 1 }),
+      makeEngagement("upper", collective.id, { id: "Z", endsBeforeWeek: 1 }),
+    ];
+
+    const result = advanceUnmarked({ ...state, engagements }, emptyWeeks(4));
+
+    expect(
+      result.reasons
+        .filter((reason) => reason.kind === "engagement-expired")
+        .map((reason) => reason.engagementId),
+    ).toEqual(["Z", "a"]);
   });
 });

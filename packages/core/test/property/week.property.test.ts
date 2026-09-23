@@ -123,7 +123,8 @@ describe("the week loop: invariants", () => {
             makeCollective([makePerformer("member")]),
             makeOrg(0, 1, audience),
           );
-          const credited = executeWeek(state, [{ activity }], { marking: "none" }).state.org.money;
+          const outcome = executeWeek(state, [{ activity }], { marking: "none" });
+          const credited = outcome.state.org.money + outcome.result.engagementExpense.total;
 
           expect(credited).toBeGreaterThanOrEqual(0);
           expect(credited).toBeLessThanOrEqual(base);
@@ -197,6 +198,30 @@ describe("the week loop: determinism", () => {
 
         expect(runWith(first)).toEqual(runWith(first));
         expect(runWith(second)).toEqual(runWith(second));
+      }),
+    );
+  });
+
+  it("returns the same week for engagements supplied in different array orders", () => {
+    fc.assert(
+      fc.property(runStateArb, (state) => {
+        const reordered = { ...state, engagements: [...state.engagements].reverse() };
+
+        expect(executeWeek(reordered, [], { marking: "none" })).toEqual(
+          executeWeek(state, [], { marking: "none" }),
+        );
+      }),
+    );
+  });
+
+  it("continues identically from a JSON-compatible state copy", () => {
+    fc.assert(
+      fc.property(runStateArb, (state) => {
+        const copied: RunState = JSON.parse(JSON.stringify(state));
+
+        expect(executeWeek(copied, [], { marking: "none" })).toEqual(
+          executeWeek(state, [], { marking: "none" }),
+        );
       }),
     );
   });

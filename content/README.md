@@ -34,6 +34,13 @@ they appear in text.
 A phrase is written whole, with substitutions, rather than glued together from pieces:
 gluing is untranslatable, and a second language is planned.
 
+## Economy inputs
+
+Every discipline declares a positive `economy.baseWeeklyRate`, the absolute weekly money
+magnitude for generated performer engagements. Discipline `economy.salaryScale` and region
+`modifiers.salaryScale` are required positive relative multipliers. Core receives all three
+values explicitly and never supplies a fallback.
+
 ## Before committing
 
 `pnpm validate:content` — schemas plus referential integrity. The same thing is run by

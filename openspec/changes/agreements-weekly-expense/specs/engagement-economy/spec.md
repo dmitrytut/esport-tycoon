@@ -13,9 +13,10 @@ an exclusive integer end week greater than its start. Engagements SHALL be store
 `Performer` and `Collective`; neither performer identity nor `PerformerSnapshot` SHALL gain
 employment fields.
 
-Engagement ids SHALL be unique. Intervals for one performer SHALL NOT overlap. An engagement SHALL
-NOT name a performer outside its named collective. Before a week advances, every current member of
-the collective SHALL have exactly one engagement covering that absolute week, where coverage means
+Engagement ids SHALL be unique and a performer SHALL have at most one stored engagement, since
+only current terms are retained. An engagement SHALL NOT name a performer outside its named
+collective. Before a week advances, every current member of the collective SHALL have exactly
+one engagement covering that absolute week, where coverage means
 `startsAtWeek <= week < endsBeforeWeek`. Every rejection SHALL leave the run and every RNG
 continuation unchanged.
 
@@ -30,9 +31,9 @@ continuation unchanged.
 - **WHEN** the next week is 7 and a member's engagement ends before week 7
 - **THEN** advancement is rejected before plan validation, state mutation or RNG movement
 
-#### Scenario: Overlapping terms are rejected
+#### Scenario: A second stored term is rejected
 
-- **WHEN** two engagements for one performer cover any common absolute week
+- **WHEN** a second engagement is stored for a performer who already has one
 - **THEN** the terms are rejected without choosing one by array order
 
 #### Scenario: Employment does not change performer serialization
@@ -43,10 +44,12 @@ continuation unchanged.
 
 ### Requirement: A generated performer receives a deterministic quoted rate
 
-A generated performer's weekly-rate quote SHALL equal the arithmetic mean of the performer's six
-current stats multiplied by the origin rate scale and discipline rate scale, rounded once to one
-tenth. Both scales SHALL be explicit, finite and positive. The domain content fields supplying
-them SHALL be required and positive and SHALL have no code fallback.
+A generated performer's weekly-rate quote SHALL equal a required positive base weekly rate
+multiplied by the arithmetic mean of the performer's six current stats, the origin rate scale
+and the discipline rate scale, rounded once to one tenth. The base rate SHALL carry the absolute
+money magnitude so the origin and discipline scales stay relative multipliers; all three SHALL be
+explicit, finite and positive. The domain content fields supplying them SHALL be required and
+positive and SHALL have no code fallback.
 
 Age, peak age, potential, traits, energy, morale and form SHALL NOT enter the quote. Quotation SHALL
 consume no RNG value and SHALL NOT change performer generation order or continuation. Once copied
@@ -55,8 +58,8 @@ scale changes.
 
 #### Scenario: The same generated profile quotes the same rate
 
-- **WHEN** identical performer stats and identical origin and discipline rate scales are quoted
-  twice
+- **WHEN** identical performer stats and identical base rate, origin and discipline rate scales
+  are quoted twice
 - **THEN** both results are identical to one tenth and every RNG continuation is unchanged
 
 #### Scenario: Temporary state does not change a quote
@@ -69,39 +72,65 @@ scale changes.
 - **WHEN** two performers have identical current stats but different potential and peak age
 - **THEN** they receive the same quote
 
-#### Scenario: Missing scale has no fallback
+#### Scenario: Missing base rate or scale has no fallback
 
-- **WHEN** a region or discipline omits its rate scale or supplies a non-positive value
+- **WHEN** a discipline omits its base weekly rate, or a region or discipline omits its rate
+  scale, or any of them supplies a non-positive value
 - **THEN** content validation fails before a performer is quoted
+
+#### Scenario: Magnitude and relative scales are separable
+
+- **WHEN** only the base weekly rate changes
+- **THEN** every quote moves by that same factor and the ratio between two origins is unchanged
 
 ### Requirement: Renewal and termination are explicit boundary operations
 
-Renewing an engagement SHALL be allowed only when it expired at the run's current next week. It
-SHALL preserve the engagement, performer and collective identities, start the replacement term at
-the current next week, and require an explicit positive rate and a later exclusive end week. It
-SHALL NOT derive a new rate or consume randomness.
+Renewing an engagement SHALL be allowed only when its `endsBeforeWeek` is at or before the run's
+current next week. It SHALL preserve the engagement, performer and collective identities, start
+the replacement term at the current next week, and require a later exclusive end week. Its rate
+SHALL be the deterministic quote for that performer's current stats and current rate inputs; a
+caller SHALL NOT supply a rate. Renewal SHALL consume no randomness.
 
 Terminating a current or expired engagement between weeks SHALL atomically remove both that
 engagement and its performer from the collective, SHALL apply no fee or other organization effect,
-and SHALL consume no randomness. Renewal and termination SHALL both reject while an incident is
+and SHALL consume no randomness. Terminating the collective's last remaining engagement SHALL be
+rejected, so a run cannot reach a memberless state that owes nothing and can do nothing while
+recruitment does not exist. Renewal and termination SHALL both reject while an incident is
 pending, preserving the incident target until resolution. Every rejected operation SHALL leave
 state and RNG continuations unchanged.
 
-#### Scenario: Renewal covers the next week
+#### Scenario: Renewal covers the next week at the current quote
 
-- **WHEN** an engagement ends before week 7 and is renewed at the boundary with end week 11 and an
-  explicit rate
-- **THEN** the replacement term covers weeks 7 through 10 and keeps the supplied rate unchanged
+- **WHEN** an engagement ends before week 7 and is renewed at the boundary with end week 11
+- **THEN** the replacement term covers weeks 7 through 10 and carries the quote for that
+  performer's current stats, not the expired rate and not a caller-chosen number
+
+#### Scenario: A stale boundary can still be renewed
+
+- **WHEN** restored state contains an engagement whose end week is earlier than the current next
+  week
+- **THEN** renewal is accepted and starts its replacement term at the current next week
 
 #### Scenario: Early renewal is rejected
 
 - **WHEN** an engagement still covers the current next week
 - **THEN** renewal is rejected without changing its rate or dates
 
+#### Scenario: Growth is priced only at a boundary
+
+- **WHEN** a performer's stats grow during a term and that term is later renewed
+- **THEN** the charged rate is unchanged until the boundary and becomes the grown quote from the
+  replacement term's first week
+
 #### Scenario: Termination removes both sides of membership
 
 - **WHEN** a member's engagement is terminated between weeks
 - **THEN** the engagement and member are absent together and no money or RNG state moves
+
+#### Scenario: The last engagement cannot be terminated
+
+- **WHEN** termination would leave the collective with no members
+- **THEN** it is rejected and both the engagement and the member remain
 
 #### Scenario: Incident resolution precedes departure
 

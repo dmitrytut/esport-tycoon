@@ -11,11 +11,11 @@ change. The command line SHALL override only the seed set, the horizon in weeks,
 output format.
 
 The loader SHALL resolve the declared region and discipline, generate performers through core,
-quote their rates through core from the required content scales, and create one engagement per
-member starting at week zero. It SHALL NOT duplicate the quote formula or provide a missing scale
-or duration default. The declared duration SHALL cover the effective invocation horizon after any
-command-line override because this change supplies no policy for resolving expiration inside a
-headless walk.
+quote their rates through core from the required content base rate and rate scales, and create
+one engagement per member starting at week zero. It SHALL NOT duplicate the quote formula or
+provide a missing rate input or duration default. The declared duration SHALL cover the effective
+invocation horizon after any command-line override because this change supplies no policy for
+resolving expiration inside a headless walk.
 
 A scenario or invocation SHALL be rejected before any week is advanced when it names activity,
 region, discipline or incident content the content tree does not define, repeats an incident id,

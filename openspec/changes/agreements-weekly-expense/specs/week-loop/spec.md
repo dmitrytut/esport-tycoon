@@ -23,8 +23,9 @@ executed under the completed calendar.
 When incident input is present, one eligible incident MAY be selected after the week's
 activities, recovery, recurring engagement settlement and other reasons have been produced. A
 selected incident SHALL be stored in run state and SHALL add `incident-pending` to that same
-week's reasons. Advancing an input state that already has a pending incident or an unresolved
-expired engagement for a current member SHALL fail before validating or executing the plan.
+week's reasons. Advancing SHALL validate the engagement coverage invariant defined by
+engagement economy before validating or executing the plan, and SHALL fail there when the input
+state already has a pending incident or an unresolved expired engagement for a current member.
 
 `engagement-expired` SHALL be unmaskable. It SHALL be produced on the last paid week for each
 engagement whose `endsBeforeWeek` equals the run's next week after advancement. That last paid
@@ -126,19 +127,9 @@ An activity effect on money SHALL change the run's balance by the amount it reso
 flat effect by its declared amount, an audience-driven effect by its declared base scaled
 by the org's reach. The reach SHALL be read from the audience the org holds at the moment
 the activity is executed, so an activity earlier in the same week that grew the audience is
-already reflected.
-
-After every planned activity and the existing weekly recovery, the week SHALL select exactly the
-engagements covering the current absolute week, order them by stable id, sum their materialized
-rates in integer tenths and debit that total through one organization change. It SHALL NOT debit
-an engagement through an activity, season operation, incident or contest. The week result SHALL
-report the ordered charged ids and total recurring expense.
-
-After that debit, a balance SHALL be allowed to remain negative. The run's
-`consecutiveNegativeWeeks` SHALL increment by one when the final balance is below zero and SHALL
-reset to zero when the final balance is zero or positive. The week in which opening money of zero
-or more finishes negative SHALL produce the money stop reason; a week that opened negative SHALL
-NOT repeat that crossing reason even though its negative streak increments.
+already reflected. A balance SHALL be allowed to go negative. The week in which opening money
+of zero or more finishes negative SHALL produce the money stop reason, and a week that opened
+negative SHALL NOT produce that crossing reason again.
 
 #### Scenario: A flat effect pays its amount
 
@@ -158,48 +149,43 @@ NOT repeat that crossing reason even though its negative streak increments.
 - **THEN** the second is paid at the grown audience, not at the audience the week opened
   with
 
-#### Scenario: Same-week income funds recurring expense
-
-- **WHEN** activities credit 50 during a week whose active engagements cost 40
-- **THEN** the week applies the 50 first, debits 40 once, and closes 10 above the balance with
-  which it opened
-
-#### Scenario: One week charges exactly the active rates
-
-- **WHEN** a collective has active engagements at 10.1, 20.2 and 30.3 for the current week
-- **THEN** the week reports their three ids in stable order, debits exactly 60.6 once, and no
-  other operation debits those rates
-
 #### Scenario: The balance falls through zero
 
-- **WHEN** a run whose negative-week count is zero opens a week non-negative and its activity
-  effects and recurring debit produce a negative final balance
-- **THEN** the week produces the money stop reason and increments the negative-week count to one
+- **WHEN** a week opens with money of zero or more and its activity effects and recurring debit
+  produce a negative final balance
+- **THEN** that week produces the money stop reason, and a later week that stays negative does
+  not produce it again
 
-#### Scenario: A continuing negative balance advances only the streak
+### Requirement: Advancing a week is deterministic
 
-- **WHEN** a run opens a week below zero and finishes it below zero again
-- **THEN** its negative-week count increments and the money crossing reason is not repeated
+Advancing SHALL depend only on its inputs: the state of the run, its current engagements and
+consecutive-negative-week count, the plan, the sensitivity mask, the materialized active-season
+calendar, the incident catalog and cadence, the trait category multipliers, and the injected
+serializable random streams. The same inputs SHALL produce the same weeks, incident occurrence
+and target, recurring expense evidence, negative-week count, stop index, reasons, kinds and
+resulting state. The week loop SHALL NOT regenerate a calendar, read a system random number
+generator or read a system clock, and incident draws SHALL NOT move another subsystem's
+stream.
 
-#### Scenario: Zero resets the series
+Engagement array insertion order SHALL NOT change charged-id order, total expense, final
+balance, count or reasons, and no engagement operation or settlement SHALL consume randomness.
 
-- **WHEN** a run with a positive negative-week count finishes a week at exactly zero
-- **THEN** the count resets to zero
+One-week execution SHALL take that week's `WeekMarking` explicitly and SHALL NOT inspect a
+calendar. Block advancement SHALL take the bounded calendar and pass the resolved current
+marking into the one-week operation. Thus both paths use the same classification rule without
+giving a one-week consumer ownership of season lifecycle.
 
-#### Scenario: Incident money cannot rewrite a closed week
+#### Scenario: Same seed, same plan, same result
 
-- **WHEN** an incident selected after settlement is later resolved with a money effect
-- **THEN** the effect changes the next week's opening balance and leaves the completed week's
-  recurring expense and negative-week count unchanged
+- **WHEN** the same run is advanced twice from the same state with the same seed, plan, mask,
+  materialized season calendar, incident input and trait category multipliers
+- **THEN** both advances produce identical results down to every performer's state, the
+  pending incident, every RNG state, the stop index, the reasons and the week kinds
 
-## ADDED Requirements
+#### Scenario: A different seed is allowed to differ
 
-### Requirement: Recurring expense is deterministic and serializable
-
-Engagement validation, selection, aggregation, expense evidence, expiration reasons and the
-negative-week count SHALL depend only on explicit run state and week inputs. Array insertion order
-SHALL NOT change charged-id order, total expense, final balance, count or reasons. No engagement
-operation or settlement SHALL read a system clock or random number generator.
+- **WHEN** the same run and plan are advanced with a different seed
+- **THEN** the result may differ, and it is again reproducible for that seed
 
 #### Scenario: Reordered terms produce the same week
 
@@ -213,3 +199,51 @@ operation or settlement SHALL read a system clock or random number generator.
   JSON-compatible representation before the next week
 - **THEN** continued advancement produces the same expense, count, reasons and state as the
   uninterrupted run
+
+## ADDED Requirements
+
+### Requirement: One recurring settlement closes the week and moves the negative series
+
+After every planned activity and the existing weekly recovery, the week SHALL select exactly the
+engagements covering the current absolute week, order them by stable id, sum their materialized
+rates in integer tenths and debit that total through one organization change. It SHALL NOT debit
+an engagement through an activity, season operation, incident or contest. The week result SHALL
+report the ordered charged ids and total recurring expense as its own evidence rather than a
+balance difference a consumer has to infer.
+
+The run's `consecutiveNegativeWeeks` SHALL increment by one when the completed week's final
+balance is below zero and SHALL reset to zero when that balance is zero or positive. An incident
+resolved after the week SHALL NOT change that completed week's expense evidence or count.
+
+#### Scenario: Same-week income funds recurring expense
+
+- **WHEN** activities credit 50 during a week whose active engagements cost 40
+- **THEN** the week applies the 50 first, debits 40 once, and closes 10 above the balance with
+  which it opened
+
+#### Scenario: One week charges exactly the active rates
+
+- **WHEN** a collective has active engagements at 10.1, 20.2 and 30.3 for the current week
+- **THEN** the week reports their three ids in stable order, debits exactly 60.6 once, and no
+  other operation debits those rates
+
+#### Scenario: A first negative close starts the series
+
+- **WHEN** a run whose negative-week count is zero finishes a week below zero
+- **THEN** the count becomes one
+
+#### Scenario: A continuing negative balance advances the streak
+
+- **WHEN** a run opens a week below zero and finishes it below zero again
+- **THEN** its negative-week count increments
+
+#### Scenario: Zero resets the series
+
+- **WHEN** a run with a positive negative-week count finishes a week at exactly zero
+- **THEN** the count resets to zero
+
+#### Scenario: Incident money cannot rewrite a closed week
+
+- **WHEN** an incident selected after settlement is later resolved with a money effect
+- **THEN** the effect changes the next week's opening balance and leaves the completed week's
+  recurring expense and negative-week count unchanged

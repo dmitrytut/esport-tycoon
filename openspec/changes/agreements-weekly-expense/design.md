@@ -57,10 +57,11 @@ for week `W` only when exactly one engagement for that performer and collective 
 
 Validation happens before plan execution or RNG restoration. It rejects a non-finite or
 non-positive rate, a rate off the one-tenth money grid, a non-integer or negative boundary, an
-empty interval, duplicate ids, overlapping intervals for a performer, an engagement naming an
-unknown performer or another collective, and a current member with zero or multiple covering
-engagements. Historical terms are not retained in `RunState`; completed `WeekResult` evidence
-identifies what was charged, while #20 snapshots only continuation-bearing current state.
+empty interval, duplicate ids, a second stored engagement for one performer, an engagement naming
+an unknown performer or another collective, and a current member with zero or multiple covering
+engagements. Only current terms are stored, so one performer has at most one engagement:
+historical terms are not retained in `RunState`, completed `WeekResult` evidence identifies what
+was charged, and #20 snapshots only continuation-bearing current state.
 
 Alternative rejected: embed terms in `Performer`. That couples personal identity and its
 existing snapshot to one employer and makes free performers nullable. Alternative rejected:
@@ -69,16 +70,25 @@ accepted rate when stats later change.
 
 ### Rate quotation is deterministic, explicit and consumes no randomness
 
-The domain loader maps required content `salaryScale` values to neutral positive rate scales.
-Region and discipline schemas require the existing fields and reject zero, negative and
-non-finite values; core receives already loaded numbers and has no fallback.
+The domain loader maps required content values to neutral positive rate inputs: a discipline
+base weekly rate plus the region and discipline `salaryScale` multipliers. Region and discipline
+schemas require those fields and reject zero, negative and non-finite values; core receives
+already loaded numbers and has no fallback.
 
 For a generated performer, the quote is:
 
 ```
 profile = (mechanical + cognitive + collective + composure + adaptability + presence) / 6
-weeklyRate = roundToTenths(profile * originRateScale * disciplineRateScale)
+weeklyRate = roundToTenths(baseWeeklyRate * profile * originRateScale * disciplineRateScale)
 ```
+
+The base rate exists because the two `salaryScale` fields are relative by design:
+`docs/design/world.md` makes 0.7 in the CIS and 1.35 in western Europe a statement about how
+much dearer one region is than another, not about how much money a week costs. Without a
+separate magnitude, #52 could only move the whole economy by multiplying every region, which
+destroys that meaning. The base rate lives in discipline content because the absolute salary
+market is a property of the discipline, while region stays a multiplier on it. #31 fixes the
+structure; #52 picks the number.
 
 All six current stats are used because adaptability and presence carry economic value outside
 contests as well as the four contest-facing stats. Age, peak age, potential, traits, energy,
@@ -87,12 +97,8 @@ temporary state cannot move a long-lived term.
 
 Quotation runs after `generatePerformer`; it neither changes `GenerateParams` draw order nor
 consumes an RNG value. Generation level affects the quote only through the generated stats.
-The quoted number is copied into the engagement. Later stat growth does not reprice it.
-Renewal accepts an explicit new quoted or caller-supplied rate and never silently calls the
-quote operation.
-
-No base-rate constant is added. The formula structure belongs to #31; #52 may tune the existing
-relative scales and concrete starting terms together with the rest of act-one economy.
+The quoted number is copied into the engagement. Later stat growth does not reprice it until a
+renewal boundary, where the same quote operation prices the performer again.
 
 ### Terms use inclusive start and exclusive end
 
@@ -100,14 +106,28 @@ An engagement with `startsAtWeek = 3` and `endsBeforeWeek = 7` is active and cha
 3, 4, 5 and 6. It is expired when the run's next absolute week becomes 7. The names encode the
 boundary and avoid a separate date interpretation.
 
-`renewEngagement` is a boundary operation for an engagement expired at the current next week.
-It preserves performer and collective identity, installs the explicit new rate, sets
-`startsAtWeek` to the current next week and requires a later `endsBeforeWeek`. Early renewal is
-not supported because repricing and negotiation before expiry are outside scope.
+`renewEngagement` is a boundary operation for an engagement whose `endsBeforeWeek` is at or
+before the current next week. The comparison is `<=` rather than `==` so a restored or
+hand-assembled state that sits past its boundary can still be renewed instead of being
+terminable only. It preserves performer and collective identity, sets `startsAtWeek` to the
+current next week and requires a later `endsBeforeWeek`.
+
+The replacement rate is the deterministic quote for the performer's current stats and current
+rate inputs; the caller supplies no rate. A caller-chosen rate would make the whole recurring
+expense optional — nothing outside negotiation would stop a run from renewing every term at the
+one-tenth minimum, which is exactly the failure signal this change writes down. Quoting at the
+boundary also gives the intended growth loop its price: a performer trained during a term stays
+cheap until it ends, then costs what they are now worth. Negotiation later replaces this rule
+with its own outcome rather than introducing pricing from nothing. Early renewal is still not
+supported, so a term cannot be locked in ahead of training.
 
 `terminateEngagement` may run between weeks for a current or expired term. It atomically removes
-the engagement and performer from the collective, charges no fee and consumes no RNG. Any
-remaining block plan that named the removed performer is invalid and must be replaced before
+the engagement and performer from the collective, charges no fee and consumes no RNG. It rejects
+when it would leave the collective empty: with no recruitment, no people-loss outcome and no
+contest obligation yet, a memberless run owes nothing, can do nothing and would advance forever.
+That guard is a stopgap for the missing mechanics, not a roster-size rule — `docs/design/acts.md`
+wants three undismissable friends, which needs relationships the model does not carry yet. Any
+remaining block plan that named a removed performer is invalid and must be replaced before
 advancement.
 
 When an incident is pending, both renewal and termination reject without mutation. This fixes
@@ -138,10 +158,9 @@ zero or positive and final money is negative. A run already below zero increment
 without repeating that crossing reason.
 
 `WeekResult` records one `engagementExpense` value containing the total and the charged ids in
-code-point order. It is present even when a future empty collective produces a zero total, so
-consumers need no inference from balance differences. The week loop is the only code that
-applies this debit. Lifecycle operations, season code, harness code and future contest code do
-not debit it.
+code-point order. It is evidence in its own right, so no consumer infers salary from adjacent
+balances. The week loop is the only code that applies this debit. Lifecycle operations, season
+code, harness code and future contest code do not debit it.
 
 An incident is selected after settlement but resolved later through the existing explicit
 operation. A resolution can change money, but the completed week's streak and expense evidence
@@ -207,10 +226,20 @@ input required to make the scenario executable, not a claim that the act-one eco
 week. JSON and text reports expose weekly and total recurring expense and the streak without
 subtracting adjacent balances or assigning incident effects to salary.
 
+Measured against current content, act one opens at zero money and the recurring fund alone is
+about 43–46 per week for the declared seeds, while the money policy's whole 24-week income is
+under 70. Every policy therefore ends the horizon deep in debt, and after #32 every policy would
+die in the same week. That is the uncalibrated starting measurement #52 asks for, not a target
+this change should quietly fix by inventing opening capital: #52 explicitly requires the
+pre-tuning report first. Until #52 lands, the harness's money series is a baseline, not a
+playable economy, and no conclusion about policy viability may be drawn from it.
+
 A harness horizon that reaches an expiration cannot choose a renewal or termination policy in
 this change. The initial duration must therefore cover the effective invocation horizon after any
 command-line override, and an invocation that outlives its terms rejects before generation. Expiry
-behavior is exercised by core scenarios rather than a fabricated harness decision.
+behavior is exercised by core scenarios rather than a fabricated harness decision. The single
+shared duration is a property of this measurement scenario, not of the model: production starting
+terms may be staggered per performer by whoever owns the starting configuration.
 
 ### Boundary contracts for dependent issues
 
@@ -220,9 +249,9 @@ contract that contest facts may arrive on either side of weekly execution. In ei
 week loop remains the sole owner of engagement debits and negative-week updates; contest code must
 not rerun settlement or subtract rates itself.
 
-#52 may tune origin and discipline scales, the starting term, opening money, activity income and
-contest rewards. It does not replace the quote formula, add a second debit or move the settlement
-boundary.
+#52 may tune the discipline base weekly rate, origin and discipline scales, the starting term,
+opening money, activity income and contest rewards. It does not replace the quote formula, add a
+second debit or move the settlement boundary.
 
 #20 later snapshots engagement ids and terms plus `consecutiveNegativeWeeks` with the rest of
 `RunState`. Rates are materialized continuation state and are not recomputed from current content
@@ -234,12 +263,22 @@ the snapshot. No new RNG stream exists.
 - The mean-stat quote values adaptability and presence equally with contest-facing stats. This is
   intentionally simple and legible; discipline-specific stat valuation would turn the rate into
   a second contest-strength formula and add balance policy before measurement.
-- Required content scales tighten existing schemas. The current two regions and one discipline
-  already provide values, so the migration exposes future incomplete content rather than
-  inventing defaults.
-- Termination without severance can be economically optimal. Fees and personal consequences are
-  negotiation/transfer mechanics; adding a hidden penalty here would widen scope. #52 measures
+- Required content values tighten existing schemas and add one field: every discipline must now
+  declare a base weekly rate, and both `salaryScale` fields become required. The single shipped
+  discipline and two regions are migrated with the change, so the strictness exposes future
+  incomplete content rather than inventing defaults.
+- Termination without severance can be economically optimal, and only the empty-collective guard
+  stops a run from dismissing its way out of the expense entirely. Fees and personal consequences
+  are negotiation/transfer mechanics; adding a hidden penalty here would widen scope. #52 measures
   whether the remaining choice is viable.
+- Price is linear in the mean stat while the value of strength is very likely convex once
+  contests exist, so "buy the strongest affordable" may dominate. Scale tuning cannot fix a shape
+  mismatch, so if #45's measurements show it, the formula is reopened by its own change rather
+  than absorbed by #52. The falsifiable signal is a run where spending the same weekly fund on
+  fewer stronger performers is never worse.
+- Boundary-only quoting means a renewal can raise a trained performer's rate sharply. That is the
+  intended cost of the growth loop, but it also makes expiry weeks the moment a plan can break;
+  the forecast exposes the boundary in advance rather than hiding it.
 - A coincident incident and expiration requires incident-first resolution. This preserves the
   pending target and is deterministic, at the cost of disallowing an otherwise harmless renewal
   until the incident is closed.

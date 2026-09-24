@@ -113,6 +113,7 @@ export interface BuildContestReportOptions {
   readonly durationMs: number;
 }
 
+/** Expand a homogeneous profile without invoking performer generation or another RNG stream. */
 function collectiveOf(profile: ContestProfile): ContestCollectiveInput {
   return {
     collectiveId: profile.collectiveId,
@@ -125,6 +126,7 @@ function collectiveOf(profile: ContestProfile): ContestCollectiveInput {
   };
 }
 
+/** Map a declared orientation to the semantic first and second inputs. */
 function orientationProfiles(
   comparison: ContestComparison,
   orientation: ContestOrientation,
@@ -134,6 +136,7 @@ function orientationProfiles(
     : [comparison.weaker, comparison.stronger];
 }
 
+/** Aggregate public outcomes for one placement without retaining per-seed results. */
 function measureOrientation(
   scenario: ContestScenario,
   comparison: ContestComparison,
@@ -181,10 +184,12 @@ export function measureContestScenario(
   }));
 }
 
+/** Convert one count to half-up integer basis points over the complete population. */
 function rate(count: number, denominator: number): number {
   return Math.round((count * 10_000) / denominator);
 }
 
+/** Join one declared comparison to the measurement carrying the same stable id. */
 function reportedComparison(
   comparison: ContestComparison,
   measurement: ContestComparisonMeasurement,

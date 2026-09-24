@@ -103,10 +103,12 @@ export function scenarioKind(path: string): "week-walk" | "contest-only" {
   throw new Error(`scenario "${basename(path, ".json")}": unknown kind "${String(value.kind)}"`);
 }
 
+/** Check the numeric grid shared by form and energy profile inputs. */
 function oneDecimal(value: number): boolean {
   return Number.isFinite(value) && Number.isInteger(value * 10);
 }
 
+/** Reject a profile before any Contest is resolved. */
 function validateProfile(
   scenarioName: string,
   comparisonId: string,
@@ -143,6 +145,7 @@ function validateProfile(
   }
 }
 
+/** Keep declared aggregate bounds as integer basis points. */
 function validateThresholds(
   scenarioName: string,
   comparisonId: string,

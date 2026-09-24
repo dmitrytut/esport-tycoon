@@ -46,12 +46,12 @@
 
 ## 9. Legacy migration and documentation
 
-- [ ] 9.1 After focused core/content/harness behavior is green, delete `specs/0004-match-engine.md` and repoint the one live reference at `docs/INDEX.md:16` to the live `contest-engine` capability; keep historical references under `openspec/changes/archive/**` unchanged, and verify the migrated behavior covers separate momentum/tally, structured Moments and data-driven disciplines while series and intervention windows remain explicitly deferred.
-- [ ] 9.2 Review all public declarations, numeric fields, formulas and utilities against ADR 0013; add short invariant/ownership comments where required and verify `et/require-comment` reports no omission.
+- [x] 9.1 After focused core/content/harness behavior is green, delete `specs/0004-match-engine.md` and repoint the one live reference at `docs/INDEX.md:16` to the live `contest-engine` capability; keep historical references under `openspec/changes/archive/**` unchanged, and verify the migrated behavior covers separate momentum/tally, structured Moments and data-driven disciplines while series and intervention windows remain explicitly deferred.
+- [x] 9.2 Review all public declarations, numeric fields, formulas and utilities against ADR 0013; add short invariant/ownership comments where required and verify `et/require-comment` reports no omission.
 
 ## 10. Integration gate and archive
 
-- [ ] 10.1 Run focused unit, property, validator and sim-harness smoke commands, then `pnpm format`, `pnpm lint`, `pnpm check:language`, `pnpm typecheck` and full `pnpm verify`; fix every failure without changing `test/golden/**` or `sim/baseline/**`.
+- [x] 10.1 Run focused unit, property, validator and sim-harness smoke commands, then `pnpm format`, `pnpm lint`, `pnpm check:language`, `pnpm typecheck` and full `pnpm verify`; fix every failure without changing `test/golden/**` or `sim/baseline/**`.
 - [ ] 10.2 Archive with `/opsx:archive contest-engine`, verify `openspec validate --all` passes, and inspect the archived `contest-engine` and `sim-harness` live specs before opening PR-2; do not hand-edit `openspec/specs/**`.
 
 Golden snapshot regeneration is not part of PR-2. If later evidence justifies one, it must be a

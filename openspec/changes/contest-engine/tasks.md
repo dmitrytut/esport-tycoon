@@ -6,7 +6,7 @@
 
 ## 2. Core input, output and rejection boundary
 
-- [ ] 2.1 Write compile-time/public-surface tests or focused type consumers for the branded Contest id, closed rules, Collective/participant input, Moment, tally/outcome, participant consequence and RNG continuation shapes; add the commented domain-neutral declarations beside their invariants in `contest.ts`, export them from `index.ts`, and verify `pnpm typecheck` succeeds.
+- [x] 2.1 Write compile-time/public-surface tests or focused type consumers for the branded Contest id, closed rules, Collective/participant input, Moment, tally/outcome, participant consequence and RNG continuation shapes; add the commented domain-neutral declarations beside their invariants in `contest.ts`, export them from `index.ts`, and verify `pnpm typecheck` succeeds.
 - [ ] 2.2 Write failing purity tests for duplicate/overlapping ids, roster mismatch, off-grid/out-of-range participant state, missing/invalid weights, malformed rule bounds/references, invalid RNG state and unsupported series/Bo3/Bo5/points-table kinds; implement complete preflight validation and verify each rejection leaves the deep input and supplied continuation unchanged and consumes no draw.
 - [ ] 2.3 Add JSON round-trip tests for complete input, every Moment field, participant results and the seed/state continuation; implement only JSON-compatible public values and verify the focused serialization tests reproduce the same result and next continuation.
 

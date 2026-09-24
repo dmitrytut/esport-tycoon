@@ -7,30 +7,30 @@
 ## 2. Core input, output and rejection boundary
 
 - [x] 2.1 Write compile-time/public-surface tests or focused type consumers for the branded Contest id, closed rules, Collective/participant input, Moment, tally/outcome, participant consequence and RNG continuation shapes; add the commented domain-neutral declarations beside their invariants in `contest.ts`, export them from `index.ts`, and verify `pnpm typecheck` succeeds.
-- [ ] 2.2 Write failing purity tests for duplicate/overlapping ids, roster mismatch, off-grid/out-of-range participant state, missing/invalid weights, malformed rule bounds/references, invalid RNG state and unsupported series/Bo3/Bo5/points-table kinds; implement complete preflight validation and verify each rejection leaves the deep input and supplied continuation unchanged and consumes no draw.
-- [ ] 2.3 Add JSON round-trip tests for complete input, every Moment field, participant results and the seed/state continuation; implement only JSON-compatible public values and verify the focused serialization tests reproduce the same result and next continuation.
+- [x] 2.2 Write failing purity tests for duplicate/overlapping ids, roster mismatch, off-grid/out-of-range participant state, missing/invalid weights, malformed rule bounds/references, invalid RNG state and unsupported series/Bo3/Bo5/points-table kinds; implement complete preflight validation and verify each rejection leaves the deep input and supplied continuation unchanged and consumes no draw.
+- [x] 2.3 Add JSON round-trip tests for complete input, every Moment field, participant results and the seed/state continuation; implement only JSON-compatible public values and verify the focused serialization tests reproduce the same result and next continuation.
 
 ## 3. Weighted strength and side chance
 
-- [ ] 3.1 Write failing table tests for deci conversion, one-decimal rejection, fatigue at energy 100/80/0, positive/zero discipline weights, form/clamp boundaries and half-up performer/Collective means; implement the exact integer weighted-strength calculation and verify reported strengths stay in 10–200.
-- [ ] 3.2 Write failing observable tests for equal 5,000-basis-point chance, ten-deci 5,300 chance, both 4,000/6,000 caps and a single raw side draw; implement the bounded linear threshold with integer arithmetic and verify no logistic, exponential, logarithmic, system RNG or clock call enters core.
+- [x] 3.1 Write failing table tests for deci conversion, one-decimal rejection, fatigue at energy 100/80/0, positive/zero discipline weights, form/clamp boundaries and half-up performer/Collective means; implement the exact integer weighted-strength calculation and verify reported strengths stay in 10–200.
+- [x] 3.2 Write failing observable tests for equal 5,000-basis-point chance, ten-deci 5,300 chance, both 4,000/6,000 caps and a single raw side draw; implement the bounded linear threshold with integer arithmetic and verify no logistic, exponential, logarithmic, system RNG or clock call enters core.
 
 ## 4. Moment generation and RNG continuation
 
-- [ ] 4.1 Write failing deterministic tests for slot order, Moment-type id canonicalization, positive content weights and exactly one type `weightedIndex` call even for a singleton; implement per-slot type selection and verify array insertion order cannot change the selected type or continuation.
-- [ ] 4.2 Write failing tests that side selection precedes participant selection, participants are id-sorted and weighted by strength, and every selected Performer belongs to the selected Collective; implement attribution and metric-delta recording, then verify participant totals reconcile exactly with their selected Moments.
-- [ ] 4.3 Pin a known seed/state continuation and write a failing test for exactly three raw draws per Moment and six per tactical unit, including singleton candidates and early termination; implement the canonical type → side → participant order and verify the returned continuation is immediately after the final participant draw.
+- [x] 4.1 Write failing deterministic tests for slot order, Moment-type id canonicalization, positive content weights and exactly one type `weightedIndex` call even for a singleton; implement per-slot type selection and verify array insertion order cannot change the selected type or continuation.
+- [x] 4.2 Write failing tests that side selection precedes participant selection, participants are id-sorted and weighted by strength, and every selected Performer belongs to the selected Collective; implement attribution and metric-delta recording, then verify participant totals reconcile exactly with their selected Moments.
+- [x] 4.3 Pin a known seed/state continuation and write a failing test for exactly three raw draws per Moment and six per tactical unit, including singleton candidates and early termination; implement the canonical type → side → participant order and verify the returned continuation is immediately after the final participant draw.
 
 ## 5. Momentum, scoring and outcome
 
-- [ ] 5.1 Write failing tests for signed -100…100 momentum, 75-percent truncation towards zero for positive and negative values, content-declared shifts, clamping and use of pre-Moment momentum in the next side threshold; implement momentum transition and record before/retained/shift/after evidence on every Moment.
-- [ ] 5.2 Write failing tactical-unit tests proving setup changes momentum but not tally, resolution adds exactly one point, tally never changes momentum, and a tally leader can have negative momentum; implement ordered slot execution while keeping the two state machines independent.
-- [ ] 5.3 Write failing outcome tests for first/second reaching 13, early stop with no later draws, all 13–24 unit bounds and a 12–12 draw after unit 24; implement termination and the tagged first-win/second-win/draw result without overtime, series or multi-Collective fallback.
+- [x] 5.1 Write failing tests for signed -100…100 momentum, 75-percent truncation towards zero for positive and negative values, content-declared shifts, clamping and use of pre-Moment momentum in the next side threshold; implement momentum transition and record before/retained/shift/after evidence on every Moment.
+- [x] 5.2 Write failing tactical-unit tests proving setup changes momentum but not tally, resolution adds exactly one point, tally never changes momentum, and a tally leader can have negative momentum; implement ordered slot execution while keeping the two state machines independent.
+- [x] 5.3 Write failing outcome tests for first/second reaching 13, early stop with no later draws, all 13–24 unit bounds and a 12–12 draw after unit 24; implement termination and the tagged first-win/second-win/draw result without overtime, series or multi-Collective fallback.
 
 ## 6. Participant consequences
 
-- [ ] 6.1 Write failing tests for tactical energy 73→53, 20→0 and 8→0, unchanged input energy, unchanged morale/form/stats and one participant result per roster member; implement post-resolution nominal cost, actual delta and authoritative energy-after evidence without mutating a Collective or `RunState`.
-- [ ] 6.2 Add a consumer-level test that installs `energyAfter` once and proves a second subtraction would disagree with the declared result; document the ownership on the exported consequence fields and verify no recovery, reward, week or season operation is called by resolution.
+- [x] 6.1 Write failing tests for tactical energy 73→53, 20→0 and 8→0, unchanged input energy, unchanged morale/form/stats and one participant result per roster member; implement post-resolution nominal cost, actual delta and authoritative energy-after evidence without mutating a Collective or `RunState`.
+- [x] 6.2 Add a consumer-level test that installs `energyAfter` once and proves a second subtraction would disagree with the declared result; document the ownership on the exported consequence fields and verify no recovery, reward, week or season operation is called by resolution.
 
 ## 7. Content-only portability and properties
 

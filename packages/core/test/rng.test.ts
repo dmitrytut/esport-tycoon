@@ -32,6 +32,19 @@ describe("determinism (ADR 0002)", () => {
 
     expect([...head, ...tail]).toEqual(sequence);
   });
+
+  it("serializes every state word as uint32", () => {
+    const rng = createRng(16_578).stream("contest");
+
+    for (let drawIndex = 0; drawIndex < 24; drawIndex += 1) {
+      for (const word of rng.state()) {
+        expect(Number.isInteger(word)).toBe(true);
+        expect(word).toBeGreaterThanOrEqual(0);
+        expect(word).toBeLessThanOrEqual(0xffffffff);
+      }
+      rng.nextUint32();
+    }
+  });
 });
 
 describe("streams (ADR 0002, item 3)", () => {

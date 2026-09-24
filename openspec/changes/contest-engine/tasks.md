@@ -40,9 +40,9 @@
 
 ## 8. Deterministic statistical harness
 
-- [ ] 8.1 Write failing scenario/loader tests for a contest-only `contest-strength.json` using the exact 0…4095 seed population, two orientations and declared mechanical-edge/maximum-gap profiles; implement the isolated scenario path without changing existing week scenarios or advancing week/season/career state.
-- [ ] 8.2 Write failing report tests for scenario/rules/profile/seed metadata, orientation-specific win/draw counts, integer basis-point rates and byte-identical repeated metrics; implement JSON and text reporting from public Contest results without reproducing strength, probability, energy or outcome arithmetic.
-- [ ] 8.3 Run the actual harness for both orientations and verify the pre-implementation thresholds with every rate divided by all 4,096 Contests, including draws: Mechanical 14 versus 10 wins at least 55 percent, leads the weaker profile by at least 10 percentage points and the weaker profile wins at least 20 percent; the maximum-gap weak profile wins at least 5 percent; orientation rates differ by at most three points. Fix contract-compliant implementation defects rather than selecting seeds, regenerating a golden or writing a balance baseline.
+- [x] 8.1 Write failing scenario/loader tests for a contest-only `contest-strength.json` using the exact 0…4095 seed population, two orientations and declared mechanical-edge/maximum-gap profiles; implement the isolated scenario path without changing existing week scenarios or advancing week/season/career state.
+- [x] 8.2 Write failing report tests for scenario/rules/profile/seed metadata, orientation-specific win/draw counts, integer basis-point rates and byte-identical repeated metrics; implement JSON and text reporting from public Contest results without reproducing strength, probability, energy or outcome arithmetic.
+- [x] 8.3 Run the actual harness for both orientations and verify the pre-implementation thresholds with every rate divided by all 4,096 Contests, including draws: Mechanical 14 versus 10 wins at least 55 percent, leads the weaker profile by at least 10 percentage points and the weaker profile wins at least 20 percent; the maximum-gap weak profile wins at least 5 percent; orientation rates differ by at most three points. Fix contract-compliant implementation defects rather than selecting seeds, regenerating a golden or writing a balance baseline.
 
 ## 9. Legacy migration and documentation
 

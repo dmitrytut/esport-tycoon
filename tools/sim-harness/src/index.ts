@@ -5,6 +5,12 @@ import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 
 import { loadContent } from "./content.ts";
+import {
+  buildContestReport,
+  measureContestScenario,
+  renderContestReport,
+} from "./contest-report.ts";
+import { loadContestScenario, scenarioKind } from "./contest-scenario.ts";
 import { POLICY_NAMES, type PolicyName } from "./policy.ts";
 import { buildReport, renderReport } from "./report.ts";
 import { runPolicy } from "./run.ts";
@@ -110,6 +116,31 @@ function parseArgs(args: readonly string[]): CliOptions {
 export function main(args: readonly string[]): string {
   const options = parseArgs(args);
   const content = loadContent(join(repoRoot, "content"));
+  if (scenarioKind(options.scenarioPath) === "contest-only") {
+    if (options.policies.length > 0) {
+      throw new Error("contest-only scenarios do not accept a policy override");
+    }
+    if (options.seeds !== undefined) {
+      throw new Error("contest-only scenarios use their declared fixed seed range");
+    }
+    if (options.horizon !== undefined) {
+      throw new Error("contest-only scenarios do not accept a week horizon");
+    }
+    const scenario = loadContestScenario(options.scenarioPath, content);
+    const startedAt = performance.now();
+    const measurements = measureContestScenario(scenario);
+    const durationMs = performance.now() - startedAt;
+    const report = buildContestReport({
+      scenario,
+      scenarioPath: options.scenarioPath,
+      measurements,
+      durationMs,
+    });
+    return options.format === "json"
+      ? `${JSON.stringify(report, null, 2)}\n`
+      : renderContestReport(report);
+  }
+
   const scenario = loadScenario(options.scenarioPath, content);
   const policies = options.policies.length === 0 ? POLICY_NAMES : options.policies;
   const seeds = options.seeds ?? scenario.seeds;

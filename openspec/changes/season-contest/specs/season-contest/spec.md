@@ -20,8 +20,9 @@ before any state or RNG moves, SHALL NOT resolve one Contest in its place, and S
 until a separate accepted change supplies that format; this capability SHALL NOT substitute a
 single Contest, an average, a coin flip or a default outcome for it.
 
-An entry that is unknown, unmarked, later than the current entry, or already settled SHALL be
-rejected before any state or RNG moves.
+An entry that is unknown, unmarked or later than the current entry SHALL be rejected before any
+state or RNG moves. An already settled entry SHALL instead return its stored encounter unchanged,
+as specified by the idempotent lifecycle below.
 
 #### Scenario: A contest entry resolves one Contest
 

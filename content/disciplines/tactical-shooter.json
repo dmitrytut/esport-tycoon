@@ -6,16 +6,89 @@
     "mechanical": 3,
     "cognitive": 1,
     "collective": 2,
-    "composure": 3
+    "composure": 3,
+    "adaptability": 0,
+    "presence": 0
   },
   "metaVolatility": 0.2,
   "contest": {
-    "format": "bo3",
-    "unit": "round",
+    "kind": "head-to-head",
+    "scoreToWin": 13,
+    "maxUnits": 24,
+    "energyCost": 20,
     "momentumMeans": "tempo control inside the round",
-    "tally": "rounds",
-    "columns": ["Kills", "Deaths", "Assists", "Economy"],
-    "participants": 2
+    "sideChance": {
+      "strengthBpsPerDeciPoint": 30,
+      "momentumBpsPerPoint": 10,
+      "underdogFloorBps": 4000
+    },
+    "momentumRetentionBps": 7500,
+    "slots": [
+      { "id": "setup", "scoring": false },
+      { "id": "resolution", "scoring": true }
+    ],
+    "metrics": [
+      { "id": "eliminations", "label": "Eliminations" },
+      { "id": "deaths", "label": "Deaths" },
+      { "id": "assists", "label": "Assists" },
+      { "id": "resources", "label": "Resources" }
+    ],
+    "momentTypes": [
+      {
+        "id": "early-advantage",
+        "slot": "setup",
+        "weight": 4,
+        "momentumShift": 12,
+        "participantMetricDeltas": { "eliminations": 1 }
+      },
+      {
+        "id": "coordinated-pressure",
+        "slot": "setup",
+        "weight": 3,
+        "momentumShift": 10,
+        "participantMetricDeltas": { "assists": 1 }
+      },
+      {
+        "id": "resource-control",
+        "slot": "setup",
+        "weight": 2,
+        "momentumShift": 8,
+        "participantMetricDeltas": { "resources": 2 }
+      },
+      {
+        "id": "clean-conversion",
+        "slot": "resolution",
+        "weight": 4,
+        "momentumShift": 18,
+        "participantMetricDeltas": {
+          "eliminations": 2,
+          "assists": 1,
+          "resources": 1
+        }
+      },
+      {
+        "id": "traded-conversion",
+        "slot": "resolution",
+        "weight": 3,
+        "momentumShift": 14,
+        "participantMetricDeltas": {
+          "eliminations": 2,
+          "deaths": 1,
+          "assists": 1
+        }
+      },
+      {
+        "id": "resource-conversion",
+        "slot": "resolution",
+        "weight": 2,
+        "momentumShift": 12,
+        "participantMetricDeltas": {
+          "eliminations": 1,
+          "assists": 2,
+          "resources": 2
+        }
+      }
+    ]
   },
   "economy": {
     "baseWeeklyRate": 1.0,

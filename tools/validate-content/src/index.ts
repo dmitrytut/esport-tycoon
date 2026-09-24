@@ -18,7 +18,7 @@ import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Schemas are declared in the 2020-12 dialect — pick the matching ajv build.
-import { Ajv2020 as Ajv, type ValidateFunction } from "ajv/dist/2020.js";
+import { Ajv2020 as Ajv, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const contentRoot = process.argv[2] ? resolve(process.argv[2]) : join(repoRoot, "content");
@@ -85,6 +85,36 @@ const eventSchema = readJson(join(schemaRoot, "event.schema.json")) as {
 };
 const eventCategories = eventSchema.properties.category.enum;
 
+/** Resolve one Ajv JSON pointer so validation errors can name the rejected value. */
+function valueAtJsonPointer(root: unknown, pointer: string): unknown {
+  let value = root;
+  for (const rawPart of pointer.split("/").slice(1)) {
+    if (typeof value !== "object" || value === null) return undefined;
+    const part = rawPart.replaceAll("~1", "/").replaceAll("~0", "~");
+    value = (value as Record<string, unknown>)[part];
+  }
+  return value;
+}
+
+/** Add the missing, additional or rejected value that Ajv otherwise leaves implicit. */
+function schemaIssueContext(record: Record<string, unknown>, issue: ErrorObject): string {
+  const missingProperty = issue.params["missingProperty"];
+  if (typeof missingProperty === "string") return `; offending property "${missingProperty}"`;
+
+  const additionalProperty = issue.params["additionalProperty"];
+  if (typeof additionalProperty === "string") {
+    const parent = valueAtJsonPointer(record, issue.instancePath);
+    const value =
+      typeof parent === "object" && parent !== null
+        ? (parent as Record<string, unknown>)[additionalProperty]
+        : undefined;
+    return `; offending property "${additionalProperty}" value ${JSON.stringify(value)}`;
+  }
+
+  const value = valueAtJsonPointer(record, issue.instancePath);
+  return value === undefined ? "" : `; offending value ${JSON.stringify(value)}`;
+}
+
 // ---------- loading ----------
 const entities: Entity[] = [];
 const idsByType: Record<string, Set<string>> = {};
@@ -113,13 +143,13 @@ for (const type of Object.keys(TYPES)) {
     const validate = validators.get(type);
     if (validate && !validate(record)) {
       for (const issue of validate.errors ?? []) {
-        // ajv names the allowed values only in `params`; a closed set is unusable as an
+        // Ajv names the allowed values only in `params`; a closed set is unusable as an
         // error unless the reader is told what the set is.
         const allowed: unknown = issue.params["allowedValues"];
         const listed = Array.isArray(allowed) ? ` [${allowed.join(", ")}]` : "";
         fail(
           relative,
-          `schema: ${issue.instancePath || "/"} ${issue.message ?? "fails validation"}${listed}`,
+          `schema: ${issue.instancePath || "/"} ${issue.message ?? "fails validation"}${listed}${schemaIssueContext(record, issue)}`,
         );
       }
     }
@@ -251,6 +281,100 @@ for (const entity of entities) {
   if (entity.type === "disciplines") {
     for (const regionId of (data["strongRegions"] as unknown[] | undefined) ?? []) {
       checkRef(entity, "regions", regionId, "strongRegions");
+    }
+
+    const statWeights = data["statWeights"];
+    if (typeof statWeights === "object" && statWeights !== null && !Array.isArray(statWeights)) {
+      const weights = Object.values(statWeights);
+      if (
+        weights.length === CORE_STATS.length &&
+        weights.every((weight) => typeof weight === "number") &&
+        weights.reduce((total, weight) => total + weight, 0) <= 0
+      ) {
+        fail(entity.file, "statWeights must have a positive total; got 0");
+      }
+    }
+
+    const contest = data["contest"];
+    if (typeof contest !== "object" || contest === null || Array.isArray(contest)) continue;
+    const contestData = contest as Record<string, unknown>;
+    const scoreToWin = contestData["scoreToWin"];
+    const maxUnits = contestData["maxUnits"];
+    if (typeof scoreToWin === "number" && typeof maxUnits === "number") {
+      if (maxUnits < scoreToWin) {
+        fail(entity.file, `contest.maxUnits ${maxUnits} must be at least scoreToWin ${scoreToWin}`);
+      } else if (maxUnits > 2 * (scoreToWin - 1)) {
+        fail(
+          entity.file,
+          `contest.maxUnits ${maxUnits} must not exceed ${2 * (scoreToWin - 1)} for scoreToWin ${scoreToWin}`,
+        );
+      }
+    }
+
+    const slots = Array.isArray(contestData["slots"]) ? contestData["slots"] : [];
+    const slotIds = new Set<string>();
+    let scoringSlots = 0;
+    let scoringSlotIndex = -1;
+    slots.forEach((slot, index) => {
+      if (typeof slot !== "object" || slot === null || Array.isArray(slot)) return;
+      const slotData = slot as Record<string, unknown>;
+      const id = slotData["id"];
+      if (typeof id === "string") {
+        if (slotIds.has(id)) fail(entity.file, `contest slot id "${id}" is duplicated`);
+        slotIds.add(id);
+      }
+      if (slotData["scoring"] === true) {
+        scoringSlots += 1;
+        scoringSlotIndex = index;
+      }
+    });
+    if (scoringSlots !== 1) {
+      fail(entity.file, `contest.slots must contain exactly one scoring slot; got ${scoringSlots}`);
+    } else if (scoringSlotIndex !== slots.length - 1) {
+      fail(entity.file, `contest.slots[${scoringSlotIndex}] scoring slot must be last`);
+    }
+
+    const metrics = Array.isArray(contestData["metrics"]) ? contestData["metrics"] : [];
+    const metricIds = new Set<string>();
+    metrics.forEach((metric) => {
+      if (typeof metric !== "object" || metric === null || Array.isArray(metric)) return;
+      const id = (metric as Record<string, unknown>)["id"];
+      if (typeof id !== "string") return;
+      if (metricIds.has(id)) fail(entity.file, `contest metric id "${id}" is duplicated`);
+      metricIds.add(id);
+    });
+
+    const momentTypes = Array.isArray(contestData["momentTypes"]) ? contestData["momentTypes"] : [];
+    const momentTypeIds = new Set<string>();
+    const reachableSlots = new Set<string>();
+    momentTypes.forEach((momentType, index) => {
+      if (typeof momentType !== "object" || momentType === null || Array.isArray(momentType))
+        return;
+      const momentTypeData = momentType as Record<string, unknown>;
+      const id = momentTypeData["id"];
+      if (typeof id === "string") {
+        if (momentTypeIds.has(id))
+          fail(entity.file, `contest Moment type id "${id}" is duplicated`);
+        momentTypeIds.add(id);
+      }
+
+      const slot = momentTypeData["slot"];
+      if (typeof slot === "string") {
+        if (slotIds.has(slot)) reachableSlots.add(slot);
+        else fail(entity.file, `contest.momentTypes[${index}] refers to unknown slot "${slot}"`);
+      }
+
+      const deltas = momentTypeData["participantMetricDeltas"];
+      if (typeof deltas !== "object" || deltas === null || Array.isArray(deltas)) return;
+      for (const metric of Object.keys(deltas)) {
+        if (!metricIds.has(metric)) {
+          fail(entity.file, `contest.momentTypes[${index}] refers to unknown metric "${metric}"`);
+        }
+      }
+    });
+
+    for (const slot of slotIds) {
+      if (!reachableSlots.has(slot)) fail(entity.file, `contest slot "${slot}" has no Moment type`);
     }
   }
 

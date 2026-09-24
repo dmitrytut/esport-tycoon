@@ -21,19 +21,44 @@
     "statWeights": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mechanical", "cognitive", "collective", "composure"],
+      "required": [
+        "mechanical",
+        "cognitive",
+        "collective",
+        "composure",
+        "adaptability",
+        "presence"
+      ],
       "properties": {
         "mechanical": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
         },
         "cognitive": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
         },
         "collective": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
         },
         "composure": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "adaptability": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "presence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
         }
       }
     },
@@ -45,34 +70,149 @@
     },
     "contest": {
       "type": "object",
-      "required": ["format", "momentumMeans", "tally", "columns"],
+      "required": [
+        "kind",
+        "scoreToWin",
+        "maxUnits",
+        "energyCost",
+        "momentumMeans",
+        "sideChance",
+        "momentumRetentionBps",
+        "slots",
+        "metrics",
+        "momentTypes"
+      ],
       "additionalProperties": false,
       "properties": {
-        "format": {
-          "enum": ["bo1", "bo3", "bo5", "points-table"]
+        "kind": {
+          "enum": ["head-to-head"]
         },
-        "unit": {
-          "enum": ["round", "phase", "map", "half"]
+        "scoreToWin": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 100
+        },
+        "maxUnits": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 198
+        },
+        "energyCost": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
         },
         "momentumMeans": {
           "type": "string",
+          "minLength": 1,
           "description": "what the bar means in this discipline; the text is English, shown to the player (docs/adr/0007)"
         },
-        "tally": {
-          "enum": ["rounds", "objectives", "placement-points", "goals"]
-        },
-        "columns": {
-          "type": "array",
-          "description": "player table column headers, in English (docs/adr/0007)",
-          "minItems": 2,
-          "items": {
-            "type": "string"
+        "sideChance": {
+          "type": "object",
+          "required": ["strengthBpsPerDeciPoint", "momentumBpsPerPoint", "underdogFloorBps"],
+          "additionalProperties": false,
+          "properties": {
+            "strengthBpsPerDeciPoint": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "momentumBpsPerPoint": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "underdogFloorBps": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4999
+            }
           }
         },
-        "participants": {
+        "momentumRetentionBps": {
           "type": "integer",
-          "minimum": 2,
-          "default": 2
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "slots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["id", "scoring"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "scoring": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["id", "label"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "momentTypes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": ["id", "slot", "weight", "momentumShift", "participantMetricDeltas"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "slot": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "momentumShift": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "participantMetricDeltas": {
+                "type": "object",
+                "propertyNames": {
+                  "pattern": "^[a-z0-9-]+$"
+                },
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": -100,
+                  "maximum": 100
+                }
+              }
+            }
+          }
         }
       }
     },

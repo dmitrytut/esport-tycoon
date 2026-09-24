@@ -34,6 +34,18 @@ they appear in text.
 A phrase is written whole, with substitutions, rather than glued together from pieces:
 gluing is untranslatable, and a second language is planned.
 
+## Contest inputs
+
+Every discipline declares all six stat weights and one closed `head-to-head` Contest
+configuration. The configuration owns score and unit bounds, participant energy cost,
+side-chance coefficients, momentum retention, ordered slots, stable metrics and weighted
+Moment types. The last and only scoring slot completes each unit. Metric labels are
+player-facing content; core receives ids and numeric deltas only.
+
+Series formats, executable expressions and hidden defaults are not content options. A new
+discipline changes these validated data values rather than adding a discipline-specific branch
+to core.
+
 ## Economy inputs
 
 Every discipline declares a positive `economy.baseWeeklyRate`, the absolute weekly money

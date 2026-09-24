@@ -68,12 +68,45 @@ const discipline = {
     cognitive: 1,
     collective: 2,
     composure: 3,
+    adaptability: 0,
+    presence: 0,
   },
   contest: {
-    format: "bo3",
+    kind: "head-to-head",
+    scoreToWin: 13,
+    maxUnits: 24,
+    energyCost: 20,
     momentumMeans: "tempo control",
-    tally: "rounds",
-    columns: ["Kills", "Deaths"],
+    sideChance: {
+      strengthBpsPerDeciPoint: 30,
+      momentumBpsPerPoint: 10,
+      underdogFloorBps: 4000,
+    },
+    momentumRetentionBps: 7500,
+    slots: [
+      { id: "setup", scoring: false },
+      { id: "resolution", scoring: true },
+    ],
+    metrics: [
+      { id: "eliminations", label: "Eliminations" },
+      { id: "deaths", label: "Deaths" },
+    ],
+    momentTypes: [
+      {
+        id: "early-advantage",
+        slot: "setup",
+        weight: 4,
+        momentumShift: 12,
+        participantMetricDeltas: { eliminations: 1 },
+      },
+      {
+        id: "clean-conversion",
+        slot: "resolution",
+        weight: 4,
+        momentumShift: 18,
+        participantMetricDeltas: { eliminations: 2 },
+      },
+    ],
   },
   economy: {
     baseWeeklyRate: 1,
@@ -176,6 +209,261 @@ describe("content validator (ADR 0003)", () => {
     const result = run(root);
     expect(result.code).toBe(1);
     expect(result.output).toContain("schema");
+  });
+
+  it("accepts the closed head-to-head discipline contract", () => {
+    const root = fresh();
+    put(root, "disciplines/tactical-shooter.json", discipline);
+
+    const result = run(root);
+    expect(result.output).toContain("Content is valid");
+    expect(result.code).toBe(0);
+  });
+
+  it.each([
+    [
+      "a missing sixth stat weight",
+      {
+        ...discipline,
+        statWeights: { mechanical: 3, cognitive: 1, collective: 2, composure: 3, presence: 0 },
+      },
+      "adaptability",
+    ],
+    [
+      "zero total stat weight",
+      {
+        ...discipline,
+        statWeights: {
+          mechanical: 0,
+          cognitive: 0,
+          collective: 0,
+          composure: 0,
+          adaptability: 0,
+          presence: 0,
+        },
+      },
+      "positive total",
+    ],
+    [
+      "an unsupported contest kind",
+      { ...discipline, contest: { ...discipline.contest, kind: "series" } },
+      "series",
+    ],
+    [
+      "an invalid score target",
+      { ...discipline, contest: { ...discipline.contest, scoreToWin: 1 } },
+      "scoreToWin",
+    ],
+    [
+      "a unit cap below the score target",
+      { ...discipline, contest: { ...discipline.contest, maxUnits: 12 } },
+      "maxUnits",
+    ],
+    [
+      "a unit cap above regulation",
+      { ...discipline, contest: { ...discipline.contest, maxUnits: 25 } },
+      "maxUnits",
+    ],
+    [
+      "an invalid side-chance bound",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          sideChance: { ...discipline.contest.sideChance, underdogFloorBps: 5000 },
+        },
+      },
+      "underdogFloorBps",
+    ],
+    [
+      "missing scoring slots",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          slots: [
+            { id: "setup", scoring: false },
+            { id: "resolution", scoring: false },
+          ],
+        },
+      },
+      "exactly one scoring slot",
+    ],
+    [
+      "duplicate scoring slots",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          slots: [
+            { id: "setup", scoring: true },
+            { id: "resolution", scoring: true },
+          ],
+        },
+      },
+      "exactly one scoring slot",
+    ],
+    [
+      "a non-final scoring slot",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          slots: [
+            { id: "setup", scoring: true },
+            { id: "resolution", scoring: false },
+          ],
+        },
+      },
+      "last",
+    ],
+    [
+      "a duplicate slot id",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          slots: [
+            { id: "setup", scoring: false },
+            { id: "setup", scoring: true },
+          ],
+        },
+      },
+      'slot id "setup" is duplicated',
+    ],
+    [
+      "an unreachable slot",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          momentTypes: [discipline.contest.momentTypes[0]],
+        },
+      },
+      'slot "resolution" has no Moment type',
+    ],
+    [
+      "a duplicate Moment type id",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          momentTypes: [
+            discipline.contest.momentTypes[0],
+            { ...discipline.contest.momentTypes[1], id: "early-advantage" },
+          ],
+        },
+      },
+      'Moment type id "early-advantage" is duplicated',
+    ],
+    [
+      "an unknown Moment slot",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          momentTypes: [
+            discipline.contest.momentTypes[0],
+            { ...discipline.contest.momentTypes[1], slot: "overtime" },
+          ],
+        },
+      },
+      'slot "overtime"',
+    ],
+    [
+      "a duplicate metric id",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          metrics: [
+            discipline.contest.metrics[0],
+            { ...discipline.contest.metrics[1], id: "eliminations" },
+          ],
+        },
+      },
+      'metric id "eliminations" is duplicated',
+    ],
+    [
+      "an unknown participant metric",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          momentTypes: [
+            {
+              ...discipline.contest.momentTypes[0],
+              participantMetricDeltas: { pressure: 1 },
+            },
+            discipline.contest.momentTypes[1],
+          ],
+        },
+      },
+      'metric "pressure"',
+    ],
+    [
+      "a non-positive Moment weight",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          momentTypes: [
+            { ...discipline.contest.momentTypes[0], weight: 0 },
+            discipline.contest.momentTypes[1],
+          ],
+        },
+      },
+      "weight",
+    ],
+    [
+      "an invalid momentum shift",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          momentTypes: [
+            { ...discipline.contest.momentTypes[0], momentumShift: 0 },
+            discipline.contest.momentTypes[1],
+          ],
+        },
+      },
+      "momentumShift",
+    ],
+    [
+      "an executable field",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          momentTypes: [
+            { ...discipline.contest.momentTypes[0], script: "return momentum + 1" },
+            discipline.contest.momentTypes[1],
+          ],
+        },
+      },
+      "script",
+    ],
+    [
+      "a legacy series format",
+      {
+        ...discipline,
+        contest: {
+          format: "bo3",
+          momentumMeans: "tempo control",
+          tally: "rounds",
+          columns: ["Kills", "Deaths"],
+        },
+      },
+      "format",
+    ],
+  ])("rejects %s with the offending value", (_label, invalid, expected) => {
+    const root = fresh();
+    put(root, "disciplines/tactical-shooter.json", invalid);
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/disciplines/tactical-shooter.json");
+    expect(result.output).toContain(expected);
   });
 
   it.each([

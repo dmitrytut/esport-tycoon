@@ -100,12 +100,22 @@ The shell SHALL refuse to start a run when required content is invalid or missin
 
 ### Requirement: Mobile presentation keeps command access separate from the scene
 
-The week screen SHALL use a portrait-first DOM panel over a visual scene. Planning, numbers, reasons, controls and their accessible labels SHALL remain in the DOM; the scene SHALL not be the only place to read a game state or trigger a command. Safe areas, narrow screens, scrolling plan content and touch activation SHALL not hide or overlap the active Continue control. Scene geometry SHALL scale by whole-number steps rather than blur via fractional scaling (ADR 0008).
+The week screen SHALL use a portrait-first scene with a collapsible DOM planning sheet. In its collapsed position the scene and a compact current-state and stop-reason summary SHALL remain visible; expanding the sheet SHALL expose the editable block while retaining a visible scene preview. Planning, numbers, reasons, controls and their accessible labels SHALL remain in the DOM; the scene SHALL not be the only place to read a game state or trigger a command. Opening or closing the sheet SHALL NOT submit a command, discard an unexecuted assignment or change core state. The same single Continue action and stop reason SHALL stay accessible in either position; safe areas, narrow screens, scrolling plan content and touch activation SHALL not hide or overlap them. Scene geometry SHALL scale by whole-number steps rather than blur via fractional scaling (ADR 0008).
 
 #### Scenario: Portrait touch planning
 
 - **WHEN** a user opens the screen in the declared portrait reference viewport with safe-area insets
-- **THEN** the plan can scroll, all active controls can be reached and activated by touch, and core numbers and reasons remain readable without interacting with the scene
+- **THEN** the sheet opens to an independently scrolling plan, retains a visible scene preview, and all active controls can be reached and activated by touch without losing the current values or reason
+
+#### Scenario: Planning sheet closes and reopens
+
+- **WHEN** a user assigns an activity in the expanded sheet, closes it to inspect the scene and reopens it
+- **THEN** the future assignment and committed core values are unchanged, the current reason remains visible, and no advancement has occurred
+
+#### Scenario: Stop exposes the real outcome
+
+- **WHEN** advancement completes while the sheet is expanded
+- **THEN** the sheet collapses to reveal the scene and a DOM summary of all returned reasons and the committed numbers; reopening shows only editable future weeks
 
 #### Scenario: Wider viewport
 
@@ -114,12 +124,12 @@ The week screen SHALL use a portrait-first DOM panel over a visual scene. Planni
 
 ### Requirement: Layout probes and device profile do not define final art
 
-The shell SHALL provide front-facing and isometric geometric arrangements with the same characters, actions and DOM panel for comparison. Neither arrangement SHALL be treated as the final art grid or a commitment to isometric production. The act-three performance profile SHALL use at least 15 geometric figures and the real DOM panel on named physical iOS and Android devices, record environment and viewport, fixed input sequence, frame timing, FPS and available peak memory, and distinguish unavailable memory counters from measured values.
+The shell SHALL provide front-facing and isometric geometric arrangements with the same characters, actions and collapsible DOM sheet for comparison in both sheet positions. Neither arrangement SHALL be treated as the final art grid or a commitment to isometric production. The act-three performance profile SHALL use at least 15 geometric figures and the real DOM sheet on named physical iOS and Android devices, record environment and viewport, the same open/edit/close/advance sequence, frame timing, FPS and available peak memory, and distinguish unavailable memory counters from measured values.
 
 #### Scenario: Comparing two probes
 
 - **WHEN** the same roster and reference viewport are shown in each probe
-- **THEN** the DOM controls, data and figure count match; visible scene area, figure occlusion, tap conflicts and frame timing can be compared for #37 without selecting final sprites
+- **THEN** the sheet controls, data and figure count match in both collapsed and expanded positions; scene visibility, figure/state legibility, future-week touch editing, occlusion, pointer conflicts and frame timing can be compared for #37 without selecting final sprites
 
 #### Scenario: Device metric unavailable
 

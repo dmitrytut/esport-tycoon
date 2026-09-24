@@ -4,9 +4,9 @@ Issue #38 has no playable browser surface: the real week and season contracts ca
 
 ## What Changes
 
-- Add a Vite application at `packages/shell` with a PixiJS 8 visual scene, DOM week controls, a browser content/run adapter, and a phone-first responsive viewport.
+- Add a Vite application at `packages/shell` with a PixiJS 8 visual scene, a collapsible DOM planning sheet over the scene, a browser content/run adapter, and a phone-first responsive viewport. The scene gets room while decisions are being observed; the sheet expands for editing without becoming a separate screen.
 - Let a user compose a four-to-six-week block from validated activities and participant identities; advance via the existing public `@et/core` contract, display the returned state and every stop reason, lock executed weeks, and continue only from the next absolute week. Pending core decisions block advancement rather than being resolved by a fabricated UI transition.
-- Measure two deliberately temporary scene arrangements (front-facing cutaway and isometric probe), with identical geometric stand-ins and the same DOM panel. Neither becomes a sprite, pixel-grid, camera or final layout contract for #37; both produce comparable art inputs.
+- Measure two deliberately temporary scene arrangements (front-facing cutaway and isometric probe), with identical geometric stand-ins and the same collapsible DOM sheet. Compare scene legibility and planning usability in both sheet positions, not only FPS. Neither arrangement becomes a sprite, pixel-grid, camera or final layout contract for #37.
 - Choose a library-based localization mechanism for a later change while keeping #38 English-only. Record a reproducible real-device performance procedure for 15+ geometric characters plus the actual DOM panel, without inventing devices or results.
 - Include the shell build in the repository gate. No changes to core mechanics, the public core API, content mechanic schemas, golden/baseline files, or live week-loop and activity-catalog requirements.
 
@@ -29,6 +29,8 @@ PR-1 changes only `openspec/changes/week-shell/**`. PR-2 adds the shell package,
 ## Player Experience (MDA / SDT)
 
 The player sees a live room while planning for several weeks, chooses activities and people, and gets back the actual consequences and precise interruption from core rather than a scripted animation. Planning supports autonomy; returned energy, morale, balance, spent slots and reasons support competence by making the cost of that choice legible; named roster members make the decision about people rather than faceless slots, supporting relatedness. Blocked contest/incident/engagement decisions constrain autonomy until their dedicated interactions arrive; the shell will say why, not offer a misleading Continue. Failure signal: after stopping early, tapping Continue either replays an executed week's cost or silently passes a pending decision, or the panel shows a number different from the returned core state.
+
+The sheet stays collapsed while inspecting the room and returned outcomes, then expands for multiweek editing while leaving a visible scene preview. The single Continue control and returned stop reason remain reachable in either position; closing the sheet never discards a draft or changes core state. If the scene becomes illegible when the sheet is open or the sheet makes a future-week edit hard to complete with touch, the phone-first experience has failed even if its frame rate is high.
 
 ## Affects
 

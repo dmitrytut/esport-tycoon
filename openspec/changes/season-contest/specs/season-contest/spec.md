@@ -41,45 +41,87 @@ rejected before any state or RNG moves.
 - **WHEN** settlement is requested for a marked entry later than the current one
 - **THEN** it is rejected and the season, run and every RNG continuation are unchanged
 
-### Requirement: The opponent is materialized once from validated content
+### Requirement: The season's opponent field is materialized once
 
-Opening an encounter SHALL draw exactly one encounter definition from a caller-supplied pool of
-validated definitions, ordered by stable id before the draw, and SHALL generate the opponent's
-Performers through the existing core generator using that definition's declared origin and level.
-The opponent SHALL carry exactly the participant count the discipline declares, and each
-generated Performer SHALL enter the Contest with the stats, form and energy the generator
-produced. A pool of one definition SHALL still consume its selection draw. The same definition
-MAY be drawn for more than one entry of a season, because no standing, table or elimination
-exists to forbid it.
+A season SHALL hold an opponent field: exactly one materialized opponent for every definition in
+the caller-supplied pool of validated encounter definitions. The field SHALL be materialized by
+one explicit operation before the season's first encounter is opened, visiting the definitions in
+stable id order and generating each opponent's Performers through the existing core generator
+from that definition's declared origin and level. Each opponent SHALL carry exactly the
+participant count its discipline declares, and each generated Performer SHALL enter every Contest
+with the stats, form and energy the generator produced.
 
-The materialized opponent's Collective and Performer identities SHALL be derived from the
-encounter identity so that they cannot equal a career identity; materialization SHALL be rejected
-rather than resolved if any generated identity still collides with a current collective member.
+Opening an encounter while the season has no materialized field SHALL be rejected before any
+state or RNG moves. Materializing a field twice for the same season SHALL be rejected rather than
+replacing the existing one, so no opponent can be silently regenerated mid-season.
 
-Once materialized, the opponent SHALL be frozen: its identity, participants, stats, form and
-energy SHALL NOT change when the encounter is opened again, when weeks advance, or when the
-Contest is resolved. An empty pool, a definition naming an unknown discipline, origin or level,
-or a definition whose discipline differs from the entry's discipline SHALL be rejected before any
-draw.
+Every opponent Collective and Performer identity SHALL be derived from the season and its
+definition id so that it cannot equal a career identity; materialization SHALL be rejected rather
+than resolved if any generated identity still collides with a current collective member. An empty
+pool, a duplicate definition id, a definition naming an unknown discipline, origin or level, or a
+definition whose discipline is not the one the collective plays SHALL be rejected before any draw.
+
+#### Scenario: The field exists before the first encounter
+
+- **WHEN** an encounter is opened for a season whose field has not been materialized
+- **THEN** it is rejected before any draw, and the season, run and every RNG continuation are
+  unchanged
+
+#### Scenario: A field is materialized exactly once
+
+- **WHEN** field materialization is requested for a season that already has one
+- **THEN** it is rejected, the existing opponents are unchanged, and no RNG continuation moves
+
+#### Scenario: Generated opponents cannot be career people
+
+- **WHEN** a field is materialized for a collective whose members were generated from the same
+  origin
+- **THEN** every opponent identity is distinct from every career identity, and the opponent
+  Performers are absent from the collective, from engagements and from weekly recovery
+
+#### Scenario: An empty or malformed pool is inert
+
+- **WHEN** the supplied pool is empty, repeats a definition id, names an unknown origin or level,
+  or names a discipline other than the one the collective plays
+- **THEN** materialization is rejected before a draw, and the season, run and every RNG
+  continuation are unchanged
+
+### Requirement: An encounter draws one opponent from the season field
+
+Opening an encounter SHALL select exactly one member of the season field, drawn from the field
+ordered by stable definition id, and SHALL store that definition id on the encounter. A field of
+one member SHALL still consume its selection draw. Opening SHALL generate no Performer: the
+opponent already exists.
+
+The same field member MAY be drawn for more than one marked entry of a season, and when it is, it
+SHALL be the same Collective with the same Performers, identities, stats, form and energy as the
+first time. No standing, table, seeding or elimination exists to order, forbid or advance those
+meetings.
+
+A field member SHALL be frozen for the whole season: its identity, participants, stats, form and
+energy SHALL NOT change when an encounter is opened, when weeks advance, or when a Contest is
+resolved. The participant consequences a Contest reports for opponent Performers SHALL stay inside
+that encounter's stored result and SHALL NOT be written back to the field, because opponents
+receive no weekly recovery and a one-way drain would make a repeated meeting progressively
+easier.
 
 #### Scenario: Reopening returns the same opponent
 
 - **WHEN** an already-opened encounter is opened a second time
-- **THEN** the stored opponent identity, participants, stats, form and energy are returned
-  unchanged and no RNG continuation moves
+- **THEN** the stored definition id, opponent identity, participants, stats, form and energy are
+  returned unchanged and no RNG continuation moves
 
-#### Scenario: Generated opponents cannot be career people
+#### Scenario: The same opponent is the same people
 
-- **WHEN** an opponent is materialized for a collective whose members were generated from the
-  same origin
-- **THEN** every opponent identity is distinct from every career identity, and the opponent
-  Performers are absent from the collective, from engagements and from weekly recovery
+- **WHEN** the same field member is drawn for two marked entries of one season
+- **THEN** both encounters name the same Collective and the same Performer identities, stats and
+  form, and both Contests start from that member's materialized energy
 
-#### Scenario: An empty or mismatched pool is inert
+#### Scenario: A defeated opponent is not worn down
 
-- **WHEN** the supplied pool is empty or its only definition names another discipline
-- **THEN** opening is rejected before a draw, and the season, run and every RNG continuation are
-  unchanged
+- **WHEN** a field member has already played one Contest of the season and is drawn again
+- **THEN** its participants enter the second Contest at their materialized energy, and the first
+  Contest's opponent energy results remain evidence inside the first encounter only
 
 ### Requirement: An encounter has an explicit two-state lifecycle
 
@@ -117,7 +159,7 @@ season fact, which is already sufficient to hold season completion.
 
 ### Requirement: Encounter randomness uses named injected streams only
 
-Opponent selection and opponent generation SHALL draw only from a named `encounter` stream
+Field materialization and opponent selection SHALL draw only from a named `encounter` stream
 derived from the run's root seed. Contest resolution SHALL receive the named `contest` stream's
 seed and current state and SHALL return its continuation, which SHALL be stored before the
 settlement returns. Both continuations SHALL be retained in run state, not in season state, so
@@ -125,15 +167,16 @@ they survive the season boundary unchanged. Settlement SHALL consume no randomne
 beyond those two streams, and SHALL NOT read a system random number generator or a clock.
 
 Identical run state, season state, pool, discipline rules and seed SHALL produce an identical
-opponent, Contest result, installed energy, reward, recorded fact and both continuations. Opening
-an encounter SHALL move only the `encounter` continuation; settling it SHALL move only the
-`contest` continuation.
+field, opponent, Contest result, installed energy, reward, recorded fact and both continuations.
+Materializing the field and opening an encounter SHALL move only the `encounter` continuation;
+settling an encounter SHALL move only the `contest` continuation.
 
 #### Scenario: Each phase moves exactly its own stream
 
-- **WHEN** an encounter is opened and then settled
-- **THEN** opening moved the `encounter` continuation and left the `contest` one unchanged, and
-  settlement moved the `contest` continuation and left the `encounter` one unchanged
+- **WHEN** a field is materialized, an encounter is opened and then settled
+- **THEN** materialization and opening moved the `encounter` continuation and left the `contest`
+  one unchanged, and settlement moved the `contest` continuation and left the `encounter` one
+  unchanged
 
 #### Scenario: Continuations survive serialization and the season boundary
 
@@ -303,10 +346,11 @@ definition SHALL name a real organization, competition or person.
 
 ### Requirement: The whole path is headless, neutral and serializable
 
-Opening and settling an encounter SHALL be pure state transitions available without a user
-interface: they SHALL perform no I/O, read no clock and print nothing. Encounter state, opponent
-participants, the stored Contest result and both continuations SHALL contain only JSON
-primitives, arrays and objects, and a JSON round-trip SHALL be deeply equal to the original.
+Materializing a field, opening an encounter and settling one SHALL be pure state transitions
+available without a user interface: they SHALL perform no I/O, read no clock and print nothing.
+The field, encounter state, opponent participants, the stored Contest result and both
+continuations SHALL contain only JSON primitives, arrays and objects, and a JSON round-trip SHALL
+be deeply equal to the original.
 
 Core declarations and behavior for this capability SHALL use domain-neutral `Encounter`,
 `Contest`, `Collective`, `Performer` and `Season` vocabulary (ADR 0001) and SHALL NOT name a real
@@ -314,14 +358,14 @@ title, organization or person.
 
 #### Scenario: A full season runs without an interface
 
-- **WHEN** a season whose template declares no `series` week is advanced headlessly, settling each
-  marked entry before its week
-- **THEN** every encounter produces an opponent, a real Contest result, installed energy, a
+- **WHEN** a season whose template declares no `series` week has its field materialized and is
+  then advanced headlessly, settling each marked entry before its week
+- **THEN** every encounter names a field member, a real Contest result, installed energy, a
   credited reward and one fact, and the season completes with its goal evaluated
 
 #### Scenario: State survives a save
 
 - **WHEN** run and season state are copied through a JSON-compatible representation between two
   encounters
-- **THEN** the remaining encounters, opponents, outcomes, rewards, facts and continuations are
-  identical to an uninterrupted run
+- **THEN** the field, the remaining encounters, opponents, outcomes, rewards, facts and
+  continuations are identical to an uninterrupted run

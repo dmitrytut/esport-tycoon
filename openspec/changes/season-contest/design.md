@@ -80,7 +80,7 @@ change. Alternative rejected: edit `content/seasons/standard.json` to drop `seri
 deletes a designed act-one feature (`design/match.md` §7.5) through a content edit, which is a
 design decision and not this change's to take.
 
-### The opponent is drawn from content and frozen at materialization
+### The season has a field of opponents, materialized once and frozen
 
 An encounter definition is a content file:
 
@@ -91,29 +91,53 @@ An encounter definition is a content file:
 ```
 
 The caller (the domain layer, which is allowed to read files) loads and validates the pool and
-passes it to core, exactly as regions, activities and disciplines already arrive. Opening an
-encounter draws one definition uniformly from the pool sorted by stable id — one draw even for a
-single-entry pool, so adding a second definition later does not shift the sequence for a pool of
-one — then generates the participant count the discipline declares, in order, through
-`generatePerformer`.
+passes it to core, exactly as regions, activities and disciplines already arrive. One explicit
+operation then materializes the **season field**: walking the pool in stable id order, it
+generates one opponent per definition through `generatePerformer`, with the participant count the
+discipline declares. The field is stored in season state. Opening a marked entry afterwards is a
+single selection draw over the field ordered by definition id — one draw even for a field of one,
+so adding a second definition later does not shift the sequence for a field of one — and generates
+nobody, because the opponent already exists.
 
-Freezing happens at materialization, not at resolution. The `pending` encounter stores the chosen
-definition id, the opponent Collective identity and the complete participant list with stats,
-form and energy. Reopening returns that record and moves nothing. Nothing recovers, ages or
-retrains an opponent: outside its own encounter the opponent does not exist.
+That split is the whole point. A season's opponents are a fixed set of named Collectives with
+named people; meeting one twice means meeting the same five performers with the same stats. The
+earlier model, which generated a roster per encounter, was deterministic but incoherent: the same
+definition id would arrive twice with different people, which reads as a bug to anyone who looks.
+Nothing here invents a table, a seeding or a bracket — those stay out of scope — but a recurring,
+recognizable opponent is the substrate they would need later, and it costs one operation now.
 
-Generated ids are namespaced by the encounter identity, because `generatePerformer` derives its id
-from origin id and draw seed and could in principle repeat a career id. Namespacing makes the
-collision structurally impossible; materialization still rejects rather than resolves if an
-identity somehow equals a current member's, because `contest-engine` requires globally unique
-participant ids and a duplicate would otherwise surface as an opaque resolver rejection.
+Freezing lasts for the whole season. A field member's identity, participants, stats, form and
+energy never move: not when an encounter is opened, not when weeks advance, not when a Contest
+resolves. In particular the Contest's opponent-side `energyAfter` stays inside that encounter's
+stored result and is **not** written back to the field. Opponents get no weekly tick, so a
+write-back would be a one-way drain: meet the same opponent three times and the third one is
+exhausted for free. That is an exploit, not a simulation, and simulating opponent recovery is
+opponent-world work this change does not own.
 
-Repeats within a season are allowed. There is no table, bracket or elimination to violate, and
-forbidding them would need a rule this change has no reason to invent.
+Materialization is required before the season's first encounter and is rejected if the season
+already has a field, so no opponent can be silently regenerated mid-season. Generated ids are
+namespaced by the season and definition id, because `generatePerformer` derives its id from origin
+id and draw seed and could in principle repeat a career id. Namespacing makes the collision
+structurally impossible; materialization still rejects rather than resolves if an identity somehow
+equals a current member's, because `contest-engine` requires globally unique participant ids and a
+duplicate would otherwise surface as an opaque resolver rejection.
 
-Alternative rejected: hand-author complete opponent rosters in content. It multiplies content
-weight per opponent, freezes stat values that the generator already derives from origin and level,
-and gives no reproducible way to scale to more opponents. Alternative rejected: generate the
+Repeats within a season are allowed and now mean something. There is no table, bracket or
+elimination to violate, and forbidding a rematch would need a rule this change has no reason to
+invent.
+
+At the season boundary the field resets with the other season-owned state and is materialized
+again from the pool supplied then. So next season's opponents carry the same content labels with
+freshly generated people. That is deliberate and honest: an opponent world that ages, trains and
+transfers is a separate capability, and pretending to have one by carrying rosters forward without
+any of those rules would be worse than starting clean.
+
+Alternative rejected: materialize an opponent lazily, on the first draw of its definition. It
+saves generating opponents never met, but makes "does this opponent exist" conditional state and
+gives the future bracket no complete field to seed from. Pools are small; the saving is not worth
+the weaker invariant. Alternative rejected: hand-author complete opponent rosters in content. It
+multiplies content weight per opponent, freezes stat values the generator already derives from
+origin and level, and gives no reproducible way to scale. Alternative rejected: generate the
 opponent at resolution time. Then a UI preview of "who you face this week" would either resolve
 the Contest early or show an opponent that later changes.
 
@@ -136,19 +160,21 @@ stop reason is needed.
 ### Streams: `encounter` for the opponent, `contest` for the Contest, both retained in the run
 
 Two named streams derived from the run root seed, in the pattern `contest-engine` already
-declares: `encounter` for definition selection and opponent generation, `contest` for resolution.
-Opening moves only the first; settling moves only the second. A subsystem that spends an extra
-draw therefore cannot shift the other.
+declares: `encounter` for field materialization and opponent selection, `contest` for resolution.
+Materializing and opening move only the first; settling moves only the second. A subsystem that
+spends an extra draw therefore cannot shift the other.
 
 Both continuations live in `RunState`, not in season state. `season-calendar` requires every
-non-season continuation to carry forward across the boundary, and encounter identity is
-season-scoped while the streams are not: season two's first opponent must continue the sequence
-rather than restart it. The encounters themselves are season-scoped and are stored in season
-state, keyed by entry identity, reset by `startNextSeason` with the other season-owned
-accumulators. That is the only reason `season-calendar` is modified at all.
+non-season continuation to carry forward across the boundary, and the field and encounters are
+season-scoped while the streams are not: season two's field must continue the sequence rather
+than restart it, otherwise every season would draw the same people. The field and the encounters
+are stored in season state — encounters keyed by entry identity — and both are reset by
+`startNextSeason` with the other season-owned accumulators. That is the only reason
+`season-calendar` is modified at all.
 
-Alternative rejected: keep encounters in `RunState` and clear them when a season starts. Season
-lifetime state living outside the season value makes the reset a remote side effect and puts the
+Alternative rejected: keep the field and encounters in `RunState` and clear them when a season
+starts. Season lifetime state living outside the season value makes the reset a remote side effect
+and puts the
 "what resets at the boundary" answer in two places. Alternative rejected: one shared stream for
 opponent and Contest. Any future change to opponent generation would then move every Contest
 result in the run.
@@ -169,7 +195,7 @@ reports none, and inventing one here would make the contest contract untrue. Met
 stored exactly as returned and are never extended, recomputed or re-attributed — the known
 limitation that opponent-side metrics such as `deaths` cannot be physically coherent across sides
 belongs to `contest-engine` and is not papered over here. Opponent participant results stay inside
-the encounter.
+the encounter's stored result and reach neither career state nor the season field.
 
 ### The reward is data, and the draw row is permanent
 
@@ -229,10 +255,12 @@ completion path to reach the season result.
 ### The headless proof lives in core, not in the harness
 
 The end-to-end check is a core test: a run and a season built on the zero-series template fixture
-and an encounter pool fixture, advanced block by block, settling each marked entry before its
-week, asserting a concrete opponent, a real `resolveContest` call, installed energies, credited
-rewards, recorded facts, a completed season with an evaluated goal, and byte-identical repetition
-from the same seed.
+and an encounter pool fixture, its field materialized once, advanced block by block, settling each
+marked entry before its week, asserting a field member as the opponent, a real `resolveContest`
+call, installed energies, credited rewards, recorded facts, a completed season with an evaluated
+goal, and byte-identical repetition from the same seed. One case deliberately forces the same
+field member into two marked entries and asserts both name the same Performers at the same
+materialized energy.
 
 `sim-harness` is deliberately untouched. Its week-walk scenarios declare no contest configuration,
 and its spec requires that a mechanic a run does not implement stay absent rather than appear as a
@@ -253,17 +281,26 @@ with prize income. It is named here as a follow-up, not smuggled in.
 - **Fixed `first` orientation.** If a future rules change makes side order matter, every encounter
   inherits the same bias. Mitigation: the harness's accepted orientation check (≤3 percentage
   points) is the falsifier, and `contest-engine` owns it.
-- **Opponent repeats can look odd.** The same definition may be drawn twice in one season.
-  Mitigation: with no table or bracket this is cosmetic; a no-repeat rule would need its own
-  gameplay justification.
+- **Opponent repeats are now visible.** The same field member can be drawn twice in one season and
+  will be literally the same people. Mitigation: with no table or bracket this reads as a rematch,
+  which is coherent; a no-repeat or seeding rule needs the tournament structure that is out of
+  scope, not a patch here.
+- **A season's opponents do not persist between seasons.** The field resets at the boundary, so
+  next season's opponents share labels but not people. Mitigation: carrying rosters forward
+  without ageing, training or transfers would fake an opponent world; the honest version is its
+  own capability.
+- **The field costs generation for opponents never met.** Mitigation: pools are small and the
+  complete field is what a future bracket would need anyway; lazy materialization is recorded as
+  the rejected alternative.
 - **Two continuations added to `RunState`.** Save state (#20) grows by two stream states.
   Mitigation: both are plain four-word states, already the established shape.
 
 ## Migration Plan
 
 Additive. No existing behavior is removed or renamed. `RunState` gains two continuations and
-season state gains its encounters; existing runs have neither, so PR-2 must require them
-explicitly at construction rather than defaulting them, keeping ADR 0002's "no hidden seed" rule.
+season state gains its opponent field and encounters; existing runs have none of them, so PR-2
+must require them explicitly at construction rather than defaulting them, keeping ADR 0002's "no
+hidden seed" rule.
 No golden snapshot or balance baseline is created or regenerated; if later evidence justifies one,
 it is a separate pull request with a single `golden:` commit.
 

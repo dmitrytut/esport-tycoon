@@ -4,6 +4,25 @@ The game shell presents a real core run as a usable browser week screen while ke
 
 ## ADDED Requirements
 
+### Requirement: The demo starts from a declared reproducible run
+
+With no `?seed=` override, the shell SHALL start a fresh unsaved run using the fixed development seed `week-shell-38-5`, the validated `tactical-shooter` discipline, `western-europe` origin and shipped `standard` season. It SHALL use the discipline's participant count at level 1, quote an engagement for each member through the season length, and set the demo organization to balance 10,000, audience 0, reputation 50 and the core act-one slot count. The season goal SHALL be `minimum-contest-wins` with target 2. These numbers and identities are demo inputs, not a new core career-start rule. A supplied `?seed=` SHALL override only the seed, not the input profile; a reload SHALL rebuild the same starting state from that seed and disclose that progress is unsaved.
+
+#### Scenario: The default opens at an ordinary week
+
+- **WHEN** the screen opens without a query seed and valid shipped content is available
+- **THEN** week 0 is editable, an ordinary planned week can be advanced by the real core, and a later marked week still blocks until its decision is implemented
+
+#### Scenario: Explicit seed can begin at a blocker
+
+- **WHEN** the screen opens with `?seed=week-shell-38`
+- **THEN** the start may be blocked at a marked contest; it does not invent a result or silently replace the requested seed
+
+#### Scenario: Reload reconstructs the demo
+
+- **WHEN** the user reloads the page with the same explicit or default seed
+- **THEN** the initial generated roster, engagement terms, organization values and calendar are identical, and the screen makes clear that prior progress was not saved
+
 ### Requirement: The week screen presents authoritative run values
 
 The shell SHALL show the current absolute week, available slots, every roster member's energy and morale, collective morale and organization balance from the currently committed core state. It SHALL NOT infer changes to those values from a planned action, an animation or an in-flight command. Any state represented visually in the scene SHALL also be available as text or a number in the DOM (ADR 0008).

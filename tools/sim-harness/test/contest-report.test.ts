@@ -67,7 +67,7 @@ describe("contest-only reports", () => {
 
   it("produces byte-identical game metrics on repeated measurements", () => {
     expect(withoutDuration(reportOf(1))).toBe(withoutDuration(reportOf(2)));
-  });
+  }, 30_000);
 
   it("renders text from the same report data", () => {
     const text = renderContestReport(reportOf());

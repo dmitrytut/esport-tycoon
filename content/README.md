@@ -14,12 +14,17 @@ the `id`. Schemas live in `schema/`. Rules — `docs/adr/0003`.
 | `names/` | name and nickname pools by region | `name-pool.schema.json` |
 | `activities/` | what a slot of the week is spent on | `activity.schema.json` |
 | `seasons/` | season length and complete marked-week count ranges | `season.schema.json` |
+| `encounters/` | season-contest opponent definitions and their rewards | `encounter.schema.json` |
 
 ## Language
 
 All player-facing text is written **in English**: event text, choice labels, trait,
 discipline, and region names, given names and nicknames (`docs/adr/0007`). Russian is
 allowed only in the schemas' service fields (`description`) — the player never sees them.
+
+Encounter `label` values are additionally fictional identities: `content/encounters/` names
+an opponent Collective, and no real esports organization, team or player may appear there
+(`docs/adr/0005`).
 
 There's no localization yet. The mechanism (string keys, translation files) is chosen
 alongside the first interface screen, see `docs/adr/0008`. Until then, text lives inline in
@@ -45,6 +50,16 @@ player-facing content; core receives ids and numeric deltas only.
 Series formats, executable expressions and hidden defaults are not content options. A new
 discipline changes these validated data values rather than adding a discipline-specific branch
 to core.
+
+## Encounter inputs
+
+Every encounter declares one opponent `originId` and `level`, passed as-is to the core
+generator (`specs/0001`), and one money amount for each Contest outcome — `win`, `loss` and
+`draw` — on the one-tenth money grid used everywhere else money is expressed. `draw` is a
+declared amount, not a fallback derived from `win` and `loss`: the accepted contest engine
+makes a regulation draw a permanent outcome, not an edge case. Adding another encounter is a
+content-only change: a new file under `content/encounters/` needs no code change as long as
+its `disciplineId` and `opponent.originId` already exist.
 
 ## Economy inputs
 

@@ -1,3 +1,4 @@
+import type { EncounterField, EncounterState } from "./encounter.ts";
 import { validateEngagements } from "./engagement.ts";
 import type { RngState } from "./rng.ts";
 import { restoreRng } from "./rng.ts";
@@ -133,6 +134,10 @@ export interface SeasonEvidence {
   readonly totalWeeks: number;
   /** Exactly-once facts accepted so far. */
   readonly facts: readonly SeasonContestFact[];
+  /** Season's opponent field, materialized once by `season-contest`; absent until then. */
+  readonly field: EncounterField | null;
+  /** Encounters keyed by the marked entry they belong to, owned by `season-contest`. */
+  readonly encounters: readonly EncounterState[];
   /** Continuation used to construct the next season calendar. */
   readonly calendarRng: RngState;
 }
@@ -254,6 +259,8 @@ export function startSeason(input: StartSeasonInput): ActiveSeason {
     uninterruptedWeeks: 0,
     totalWeeks: 0,
     facts: [],
+    field: null,
+    encounters: [],
     calendarRng: rng.state(),
   };
 }
@@ -292,7 +299,7 @@ export interface StartNextSeasonResult {
 }
 
 /** Compares stable entry identities after serialization or structural reconstruction. */
-function sameEntryId(first: SeasonCalendarEntryId, second: SeasonCalendarEntryId): boolean {
+export function sameEntryId(first: SeasonCalendarEntryId, second: SeasonCalendarEntryId): boolean {
   return first.season === second.season && first.relativeWeek === second.relativeWeek;
 }
 

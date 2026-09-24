@@ -1,0 +1,14 @@
+{
+  "id": "rimefall-academy",
+  "label": "Rimefall Academy",
+  "disciplineId": "tactical-shooter",
+  "opponent": {
+    "originId": "western-europe",
+    "level": 2
+  },
+  "reward": {
+    "win": 800,
+    "loss": 200,
+    "draw": 400
+  }
+}

@@ -1,6 +1,8 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
+import { CONTEST_STREAM_NAME } from "../../src/contest.ts";
+import { ENCOUNTER_STREAM_NAME } from "../../src/encounter.ts";
 import type { Incident, IncidentEffect } from "../../src/incident.ts";
 import { createIncidentState, resolveIncident } from "../../src/incident.ts";
 import { REPUTATION_MAX, REPUTATION_MIN } from "../../src/org.ts";
@@ -79,6 +81,8 @@ const pendingScenarioArb: fc.Arbitrary<{
       consecutiveNegativeWeeks: 0,
       seed,
       rng: createRng(seed).state(),
+      contest: createRng(seed).stream(CONTEST_STREAM_NAME).state(),
+      encounter: createRng(seed).stream(ENCOUNTER_STREAM_NAME).state(),
       incidents: {
         ...createIncidentState(seed),
         pending: { incidentId: incident.id, performerId: target.id, week },

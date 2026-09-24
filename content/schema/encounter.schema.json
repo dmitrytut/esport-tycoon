@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Encounter",
+  "type": "object",
+  "required": ["id", "label", "disciplineId", "opponent", "reward"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "description": "English label naming the opponent Collective, shown to the player; a fictional identity, never a real esports organization (docs/adr/0005, docs/adr/0007)"
+    },
+    "disciplineId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "id from content/disciplines/; the opponent plays this discipline"
+    },
+    "opponent": {
+      "type": "object",
+      "required": ["originId", "level"],
+      "additionalProperties": false,
+      "properties": {
+        "originId": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "id from content/regions/; the opponent's origin, passed to the core generator"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "1 — basement amateur, 5 — world top; passed to the core generator"
+        }
+      }
+    },
+    "reward": {
+      "type": "object",
+      "required": ["win", "loss", "draw"],
+      "additionalProperties": false,
+      "description": "money paid on settlement, exactly once, for each Contest outcome; draw is a declared amount, not a fallback",
+      "properties": {
+        "win": {
+          "type": "number",
+          "minimum": 0,
+          "description": "credited on a first-win outcome, on the one-tenth money grid"
+        },
+        "loss": {
+          "type": "number",
+          "minimum": 0,
+          "description": "credited on a second-win outcome, on the one-tenth money grid"
+        },
+        "draw": {
+          "type": "number",
+          "minimum": 0,
+          "description": "credited on a regulation-draw outcome, on the one-tenth money grid"
+        }
+      }
+    }
+  }
+}

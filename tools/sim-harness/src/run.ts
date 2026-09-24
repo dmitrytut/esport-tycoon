@@ -9,8 +9,10 @@
  * produces over the same plan, and the post-resolution state to core's own resolution.
  */
 import {
+  CONTEST_STREAM_NAME,
   createIncidentState,
   createRng,
+  ENCOUNTER_STREAM_NAME,
   executeWeek,
   generatePerformer,
   type IncidentInput,
@@ -107,6 +109,8 @@ export function openingState(scenario: Scenario, content: SimContent, seed: numb
     consecutiveNegativeWeeks: 0,
     seed,
     rng: rng.state(),
+    contest: rng.stream(CONTEST_STREAM_NAME).state(),
+    encounter: rng.stream(ENCOUNTER_STREAM_NAME).state(),
     incidents: createIncidentState(seed),
   };
 }

@@ -43,6 +43,7 @@ const TYPES: Record<string, string> = {
   names: "name-pool.schema.json",
   activities: "activity.schema.json",
   seasons: "season.schema.json",
+  encounters: "encounter.schema.json",
 };
 
 /** One content file already parsed: enough to validate it and to report where the error is. */
@@ -400,6 +401,24 @@ for (const entity of entities) {
     });
     for (const disciplineId of (data["disciplines"] as unknown[] | undefined) ?? []) {
       checkRef(entity, "disciplines", disciplineId, "disciplines");
+    }
+  }
+
+  if (entity.type === "encounters") {
+    checkRef(entity, "disciplines", data["disciplineId"], "disciplineId");
+    const opponent = (data["opponent"] ?? {}) as Record<string, unknown>;
+    checkRef(entity, "regions", opponent["originId"], "opponent.originId");
+    const reward = data["reward"];
+    if (typeof reward === "object" && reward !== null && !Array.isArray(reward)) {
+      for (const outcome of ["win", "loss", "draw"]) {
+        const amount: unknown = (reward as Record<string, unknown>)[outcome];
+        if (typeof amount === "number" && amount >= 0 && !Number.isInteger(amount * 10)) {
+          fail(
+            entity.file,
+            `reward.${outcome} must be on the one-tenth money grid; offending value ${amount}`,
+          );
+        }
+      }
     }
   }
 }

@@ -32,6 +32,13 @@ const participantStateArb: fc.Arbitrary<GeneratedParticipantState> = fc.record({
   energyTenths: fc.integer({ min: 0, max: 1000 }),
 });
 
+const generatedSlotArb = fc.record({
+  firstWeight: fc.integer({ min: 1, max: 5 }),
+  secondWeight: fc.integer({ min: 1, max: 5 }),
+  firstShift: fc.integer({ min: 1, max: 40 }),
+  secondShift: fc.integer({ min: 1, max: 40 }),
+});
+
 const rulesArb: fc.Arbitrary<ContestRules> = fc.integer({ min: 2, max: 8 }).chain((scoreToWin) =>
   fc
     .record({
@@ -49,18 +56,7 @@ const rulesArb: fc.Arbitrary<ContestRules> = fc.integer({ min: 2, max: 8 }).chai
         adaptability: fc.integer({ min: 0, max: 5 }),
         presence: fc.integer({ min: 0, max: 5 }),
       }),
-      typeWeights: fc.tuple(
-        fc.integer({ min: 1, max: 5 }),
-        fc.integer({ min: 1, max: 5 }),
-        fc.integer({ min: 1, max: 5 }),
-        fc.integer({ min: 1, max: 5 }),
-      ),
-      shifts: fc.tuple(
-        fc.integer({ min: 1, max: 40 }),
-        fc.integer({ min: 1, max: 40 }),
-        fc.integer({ min: 1, max: 40 }),
-        fc.integer({ min: 1, max: 40 }),
-      ),
+      slotConfigs: fc.array(generatedSlotArb, { minLength: 1, maxLength: 4 }),
     })
     .map(
       ({
@@ -71,8 +67,7 @@ const rulesArb: fc.Arbitrary<ContestRules> = fc.integer({ min: 2, max: 8 }).chai
         underdogFloorBps,
         momentumRetentionBps,
         statWeights,
-        typeWeights,
-        shifts,
+        slotConfigs,
       }): ContestRules => ({
         kind: "head-to-head",
         participantCount: 1,
@@ -86,44 +81,30 @@ const rulesArb: fc.Arbitrary<ContestRules> = fc.integer({ min: 2, max: 8 }).chai
           underdogFloorBps,
         },
         momentumRetentionBps,
-        slots: [
-          { id: "setup", scoring: false },
-          { id: "resolution", scoring: true },
-        ],
+        slots: slotConfigs.map((_config, index) => ({
+          id: `slot-${index}`,
+          scoring: index === slotConfigs.length - 1,
+        })),
         metrics: [
           { id: "alpha", label: "Alpha" },
           { id: "beta", label: "Beta" },
         ],
-        momentTypes: [
+        momentTypes: slotConfigs.flatMap((config, index) => [
           {
-            id: "setup-a",
-            slot: "setup",
-            weight: typeWeights[0],
-            momentumShift: shifts[0],
+            id: `slot-${index}-a`,
+            slot: `slot-${index}`,
+            weight: config.firstWeight,
+            momentumShift: config.firstShift,
             participantMetricDeltas: { alpha: 1 },
           },
           {
-            id: "setup-b",
-            slot: "setup",
-            weight: typeWeights[1],
-            momentumShift: shifts[1],
+            id: `slot-${index}-b`,
+            slot: `slot-${index}`,
+            weight: config.secondWeight,
+            momentumShift: config.secondShift,
             participantMetricDeltas: { beta: -1 },
           },
-          {
-            id: "resolution-a",
-            slot: "resolution",
-            weight: typeWeights[2],
-            momentumShift: shifts[2],
-            participantMetricDeltas: { alpha: 2, beta: 1 },
-          },
-          {
-            id: "resolution-b",
-            slot: "resolution",
-            weight: typeWeights[3],
-            momentumShift: shifts[3],
-            participantMetricDeltas: { alpha: -1, beta: 2 },
-          },
-        ],
+        ]),
       }),
     ),
 );
@@ -229,7 +210,9 @@ describe("Contest resolution properties", () => {
 
         for (let unit = 1; unit <= result.unitsResolved; unit += 1) {
           const unitMoments = result.moments.filter((moment) => moment.unit === unit);
-          expect(unitMoments.map((moment) => moment.slotId)).toEqual(["setup", "resolution"]);
+          expect(unitMoments.map((moment) => moment.slotId)).toEqual(
+            input.rules.slots.map((slot) => slot.id),
+          );
           expect(unitMoments.reduce((total, moment) => total + moment.scoreDelta, 0)).toBe(1);
         }
 

@@ -245,6 +245,21 @@ describe("content validator (ADR 0003)", () => {
       "positive total",
     ],
     [
+      "a slot id with a leading hyphen",
+      {
+        ...discipline,
+        contest: {
+          ...discipline.contest,
+          slots: [{ id: "-setup", scoring: false }, discipline.contest.slots[1]],
+          momentTypes: [
+            { ...discipline.contest.momentTypes[0], slot: "-setup" },
+            discipline.contest.momentTypes[1],
+          ],
+        },
+      },
+      "-setup",
+    ],
+    [
       "an unsupported contest kind",
       { ...discipline, contest: { ...discipline.contest, kind: "series" } },
       "series",

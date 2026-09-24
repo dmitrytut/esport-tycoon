@@ -56,6 +56,55 @@ describe("contest-only scenario loading", () => {
     expect(scenario.rules.scoreToWin).toBe(13);
     expect(scenario.rules.maxUnits).toBe(24);
   });
+  it.each([
+    [
+      "root",
+      "seedRanges",
+      (value: Record<string, unknown>) => {
+        value["seedRanges"] = { first: 0, last: 4095 };
+      },
+    ],
+    [
+      "comparison",
+      "threshold",
+      (value: Record<string, unknown>) => {
+        const comparisons = value["comparisons"] as Record<string, unknown>[];
+        const comparison = comparisons[0];
+        if (comparison === undefined) throw new Error("mechanical comparison missing");
+        comparison["threshold"] = {};
+      },
+    ],
+    [
+      "profile",
+      "rosterSize",
+      (value: Record<string, unknown>) => {
+        const comparisons = value["comparisons"] as {
+          stronger: Record<string, unknown>;
+        }[];
+        const comparison = comparisons[0];
+        if (comparison === undefined) throw new Error("mechanical comparison missing");
+        comparison.stronger["rosterSize"] = 5;
+      },
+    ],
+    [
+      "threshold",
+      "minimumStrongerWinsBps",
+      (value: Record<string, unknown>) => {
+        const comparisons = value["comparisons"] as {
+          thresholds: Record<string, unknown>;
+        }[];
+        const comparison = comparisons[0];
+        if (comparison === undefined) throw new Error("mechanical comparison missing");
+        comparison.thresholds["minimumStrongerWinsBps"] = 5500;
+      },
+    ],
+  ])("rejects an unknown %s field", (_location, key, change) => {
+    const path = changedScenario(change);
+
+    expect(() => loadContestScenario(path, content)).toThrow(
+      new RegExp(`${key}.*not supported`, "i"),
+    );
+  });
 
   it("rejects a selected seed subset before resolving a Contest", () => {
     const path = changedScenario((value) => {

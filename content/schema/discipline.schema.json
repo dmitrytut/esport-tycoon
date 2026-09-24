@@ -7,7 +7,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^[a-z0-9-]+$"
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
     },
     "name": {
       "type": "string",
@@ -145,7 +145,7 @@
             "properties": {
               "id": {
                 "type": "string",
-                "pattern": "^[a-z0-9-]+$"
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
               },
               "scoring": {
                 "type": "boolean"
@@ -164,7 +164,7 @@
             "properties": {
               "id": {
                 "type": "string",
-                "pattern": "^[a-z0-9-]+$"
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
               },
               "label": {
                 "type": "string",
@@ -184,11 +184,11 @@
             "properties": {
               "id": {
                 "type": "string",
-                "pattern": "^[a-z0-9-]+$"
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
               },
               "slot": {
                 "type": "string",
-                "pattern": "^[a-z0-9-]+$"
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
               },
               "weight": {
                 "type": "integer",
@@ -203,7 +203,7 @@
               "participantMetricDeltas": {
                 "type": "object",
                 "propertyNames": {
-                  "pattern": "^[a-z0-9-]+$"
+                  "pattern": "^[a-z0-9][a-z0-9-]*$"
                 },
                 "additionalProperties": {
                   "type": "integer",

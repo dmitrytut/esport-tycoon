@@ -569,6 +569,8 @@ interface CalculatedCollective {
   readonly collectiveId: string;
   /** Canonically id-sorted participants used for weighted attribution. */
   readonly participants: readonly CalculatedParticipant[];
+  /** Positive weights aligned with the canonical participant order. */
+  readonly participantWeights: readonly number[];
   /** Half-up mean of participant strengths in integer deci-points. */
   readonly strengthDeciPoints: number;
 }
@@ -579,11 +581,18 @@ interface MomentChoices {
   readonly types: readonly ContestMomentType[];
   /** Positive weights aligned with `types`. */
   readonly weights: readonly number[];
+  /** Canonically ordered metric deltas aligned with `types`. */
+  readonly orderedMetricDeltas: readonly Readonly<Record<string, number>>[];
 }
 
 /** Half-up integer division for the non-negative strength calculations. */
 function roundHalfUp(numerator: number, denominator: number): number {
   return Math.floor((2 * numerator + denominator) / (2 * denominator));
+}
+
+/** Canonicalize truncation's −0 so replay and JSON round-trips share one zero representation. */
+function canonicalZero(value: number): number {
+  return value === 0 ? 0 : value;
 }
 
 /**
@@ -630,6 +639,7 @@ function calculateCollective(
   return {
     collectiveId: collective.collectiveId,
     participants,
+    participantWeights: participants.map((participant) => participant.strengthDeciPoints),
     strengthDeciPoints: roundHalfUp(total, participants.length),
   };
 }
@@ -660,7 +670,11 @@ function momentChoicesBySlot(rules: ContestRules): Map<string, MomentChoices> {
       .filter((type) => type.slot === slot.id)
       .slice()
       .sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
-    choices.set(slot.id, { types, weights: types.map((type) => type.weight) });
+    choices.set(slot.id, {
+      types,
+      weights: types.map((type) => type.weight),
+      orderedMetricDeltas: types.map((type) => orderedMetricRecord(type.participantMetricDeltas)),
+    });
   }
   return choices;
 }
@@ -716,6 +730,10 @@ function resolveValidatedContest(input: ContestInput): ContestResult {
   const first = calculateCollective(input.first, input.rules.statWeights);
   const second = calculateCollective(input.second, input.rules.statWeights);
   const choicesBySlot = momentChoicesBySlot(input.rules);
+  const firstBaseBps =
+    5000 +
+    (first.strengthDeciPoints - second.strengthDeciPoints) *
+      input.rules.sideChance.strengthBpsPerDeciPoint;
   const totalsByPerformer = new Map<string, Record<string, number>>();
   const allParticipants = [...first.participants, ...second.participants];
   for (const participant of allParticipants) {
@@ -733,17 +751,16 @@ function resolveValidatedContest(input: ContestInput): ContestResult {
     for (const slot of input.rules.slots) {
       const choices = choicesBySlot.get(slot.id);
       if (choices === undefined) throw new RangeError(`missing Moment choices for "${slot.id}"`);
-      const selectedType = selectedAt(
-        choices.types,
-        rng.weightedIndex(choices.weights),
-        "Moment type",
+      const selectedTypeIndex = rng.weightedIndex(choices.weights);
+      const selectedType = selectedAt(choices.types, selectedTypeIndex, "Moment type");
+      const deltas = selectedAt(
+        choices.orderedMetricDeltas,
+        selectedTypeIndex,
+        "Moment metric deltas",
       );
 
       const firstBps = clamp(
-        5000 +
-          (first.strengthDeciPoints - second.strengthDeciPoints) *
-            input.rules.sideChance.strengthBpsPerDeciPoint +
-          momentum * input.rules.sideChance.momentumBpsPerPoint,
+        firstBaseBps + momentum * input.rules.sideChance.momentumBpsPerPoint,
         input.rules.sideChance.underdogFloorBps,
         10000 - input.rules.sideChance.underdogFloorBps,
       );
@@ -751,14 +768,12 @@ function resolveValidatedContest(input: ContestInput): ContestResult {
       const selectedCollective = rng.nextUint32() < firstThreshold ? first : second;
       const selectedParticipant = selectedAt(
         selectedCollective.participants,
-        rng.weightedIndex(
-          selectedCollective.participants.map((participant) => participant.strengthDeciPoints),
-        ),
+        rng.weightedIndex(selectedCollective.participantWeights),
         "participant",
       );
 
       const retainedMomentum = Math.trunc((momentum * input.rules.momentumRetentionBps) / 10000);
-      const momentumRetained = retainedMomentum === 0 ? 0 : retainedMomentum;
+      const momentumRetained = canonicalZero(retainedMomentum);
       const momentumShift =
         selectedCollective === first ? selectedType.momentumShift : -selectedType.momentumShift;
       const momentumAfter = clamp(momentumRetained + momentumShift, -100, 100);
@@ -768,7 +783,6 @@ function resolveValidatedContest(input: ContestInput): ContestResult {
         else secondTally += 1;
       }
 
-      const deltas = orderedMetricRecord(selectedType.participantMetricDeltas);
       addMetricDeltas(totalsByPerformer, selectedParticipant.input.performerId, deltas);
       moments.push({
         index: moments.length,

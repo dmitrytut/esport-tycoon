@@ -108,6 +108,25 @@ function oneDecimal(value: number): boolean {
   return Number.isFinite(value) && Number.isInteger(value * 10);
 }
 
+/** Narrow external JSON values before inspecting their declared fields. */
+function requireRecord(value: unknown, path: string): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError(`${path} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+/** Keep each scenario object closed so misspelled declarations cannot become inert data. */
+function rejectUnknownKeys(
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+  path: string,
+): void {
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key)) throw new TypeError(`${path}.${key} is not supported`);
+  }
+}
+
 /** Reject a profile before any Contest is resolved. */
 function validateProfile(
   scenarioName: string,
@@ -118,6 +137,15 @@ function validateProfile(
   const fail = (message: string): never => {
     throw new Error(`scenario "${scenarioName}": comparison "${comparisonId}" ${message}`);
   };
+  const profileRecord = requireRecord(
+    profile,
+    `scenario "${scenarioName}": comparison "${comparisonId}" profile`,
+  );
+  rejectUnknownKeys(
+    profileRecord,
+    ["id", "collectiveId", "participantCount", "stats", "form", "energy"],
+    `scenario "${scenarioName}": comparison "${comparisonId}" profile`,
+  );
   if (profile.id.length === 0) fail("has a profile with an empty id");
   if (profile.collectiveId.length === 0) fail(`profile "${profile.id}" has an empty collectiveId`);
   if (profile.participantCount !== rules.participantCount) {
@@ -151,8 +179,22 @@ function validateThresholds(
   comparisonId: string,
   thresholds: ContestThresholds,
 ): void {
-  for (const [name, value] of Object.entries(thresholds)) {
-    if (!Number.isInteger(value) || value < 0 || value > 10_000) {
+  const thresholdRecord = requireRecord(
+    thresholds,
+    `scenario "${scenarioName}": comparison "${comparisonId}" thresholds`,
+  );
+  rejectUnknownKeys(
+    thresholdRecord,
+    [
+      "minimumStrongerWinBps",
+      "minimumAdvantageBps",
+      "minimumWeakerWinBps",
+      "maximumOrientationGapBps",
+    ],
+    `scenario "${scenarioName}": comparison "${comparisonId}" thresholds`,
+  );
+  for (const [name, value] of Object.entries(thresholdRecord)) {
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 10_000) {
       throw new Error(
         `scenario "${scenarioName}": comparison "${comparisonId}" threshold "${name}" is ${String(value)}; expected integer basis points from 0 through 10000`,
       );
@@ -162,8 +204,14 @@ function validateThresholds(
 
 /** Loads one fixed-population Contest measurement and resolves its rules from content. */
 export function loadContestScenario(path: string, content: SimContent): ContestScenario {
-  const file = JSON.parse(readFileSync(path, "utf8")) as ContestScenarioFile;
   const name = basename(path, ".json");
+  const rawFile = requireRecord(JSON.parse(readFileSync(path, "utf8")), `scenario "${name}"`);
+  rejectUnknownKeys(
+    rawFile,
+    ["id", "kind", "disciplineId", "rulesId", "seedRange", "orientations", "comparisons"],
+    `scenario "${name}"`,
+  );
+  const file = rawFile as unknown as ContestScenarioFile;
   const fail = (message: string): never => {
     throw new Error(`scenario "${name}": ${message}`);
   };
@@ -194,6 +242,15 @@ export function loadContestScenario(path: string, content: SimContent): ContestS
 
   const comparisonIds = new Set<string>();
   for (const comparison of file.comparisons) {
+    const comparisonRecord = requireRecord(
+      comparison,
+      `scenario "${name}": comparison "${comparison.id}"`,
+    );
+    rejectUnknownKeys(
+      comparisonRecord,
+      ["id", "stronger", "weaker", "thresholds"],
+      `scenario "${name}": comparison "${comparison.id}"`,
+    );
     if (comparisonIds.has(comparison.id)) fail(`comparison id "${comparison.id}" is duplicated`);
     comparisonIds.add(comparison.id);
     if (comparison.stronger.collectiveId === comparison.weaker.collectiveId) {

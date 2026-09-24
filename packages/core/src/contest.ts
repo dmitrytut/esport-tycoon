@@ -756,7 +756,8 @@ function resolveValidatedContest(input: ContestInput): ContestResult {
         "participant",
       );
 
-      const momentumRetained = Math.trunc((momentum * input.rules.momentumRetentionBps) / 10000);
+      const retainedMomentum = Math.trunc((momentum * input.rules.momentumRetentionBps) / 10000);
+      const momentumRetained = retainedMomentum === 0 ? 0 : retainedMomentum;
       const momentumShift =
         selectedCollective === first ? selectedType.momentumShift : -selectedType.momentumShift;
       const momentumAfter = clamp(momentumRetained + momentumShift, -100, 100);

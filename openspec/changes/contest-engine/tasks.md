@@ -34,9 +34,9 @@
 
 ## 7. Content-only portability and properties
 
-- [ ] 7.1 Add a non-shipped second-discipline JSON fixture under `packages/core/test/fixtures/` with different six-stat weights, slots, Moment types, metrics and valid numbers, including a unit cap that can end in a non-draw below target; validate it with the production schema and referential checks without loading it as shipped content, then resolve it through the public engine and prove no discipline-id or tactical-shooter branch is added.
-- [ ] 7.2 Add fast-check properties for identical replay, success/failure input purity, momentum/tally/unit/energy bounds, scoring-slot conservation, participant membership, metric reconciliation, participant/type reorder invariance and JSON continuation; run the focused property suite under the repository's globally pinned fast-check configuration from `tests/setup/fast-check.ts` without adding a per-test seed.
-- [ ] 7.3 Add focused source/gate coverage for domain-neutral public vocabulary and verify `pnpm lint` keeps `et/no-domain-words` green with only Contest, Moment, Collective and Performer concepts in core.
+- [x] 7.1 Add a non-shipped second-discipline JSON fixture under `packages/core/test/fixtures/` with different six-stat weights, slots, Moment types, metrics and valid numbers, including a unit cap that can end in a non-draw below target; validate it with the production schema and referential checks without loading it as shipped content, then resolve it through the public engine and prove no discipline-id or tactical-shooter branch is added.
+- [x] 7.2 Add fast-check properties for identical replay, success/failure input purity, momentum/tally/unit/energy bounds, scoring-slot conservation, participant membership, metric reconciliation, participant/type reorder invariance and JSON continuation; run the focused property suite under the repository's globally pinned fast-check configuration from `tests/setup/fast-check.ts` without adding a per-test seed.
+- [x] 7.3 Add focused source/gate coverage for domain-neutral public vocabulary and verify `pnpm lint` keeps `et/no-domain-words` green with only Contest, Moment, Collective and Performer concepts in core.
 
 ## 8. Deterministic statistical harness
 

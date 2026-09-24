@@ -38,6 +38,7 @@ export {
   type ContestSlot,
   type ContestStatWeights,
   type ContestTally,
+  resolveContest,
 } from "./contest.ts";
 export {
   type DeterminateForecastWeek,

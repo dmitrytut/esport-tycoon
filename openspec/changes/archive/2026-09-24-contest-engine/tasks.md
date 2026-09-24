@@ -52,7 +52,7 @@
 ## 10. Integration gate and archive
 
 - [x] 10.1 Run focused unit, property, validator and sim-harness smoke commands, then `pnpm format`, `pnpm lint`, `pnpm check:language`, `pnpm typecheck` and full `pnpm verify`; fix every failure without changing `test/golden/**` or `sim/baseline/**`.
-- [ ] 10.2 Archive with `/opsx:archive contest-engine`, verify `openspec validate --all` passes, and inspect the archived `contest-engine` and `sim-harness` live specs before opening PR-2; do not hand-edit `openspec/specs/**`.
+- [x] 10.2 Archive with `/opsx:archive contest-engine`, verify `openspec validate --all` passes, and inspect the archived `contest-engine` and `sim-harness` live specs before opening PR-2; do not hand-edit `openspec/specs/**`.
 
 Golden snapshot regeneration is not part of PR-2. If later evidence justifies one, it must be a
 separate pull request containing exactly one `golden:` commit, as required by ADR 0009 and

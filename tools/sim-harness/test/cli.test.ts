@@ -4,11 +4,13 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import type { ContestReport } from "../src/contest-report.ts";
 import type { SimReport } from "../src/report.ts";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const entry = join(repoRoot, "tools/sim-harness/src/index.ts");
 const smokeScenario = join(repoRoot, "tools/sim-harness/scenarios/incidents-smoke.json");
+const contestScenario = join(repoRoot, "tools/sim-harness/scenarios/contest-strength.json");
 
 /** Captured process result from invoking the public command line. */
 interface CliResult {
@@ -122,5 +124,26 @@ describe("the simulation command line", () => {
     for (const policy of first.policies) {
       for (const seed of policy.seeds) expect(seed.incidents.length).toBeGreaterThan(0);
     }
+  });
+
+  it("runs a contest-only scenario without week-walk fields", () => {
+    const result = run(["--scenario", contestScenario, "--format", "json"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    const report: ContestReport = JSON.parse(result.stdout);
+    expect(report.kind).toBe("contest-only");
+    expect(report.seedCount).toBe(4096);
+    expect(report.comparisons).toHaveLength(2);
+    expect(Object.hasOwn(report, "horizon")).toBe(false);
+    expect(Object.hasOwn(report, "policies")).toBe(false);
+  });
+
+  it("rejects week-only overrides for a contest-only scenario", () => {
+    const result = run(["--scenario", contestScenario, "--policy", "money"]);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toMatch(/contest-only.*policy/i);
   });
 });

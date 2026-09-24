@@ -1,0 +1,84 @@
+{
+  "id": "strategy-arena",
+  "name": "Strategy Arena",
+  "rosterSize": 3,
+  "statWeights": {
+    "mechanical": 0,
+    "cognitive": 4,
+    "collective": 1,
+    "composure": 0,
+    "adaptability": 3,
+    "presence": 2
+  },
+  "contest": {
+    "kind": "head-to-head",
+    "scoreToWin": 5,
+    "maxUnits": 5,
+    "energyCost": 7,
+    "momentumMeans": "map initiative",
+    "sideChance": {
+      "strengthBpsPerDeciPoint": 20,
+      "momentumBpsPerPoint": 5,
+      "underdogFloorBps": 3500
+    },
+    "momentumRetentionBps": 5000,
+    "slots": [
+      {
+        "id": "draft",
+        "scoring": false
+      },
+      {
+        "id": "maneuver",
+        "scoring": false
+      },
+      {
+        "id": "capture",
+        "scoring": true
+      }
+    ],
+    "metrics": [
+      {
+        "id": "objectives",
+        "label": "Objectives"
+      },
+      {
+        "id": "mistakes",
+        "label": "Mistakes"
+      }
+    ],
+    "momentTypes": [
+      {
+        "id": "counter-pick",
+        "slot": "draft",
+        "weight": 2,
+        "momentumShift": 4,
+        "participantMetricDeltas": {
+          "objectives": 1
+        }
+      },
+      {
+        "id": "split-pressure",
+        "slot": "maneuver",
+        "weight": 3,
+        "momentumShift": 7,
+        "participantMetricDeltas": {
+          "mistakes": -1
+        }
+      },
+      {
+        "id": "zone-capture",
+        "slot": "capture",
+        "weight": 5,
+        "momentumShift": 9,
+        "participantMetricDeltas": {
+          "objectives": 2,
+          "mistakes": 1
+        }
+      }
+    ]
+  },
+  "economy": {
+    "baseWeeklyRate": 1.2,
+    "salaryScale": 0.8
+  }
+}

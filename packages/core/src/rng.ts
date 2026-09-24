@@ -68,7 +68,7 @@ function makeRng(seed: number, initial: RngState): Rng {
   const nextUint32 = (): number => {
     const t = (a + b + counter) >>> 0;
     counter = (counter + 1) >>> 0;
-    a = b ^ (b >>> 9);
+    a = (b ^ (b >>> 9)) >>> 0;
     b = (c + (c << 3)) >>> 0;
     c = ((c << 21) | (c >>> 11)) >>> 0;
     c = (c + t) >>> 0;

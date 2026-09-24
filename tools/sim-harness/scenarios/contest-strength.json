@@ -1,0 +1,88 @@
+{
+  "id": "contest-strength",
+  "kind": "contest-only",
+  "disciplineId": "tactical-shooter",
+  "rulesId": "tactical-shooter",
+  "seedRange": {
+    "first": 0,
+    "last": 4095
+  },
+  "orientations": ["stronger-first", "weaker-first"],
+  "comparisons": [
+    {
+      "id": "mechanical-edge",
+      "stronger": {
+        "id": "mechanical-14",
+        "collectiveId": "mechanical-14",
+        "participantCount": 5,
+        "stats": {
+          "mechanical": 14,
+          "cognitive": 10,
+          "collective": 10,
+          "composure": 10,
+          "adaptability": 10,
+          "presence": 10
+        },
+        "form": 0,
+        "energy": 100
+      },
+      "weaker": {
+        "id": "baseline-10",
+        "collectiveId": "baseline-10",
+        "participantCount": 5,
+        "stats": {
+          "mechanical": 10,
+          "cognitive": 10,
+          "collective": 10,
+          "composure": 10,
+          "adaptability": 10,
+          "presence": 10
+        },
+        "form": 0,
+        "energy": 100
+      },
+      "thresholds": {
+        "minimumStrongerWinBps": 5500,
+        "minimumAdvantageBps": 1000,
+        "minimumWeakerWinBps": 2000
+      }
+    },
+    {
+      "id": "maximum-gap",
+      "stronger": {
+        "id": "maximum-strong",
+        "collectiveId": "maximum-strong",
+        "participantCount": 5,
+        "stats": {
+          "mechanical": 20,
+          "cognitive": 20,
+          "collective": 20,
+          "composure": 20,
+          "adaptability": 10,
+          "presence": 10
+        },
+        "form": 0,
+        "energy": 100
+      },
+      "weaker": {
+        "id": "maximum-weak",
+        "collectiveId": "maximum-weak",
+        "participantCount": 5,
+        "stats": {
+          "mechanical": 1,
+          "cognitive": 1,
+          "collective": 1,
+          "composure": 1,
+          "adaptability": 10,
+          "presence": 10
+        },
+        "form": 0,
+        "energy": 100
+      },
+      "thresholds": {
+        "minimumWeakerWinBps": 500,
+        "maximumOrientationGapBps": 300
+      }
+    }
+  ]
+}

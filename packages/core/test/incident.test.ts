@@ -436,7 +436,7 @@ describe("selectIncident", () => {
       performerId: "solo-target",
       week: 10,
     });
-    expect(result.state.rng).toEqual([-461086731, 3797434685, 3526931618, 15]);
+    expect(result.state.rng).toEqual([3833880565, 3797434685, 3526931618, 15]);
   });
 
   it("rejects inertly when an incident is already pending, before any rng movement", () => {

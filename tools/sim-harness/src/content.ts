@@ -8,6 +8,7 @@ import { join } from "node:path";
 
 import type {
   Activity,
+  ContestRules,
   Incident,
   IncidentCategoryMultipliers,
   IncidentTraitMultipliers,
@@ -27,6 +28,8 @@ export interface SimContent {
   readonly originRateScales: ReadonlyMap<string, number>;
   /** Absolute and relative rate inputs by discipline id. */
   readonly disciplineRates: ReadonlyMap<string, DisciplineRateProfile>;
+  /** Complete validated Contest rules by discipline id. */
+  readonly contestRules: ReadonlyMap<string, ContestRules>;
   /** Incidents by id; a scenario names the subset it enables. */
   readonly incidents: ReadonlyMap<string, Incident>;
   /** Declared trait event-weight boosts by trait id, for the incident engine's weighting. */
@@ -85,10 +88,19 @@ interface Region {
   readonly namePools?: readonly string[];
 }
 
-/** One discipline file's economy fields needed by engagement quotation. */
+/** One discipline file's fields consumed by quotations and Contest measurements. */
 interface Discipline {
   /** Discipline id, matching the file name. */
   readonly id: string;
+  /** Number of participants required on each Contest side. */
+  readonly rosterSize: number;
+  /** Complete six-stat weights interpreted by core. */
+  readonly statWeights: ContestRules["statWeights"];
+  /** Validated Contest block; player-facing momentum text is not a core rule. */
+  readonly contest: Omit<ContestRules, "participantCount" | "statWeights"> & {
+    /** Player-facing explanation retained in content, not core. */
+    readonly momentumMeans: string;
+  };
   /** Economy block carrying the rate inputs a quote needs. */
   readonly economy: {
     /** Absolute weekly money magnitude before any relative scale. */
@@ -130,6 +142,7 @@ export function loadContent(contentRoot: string): SimContent {
   }
 
   const disciplineRates = new Map<string, DisciplineRateProfile>();
+  const contestRules = new Map<string, ContestRules>();
   for (const file of listJson(join(contentRoot, "disciplines"))) {
     const discipline = readJson(join(contentRoot, "disciplines", file)) as Discipline;
     disciplineRates.set(discipline.id, {
@@ -142,6 +155,19 @@ export function loadContent(contentRoot: string): SimContent {
         discipline.economy.salaryScale,
         `discipline "${discipline.id}" rate scale`,
       ),
+    });
+    contestRules.set(discipline.id, {
+      kind: discipline.contest.kind,
+      participantCount: discipline.rosterSize,
+      statWeights: discipline.statWeights,
+      scoreToWin: discipline.contest.scoreToWin,
+      maxUnits: discipline.contest.maxUnits,
+      energyCost: discipline.contest.energyCost,
+      sideChance: discipline.contest.sideChance,
+      momentumRetentionBps: discipline.contest.momentumRetentionBps,
+      slots: discipline.contest.slots,
+      metrics: discipline.contest.metrics,
+      momentTypes: discipline.contest.momentTypes,
     });
   }
 
@@ -204,6 +230,7 @@ export function loadContent(contentRoot: string): SimContent {
     origins,
     originRateScales,
     disciplineRates,
+    contestRules,
     incidents,
     seasons,
     traitMultipliers,

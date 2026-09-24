@@ -1,0 +1,8 @@
+{
+  "id": "season-no-series",
+  "length": 24,
+  "markings": {
+    "contest": { "min": 6, "max": 8 },
+    "series": { "min": 0, "max": 0 }
+  }
+}

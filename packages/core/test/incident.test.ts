@@ -759,6 +759,8 @@ describe("resolveIncident", () => {
     expect(Object.keys(result.state).sort()).toEqual([
       "collective",
       "consecutiveNegativeWeeks",
+      "contest",
+      "encounter",
       "engagements",
       "incidents",
       "org",

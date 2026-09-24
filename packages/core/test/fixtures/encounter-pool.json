@@ -1,0 +1,16 @@
+[
+  {
+    "id": "garage-rivals",
+    "label": "The Garage Regulars",
+    "disciplineId": "tactical-shooter",
+    "opponent": { "originId": "western-europe", "level": 2 },
+    "reward": { "win": 12, "loss": 2, "draw": 5 }
+  },
+  {
+    "id": "late-shift",
+    "label": "Late Shift Collective",
+    "disciplineId": "tactical-shooter",
+    "opponent": { "originId": "cis", "level": 3 },
+    "reward": { "win": 15, "loss": 1, "draw": 6 }
+  }
+]

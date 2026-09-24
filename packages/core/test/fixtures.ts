@@ -1,5 +1,7 @@
 import type { Activity } from "../src/activity.ts";
 import type { Collective } from "../src/collective.ts";
+import { CONTEST_STREAM_NAME } from "../src/contest.ts";
+import { ENCOUNTER_STREAM_NAME } from "../src/encounter.ts";
 import type { Engagement } from "../src/engagement.ts";
 import type { Incident } from "../src/incident.ts";
 import { createIncidentState } from "../src/incident.ts";
@@ -89,6 +91,8 @@ export function makeState(collective: Collective, org: Org = makeOrg(), week = 0
     consecutiveNegativeWeeks: 0,
     seed: 42,
     rng: createRng(42).state(),
+    contest: createRng(42).stream(CONTEST_STREAM_NAME).state(),
+    encounter: createRng(42).stream(ENCOUNTER_STREAM_NAME).state(),
     incidents: createIncidentState(42),
   };
 }

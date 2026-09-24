@@ -43,6 +43,7 @@ function sandbox(): string {
     "names",
     "activities",
     "seasons",
+    "encounters",
   ]) {
     mkdirSync(join(root, dir), { recursive: true });
   }
@@ -59,6 +60,13 @@ const trait = {
   description: "Sleeps at dawn, plays at night.",
 };
 const region = { id: "nordics", name: "Nordics", language: "sv", modifiers: { salaryScale: 1 } };
+const encounter = {
+  id: "rimefall-academy",
+  label: "Rimefall Academy",
+  disciplineId: "tactical-shooter",
+  opponent: { originId: "nordics", level: 2 },
+  reward: { win: 800, loss: 200, draw: 400 },
+};
 const discipline = {
   id: "tactical-shooter",
   name: "Tactical Shooter",
@@ -985,5 +993,219 @@ describe("content validator (ADR 0003)", () => {
     const result = run(root);
     expect(result.code).toBe(1);
     expect(result.output).toContain("content/seasons/standard.json");
+  });
+
+  it.each([
+    ["a missing id", { ...encounter, id: undefined }, 'offending property "id"'],
+    ["a missing label", { ...encounter, label: undefined }, 'offending property "label"'],
+    [
+      "a missing discipline id",
+      { ...encounter, disciplineId: undefined },
+      'offending property "disciplineId"',
+    ],
+    ["a missing opponent", { ...encounter, opponent: undefined }, 'offending property "opponent"'],
+    [
+      "a missing opponent origin",
+      { ...encounter, opponent: { level: 2 } },
+      'offending property "originId"',
+    ],
+    [
+      "a missing opponent level",
+      { ...encounter, opponent: { originId: "nordics" } },
+      'offending property "level"',
+    ],
+    ["a missing reward", { ...encounter, reward: undefined }, 'offending property "reward"'],
+    [
+      "a missing win amount",
+      { ...encounter, reward: { loss: 200, draw: 400 } },
+      'offending property "win"',
+    ],
+    [
+      "a missing loss amount",
+      { ...encounter, reward: { win: 800, draw: 400 } },
+      'offending property "loss"',
+    ],
+    [
+      "a missing draw amount",
+      { ...encounter, reward: { win: 800, loss: 200 } },
+      'offending property "draw"',
+    ],
+  ])("rejects %s with the offending property", (_label, invalid, expected) => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", invalid);
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain(expected);
+  });
+
+  it("rejects a definition id whose first character is not a letter or digit", () => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/-invalid.json", { ...encounter, id: "-invalid" });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/-invalid.json");
+    expect(result.output).toContain('offending value "-invalid"');
+  });
+
+  it.each([
+    ["a level below the minimum", { ...encounter.opponent, level: 0 }, "must be >= 1", "value 0"],
+    ["a level above the maximum", { ...encounter.opponent, level: 6 }, "must be <= 5", "value 6"],
+    ["a non-integer level", { ...encounter.opponent, level: 2.5 }, "must be integer", "value 2.5"],
+  ])("rejects %s with the offending value", (_label, opponent, rule, value) => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", { ...encounter, opponent });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain(rule);
+    expect(result.output).toContain(value);
+  });
+
+  it.each([
+    ["win", 0.3],
+    ["loss", 100.1],
+    ["draw", 400.3],
+  ])("accepts an on-grid %s reward of %s", (outcome, amount) => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", {
+      ...encounter,
+      reward: { ...encounter.reward, [outcome]: amount },
+    });
+
+    const result = run(root);
+    expect(result.code, result.output).toBe(0);
+    expect(result.output).toContain("encounters: 1");
+  });
+
+  it.each([
+    [
+      "a negative win amount",
+      { win: -100, loss: 200, draw: 400 },
+      "/reward/win must be >= 0",
+      "value -100",
+    ],
+    [
+      "a negative loss amount",
+      { win: 800, loss: -1, draw: 400 },
+      "/reward/loss must be >= 0",
+      "value -1",
+    ],
+    [
+      "a negative draw amount",
+      { win: 800, loss: 200, draw: -0.1 },
+      "/reward/draw must be >= 0",
+      "value -0.1",
+    ],
+    [
+      "an off-grid win amount",
+      { win: 800.05, loss: 200, draw: 400 },
+      "reward.win must be on the one-tenth money grid",
+      "value 800.05",
+    ],
+    [
+      "an off-grid loss amount",
+      { win: 800, loss: 200.33, draw: 400 },
+      "reward.loss must be on the one-tenth money grid",
+      "value 200.33",
+    ],
+    [
+      "an off-grid draw amount",
+      { win: 800, loss: 200, draw: 400.007 },
+      "reward.draw must be on the one-tenth money grid",
+      "value 400.007",
+    ],
+  ])("rejects %s with the offending value", (_label, reward, rule, value) => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", { ...encounter, reward });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain(rule);
+    expect(result.output).toContain(value);
+  });
+
+  it("rejects an unknown top-level field", () => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", { ...encounter, prizeTier: "elite" });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain('"prizeTier"');
+  });
+
+  it("rejects an unknown opponent field", () => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", {
+      ...encounter,
+      opponent: { ...encounter.opponent, seed: 7 },
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain('"seed"');
+  });
+
+  it("rejects an unknown reward field", () => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", {
+      ...encounter,
+      reward: { ...encounter.reward, entryFee: 50 },
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain('"entryFee"');
+  });
+
+  it("catches a dangling encounter reference to a nonexistent discipline", () => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "encounters/rimefall-academy.json", {
+      ...encounter,
+      disciplineId: "ghost-discipline",
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain("nonexistent disciplines");
+  });
+
+  it("catches a dangling encounter reference to a nonexistent origin", () => {
+    const root = fresh();
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/rimefall-academy.json", {
+      ...encounter,
+      opponent: { ...encounter.opponent, originId: "ghost-region" },
+    });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/rimefall-academy.json");
+    expect(result.output).toContain("nonexistent regions");
   });
 });

@@ -458,8 +458,8 @@ function validateMomentRules(rules: Record<string, unknown>): void {
   }
 }
 
-/** Validate all rules before RNG construction or consequence calculation. */
-function validateRules(value: unknown): number {
+/** Validate rules before a Contest or season field consumes randomness; internal module API. */
+export function validateContestRules(value: unknown): number {
   const rules = requireRecord(value, "rules");
   rejectUnknownKeys(
     rules,
@@ -543,7 +543,7 @@ function validateContestInput(input: ContestInput): void {
   );
   requireStableId(root["contestId"], "contestId");
   requireStableId(root["disciplineId"], "disciplineId");
-  const participantCount = validateRules(root["rules"]);
+  const participantCount = validateContestRules(root["rules"]);
   const performerIds = new Set<string>();
   const firstId = validateCollective(root["first"], participantCount, "first", performerIds);
   const secondId = validateCollective(root["second"], participantCount, "second", performerIds);

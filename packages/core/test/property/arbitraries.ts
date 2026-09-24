@@ -2,6 +2,8 @@ import fc from "fast-check";
 
 import type { Activity, ActivityEffect } from "../../src/activity.ts";
 import type { Collective } from "../../src/collective.ts";
+import { CONTEST_STREAM_NAME } from "../../src/contest.ts";
+import { ENCOUNTER_STREAM_NAME } from "../../src/encounter.ts";
 import type { GenerateParams, OriginProfile } from "../../src/generate.ts";
 import { generatePerformer } from "../../src/generate.ts";
 import { createIncidentState } from "../../src/incident.ts";
@@ -193,5 +195,7 @@ export const runStateArb: fc.Arbitrary<RunState> = fc
     consecutiveNegativeWeeks: 0,
     seed,
     rng: createRng(seed).state(),
+    contest: createRng(seed).stream(CONTEST_STREAM_NAME).state(),
+    encounter: createRng(seed).stream(ENCOUNTER_STREAM_NAME).state(),
     incidents: createIncidentState(seed),
   }));

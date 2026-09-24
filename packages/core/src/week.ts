@@ -225,6 +225,10 @@ export interface RunState {
   readonly seed: number | string;
   /** Continuation of that stream. */
   readonly rng: RngState;
+  /** Continuation of the named `contest` stream `season-contest` settlement consumes. */
+  readonly contest: RngState;
+  /** Continuation of the named `encounter` stream `season-contest` field materialization and opening consume. */
+  readonly encounter: RngState;
   /** The mandatory, independently seeded incident lifecycle: pending choice and cooldowns. */
   readonly incidents: IncidentState;
 }

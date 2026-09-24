@@ -19,6 +19,7 @@ import {
   type ContestResult,
   type ContestRules,
   resolveContest,
+  validateContestRules,
 } from "./contest.ts";
 import type { OriginProfile } from "./generate.ts";
 import { generatePerformer } from "./generate.ts";
@@ -41,6 +42,9 @@ export const ENCOUNTER_STREAM_NAME = "encounter";
 /** Generator level range accepted for an opponent, matching the generator's own scale. */
 const OPPONENT_LEVEL_MIN = 1;
 const OPPONENT_LEVEL_MAX = 5;
+
+/** Contest-compatible definition ids, checked before an opponent consumes generator draws. */
+const DEFINITION_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
 /** The opponent a definition generates: origin and level, exactly as `generatePerformer` needs. */
 export interface EncounterOpponentDefinition {
@@ -79,15 +83,20 @@ export interface EncounterFieldMember {
   /** Definition this member was generated from. */
   readonly definitionId: string;
   /** Copied from the definition, so settlement never re-reads the pool. */
-  readonly disciplineId: string;
-  /** Copied from the definition, so settlement never re-reads the pool. */
   readonly reward: EncounterReward;
   /** The generated, frozen opponent; never regenerated or written back to. */
   readonly collective: Collective;
 }
 
-/** The season's complete opponent field, in stable definition-id order. */
-export type EncounterField = readonly EncounterFieldMember[];
+/** The season's id-ordered opponents and the exact discipline rules used to generate them. */
+export interface EncounterField {
+  /** Discipline shared by every definition in this field. */
+  readonly disciplineId: string;
+  /** Rules used both to size opponent rosters and to settle every encounter. */
+  readonly rules: ContestRules;
+  /** Materialized opponents in stable definition-id order. */
+  readonly members: readonly EncounterFieldMember[];
+}
 
 /** An encounter whose opponent exists but whose Contest has not been resolved. */
 export interface PendingEncounter {
@@ -208,18 +217,20 @@ export function materializeEncounterField(
   input: MaterializeEncounterFieldInput,
 ): MaterializeEncounterFieldResult {
   const { runState, season, disciplineId, rules, pool } = input;
-  const participantCount = rules.participantCount;
   if (season.field !== null) {
     throw new Error("materializeEncounterField: this season already has a materialized field");
   }
   if (pool.length === 0) {
     throw new RangeError("materializeEncounterField: pool must declare at least one definition");
   }
-  if (!Number.isInteger(participantCount) || participantCount < 1) {
-    throw new RangeError("materializeEncounterField: participantCount must be a positive integer");
-  }
+  const participantCount = validateContestRules(rules);
   const seenIds = new Set<string>();
   for (const definition of pool) {
+    if (!DEFINITION_ID_PATTERN.test(definition.id)) {
+      throw new RangeError(
+        `materializeEncounterField: definition id "${definition.id}" must be a stable id`,
+      );
+    }
     if (seenIds.has(definition.id)) {
       throw new RangeError(`materializeEncounterField: duplicate definition id "${definition.id}"`);
     }
@@ -273,7 +284,6 @@ export function materializeEncounterField(
     }
     return {
       definitionId: definition.id,
-      disciplineId: definition.disciplineId,
       reward: definition.reward,
       // `name` is a technical id, never the content label: labels stay content-only and
       // never enter a core result or settlement branch.
@@ -283,7 +293,7 @@ export function materializeEncounterField(
 
   return {
     runState: { ...runState, encounter: rng.state() },
-    season: { ...season, field: members },
+    season: { ...season, field: { disciplineId, rules, members } },
   };
 }
 
@@ -323,8 +333,8 @@ export function openEncounter(input: OpenEncounterInput): OpenEncounterResult {
   }
   const encounterSeed = createRng(runState.seed).stream(ENCOUNTER_STREAM_NAME).seed;
   const rng = restoreRng(encounterSeed, requireRngState(runState.encounter, "runState.encounter"));
-  const index = rng.int(0, season.field.length - 1);
-  const member = season.field[index];
+  const index = rng.int(0, season.field.members.length - 1);
+  const member = season.field.members[index];
   if (member === undefined) {
     throw new Error("openEncounter: field selection drew an out-of-range index");
   }
@@ -380,9 +390,7 @@ export interface SettleEncounterInput {
   readonly entryId: SeasonCalendarEntryId;
   /** Stable correlation identity for the resolved Contest. */
   readonly contestId: ContestId;
-  /** Fully materialized discipline rules the Contest is resolved under. */
-  readonly rules: ContestRules;
-  /** Career collective member ids fielded for this Contest, exactly `rules.participantCount` long. */
+  /** Career collective member ids fielded for this Contest, exactly `season.field.rules.participantCount` long. */
   readonly participantIds: readonly string[];
 }
 
@@ -415,7 +423,9 @@ export function settleEncounter(input: SettleEncounterInput): SettleEncounterRes
   if (season.field === null) {
     throw new Error("settleEncounter: season has no materialized field");
   }
-  const fieldMember = season.field.find((member) => member.definitionId === existing.definitionId);
+  const fieldMember = season.field.members.find(
+    (member) => member.definitionId === existing.definitionId,
+  );
   if (fieldMember === undefined) {
     throw new Error(`settleEncounter: field member "${existing.definitionId}" no longer exists`);
   }
@@ -431,8 +441,8 @@ export function settleEncounter(input: SettleEncounterInput): SettleEncounterRes
   const contestSeed = createRng(runState.seed).stream(CONTEST_STREAM_NAME).seed;
   const contestInput: ContestInput = {
     contestId: input.contestId,
-    disciplineId: fieldMember.disciplineId,
-    rules: input.rules,
+    disciplineId: season.field.disciplineId,
+    rules: season.field.rules,
     first: {
       collectiveId: runState.collective.id,
       participants: careerParticipants.map(toParticipantInput),

@@ -1042,6 +1042,18 @@ describe("content validator (ADR 0003)", () => {
     expect(result.output).toContain(expected);
   });
 
+  it("rejects a definition id whose first character is not a letter or digit", () => {
+    const root = fresh();
+    put(root, "regions/nordics.json", region);
+    put(root, "disciplines/tactical-shooter.json", discipline);
+    put(root, "encounters/-invalid.json", { ...encounter, id: "-invalid" });
+
+    const result = run(root);
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("content/encounters/-invalid.json");
+    expect(result.output).toContain('offending value "-invalid"');
+  });
+
   it.each([
     ["a level below the minimum", { ...encounter.opponent, level: 0 }, "must be >= 1", "value 0"],
     ["a level above the maximum", { ...encounter.opponent, level: 6 }, "must be <= 5", "value 6"],

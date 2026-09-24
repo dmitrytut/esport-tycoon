@@ -124,7 +124,6 @@ describe("encounter state properties", () => {
           season: copied(opened.season),
           entryId,
           contestId: "property-contest" as ContestId,
-          rules,
           participantIds: collective.members.map(({ id }) => id),
         });
         expect(copied(materialized.season.field)).toEqual(materialized.season.field);
@@ -144,7 +143,6 @@ describe("encounter state properties", () => {
             season: settled.season,
             entryId,
             contestId: "property-contest" as ContestId,
-            rules,
             participantIds: collective.members.map(({ id }) => id),
           }),
         ).toEqual(settled);
@@ -171,7 +169,6 @@ describe("encounter state properties", () => {
             ...materialized,
             entryId,
             contestId: "property-contest" as ContestId,
-            rules,
             participantIds: collective.members.map(({ id }) => id),
           }),
         ).toThrow(/open/);

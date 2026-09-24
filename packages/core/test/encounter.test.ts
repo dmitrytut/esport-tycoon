@@ -13,7 +13,6 @@ import { createRng } from "../src/rng.ts";
 import {
   type ActiveSeason,
   advanceSeason,
-  recordSeasonContestFact,
   type Season,
   type SeasonTemplate,
   startNextSeason,
@@ -135,7 +134,6 @@ function settleFirstEntry(
   run: RunState,
   season: Season,
   participantIds: readonly string[] = ["a"],
-  contestRules: ContestRules = rules(participantIds.length),
 ) {
   const [entry] = season.calendar.entries;
   if (entry === undefined) throw new Error("test calendar is empty");
@@ -144,7 +142,6 @@ function settleFirstEntry(
     season,
     entryId: entry.id,
     contestId: "contest-1" as ContestId,
-    rules: contestRules,
     participantIds,
   });
 }
@@ -184,6 +181,28 @@ describe("season opponent field", () => {
     ).toThrow(/duplicate/);
   });
 
+  it.each(["Garage_Rivals", "-invalid"])(
+    "rejects malformed definition id %s before drawing",
+    (id) => {
+      const run = makeState(makeCollective([makePerformer("a")]));
+      const season = activeSeason(run);
+      const beforeRun = structuredClone(run);
+      const beforeSeason = structuredClone(season);
+
+      expect(() =>
+        materializeEncounterField({
+          runState: run,
+          season,
+          disciplineId: "tactical-shooter",
+          rules: rules(1),
+          pool: [definition(id)],
+        }),
+      ).toThrow(`definition id "${id}"`);
+      expect(run).toEqual(beforeRun);
+      expect(season).toEqual(beforeSeason);
+    },
+  );
+
   it("rejects a definition naming another discipline", () => {
     const run = makeState(makeCollective([makePerformer("a")]));
     const season = activeSeason(run);
@@ -214,6 +233,25 @@ describe("season opponent field", () => {
     ).toThrow(/level/);
   });
 
+  it("rejects invalid stored Contest rules before generating the field", () => {
+    const run = makeState(makeCollective([makePerformer("a")]));
+    const season = activeSeason(run);
+    const beforeRun = structuredClone(run);
+    const beforeSeason = structuredClone(season);
+
+    expect(() =>
+      materializeEncounterField({
+        runState: run,
+        season,
+        disciplineId: "tactical-shooter",
+        rules: { ...rules(1), energyCost: 0 },
+        pool: [definition("solo")],
+      }),
+    ).toThrow(/rules.energyCost/);
+    expect(run).toEqual(beforeRun);
+    expect(season).toEqual(beforeSeason);
+  });
+
   it("uses the discipline's Contest rules to size opponents for settlement", () => {
     const contestRules = rules(2);
     const run = makeState(makeCollective([makePerformer("a"), makePerformer("b")]));
@@ -227,13 +265,13 @@ describe("season opponent field", () => {
     const [entry] = field.season.calendar.entries;
     if (entry === undefined) throw new Error("test calendar is empty");
 
-    expect(field.season.field?.[0]?.collective.members).toHaveLength(2);
+    expect(field.season.field?.members[0]?.collective.members).toHaveLength(2);
     const opened = openEncounter({
       runState: field.runState,
       season: field.season,
       entryId: entry.id,
     });
-    const settled = settleFirstEntry(opened.runState, opened.season, ["a", "b"], contestRules);
+    const settled = settleFirstEntry(opened.runState, opened.season, ["a", "b"]);
     expect(settled.encounter.kind).toBe("settled");
     expect(settled.encounter.result.participantResults).toHaveLength(4);
   });
@@ -284,7 +322,10 @@ describe("season opponent field", () => {
       pool,
     });
 
-    expect(result.season.field?.map((member) => member.definitionId)).toEqual(["alpha", "zeta"]);
+    expect(result.season.field?.members.map((member) => member.definitionId)).toEqual([
+      "alpha",
+      "zeta",
+    ]);
   });
 
   it("produces an identical field and continuation regardless of pool array order", () => {
@@ -322,7 +363,7 @@ describe("season opponent field", () => {
       pool: [definition("solo")],
     });
 
-    const [member] = result.season.field ?? [];
+    const [member] = result.season.field?.members ?? [];
     if (member === undefined) throw new Error("field is empty");
     expect(member.collective.members).toHaveLength(3);
     const ids = new Set(member.collective.members.map((performer) => performer.id));
@@ -365,7 +406,7 @@ describe("season opponent field", () => {
     });
 
     expect(withLabelA.season.field).toEqual(withLabelB.season.field);
-    const [member] = withLabelA.season.field ?? [];
+    const [member] = withLabelA.season.field?.members ?? [];
     if (member === undefined) throw new Error("field is empty");
     expect(member.collective.name).not.toContain("Label");
     expect(JSON.stringify(withLabelA.season.field)).not.toContain("Label A");
@@ -383,7 +424,7 @@ describe("season opponent field", () => {
       rules: rules(1),
       pool,
     });
-    const [member] = probe.season.field ?? [];
+    const [member] = probe.season.field?.members ?? [];
     const generatedId = member?.collective.members[0]?.id;
     if (member === undefined || generatedId === undefined) throw new Error("field is empty");
     expect(generatedId).toMatch(/^[a-z0-9][a-z0-9-]*$/);
@@ -528,7 +569,7 @@ describe("opening an encounter", () => {
       entryId: third.id,
     });
 
-    expect(materialized.season.field?.map((member) => member.definitionId)).toEqual([
+    expect(materialized.season.field?.members.map((member) => member.definitionId)).toEqual([
       "alpha",
       "beta",
       "zeta",
@@ -598,7 +639,7 @@ describe("settlement", () => {
       runState: run,
       season,
       disciplineId: "tactical-shooter",
-      rules: rules(1),
+      rules: rules(1, energyCost),
       pool: [definition("solo")],
     });
     const [entry] = materialized.season.calendar.entries;
@@ -677,7 +718,6 @@ describe("settlement", () => {
         season,
         entryId: futureEntry.id,
         contestId: "contest-1" as ContestId,
-        rules: rules(1),
         participantIds: ["a"],
       }),
     ).toThrow(/future/);
@@ -692,7 +732,7 @@ describe("settlement", () => {
     (seed, outcome, reward, resultKind) => {
       const { runState, season } = seededOpenedSeason(seed);
 
-      const settled = settleFirstEntry(runState, season, ["a"], rules(1));
+      const settled = settleFirstEntry(runState, season, ["a"]);
 
       // The career Collective is always the `first` ordered position, so this pins the
       // fixed orientation mapping end to end through the public `resolveContest` path,
@@ -705,10 +745,19 @@ describe("settlement", () => {
     },
   );
 
+  it("settles with the rules used to materialize the field", () => {
+    const { runState, season } = openedSeason(73, 35);
+    const settled = settleFirstEntry(runState, season, ["a"]);
+
+    const participant = settled.runState.collective.members.find((member) => member.id === "a");
+    expect(participant?.state.energy).toBe(38);
+    expect(settled.encounter.result.participantResults[0]?.energyAfter).toBe(38);
+  });
+
   it("installs energy by exact replacement, never a second subtraction", () => {
     const { runState, season, energyCost } = openedSeason(73, 20);
 
-    const settled = settleFirstEntry(runState, season, ["a"], rules(1, energyCost));
+    const settled = settleFirstEntry(runState, season, ["a"]);
 
     const participant = settled.runState.collective.members.find((member) => member.id === "a");
     if (participant === undefined) throw new Error("participant is missing");
@@ -719,7 +768,7 @@ describe("settlement", () => {
   it("clamps installed energy at zero rather than going negative when cost exceeds opening energy", () => {
     const { runState, season } = seededOpenedSeason(1, 5);
 
-    const settled = settleFirstEntry(runState, season, ["a"], rules(1, 20));
+    const settled = settleFirstEntry(runState, season, ["a"]);
 
     const participant = settled.runState.collective.members.find((member) => member.id === "a");
     if (participant === undefined) throw new Error("participant is missing");
@@ -819,27 +868,33 @@ describe("settlement", () => {
     run = settled.runState;
     season = settled.season;
 
-    // Walk the remaining marked entries to a completed season without opening or settling
-    // them: each entry's fact is recorded only once `advanceSeason` has made it current, so
-    // the calendar boundary is reached while only the first entry ever had an encounter.
+    // Every remaining fact must be earned by a settled encounter before completion.
     for (const entry of season.calendar.entries.slice(1)) {
       const advancedToEntry = advanceSeason(run, season, { weeks: [[], [], [], []] });
       run = advancedToEntry.runState;
       season = advancedToEntry.season;
-      if (season.kind !== "active") break;
-      season = recordSeasonContestFact(season, { entryId: entry.id, outcome: "loss" });
+      const opened = openEncounter({ runState: run, season, entryId: entry.id });
+      const resolved = settleEncounter({
+        runState: opened.runState,
+        season: opened.season,
+        entryId: entry.id,
+        contestId: `contest-${entry.relativeWeek}` as ContestId,
+        participantIds: ["a"],
+      });
+      run = resolved.runState;
+      season = resolved.season;
     }
     const advanced = advanceSeason(run, season, { weeks: [[], [], [], []] });
     run = advanced.runState;
     season = advanced.season;
     expect(season.kind).toBe("completed");
+    expect(season.encounters.filter((encounter) => encounter.kind === "settled")).toHaveLength(4);
 
     const replay = settleEncounter({
       runState: run,
       season,
       entryId: firstEntry.id,
       contestId: "contest-1" as ContestId,
-      rules: rules(1),
       participantIds: ["a"],
     });
 
@@ -967,7 +1022,6 @@ describe("week and season boundaries", () => {
         season: opened.season,
         entryId: entry.id,
         contestId: `contest-${entry.relativeWeek}` as ContestId,
-        rules: rules(1),
         participantIds: ["a"],
       });
       currentRun = settled.runState;
@@ -1013,18 +1067,28 @@ describe("the season boundary resets the field and encounters, continuations car
     let currentSeason: Season = settled.season;
     for (const remaining of currentSeason.calendar.entries.slice(1)) {
       const advancedToEntry = advanceSeason(currentRun, currentSeason, { weeks: [[], [], [], []] });
-      currentRun = advancedToEntry.runState;
-      currentSeason = advancedToEntry.season;
-      if (currentSeason.kind !== "active") break;
-      currentSeason = recordSeasonContestFact(currentSeason, {
+      const opened = openEncounter({
+        runState: advancedToEntry.runState,
+        season: advancedToEntry.season,
         entryId: remaining.id,
-        outcome: "loss",
       });
+      const resolved = settleEncounter({
+        runState: opened.runState,
+        season: opened.season,
+        entryId: remaining.id,
+        contestId: `contest-${remaining.relativeWeek}` as ContestId,
+        participantIds: ["a"],
+      });
+      currentRun = resolved.runState;
+      currentSeason = resolved.season;
     }
     const advanced = advanceSeason(currentRun, currentSeason, { weeks: [[], [], [], []] });
     currentRun = advanced.runState;
     currentSeason = advanced.season;
     expect(currentSeason.kind).toBe("completed");
+    expect(
+      currentSeason.encounters.filter((encounter) => encounter.kind === "settled"),
+    ).toHaveLength(4);
     if (currentSeason.kind !== "completed") throw new Error("season must be complete");
 
     const beforeEncounter = currentRun.encounter;

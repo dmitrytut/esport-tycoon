@@ -375,8 +375,8 @@ export function advanceSeason(
 }
 
 /**
- * Records one canonical fact for a current or already advanced marked entry. Every rejection
- * happens before a replacement season value is constructed.
+ * Internal fact fold for encounter settlement and the isolated season tests; consumers
+ * use `settleEncounter`, since an unearned fact can poison or prematurely finish a season.
  */
 export function recordSeasonContestFact(season: Season, fact: SeasonContestFact): Season {
   if (season.kind !== "active") {

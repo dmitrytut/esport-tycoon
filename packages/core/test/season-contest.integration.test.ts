@@ -125,7 +125,7 @@ function walkSeason(seed: number, resumeAfterFirstEncounter = false): SeasonWalk
   });
   runState = field.runState;
   season = field.season;
-  const member = season.field?.[0];
+  const member = season.field?.members[0];
   if (member === undefined) throw new Error("fixture did not materialize an opponent");
   const openingMoney = runState.org.money;
   const initialOpponentEnergy = member.collective.members.map((person) => person.state.energy);
@@ -143,7 +143,6 @@ function walkSeason(seed: number, resumeAfterFirstEncounter = false): SeasonWalk
         season: opened.season,
         entryId: current.id,
         contestId: `encounter-${current.relativeWeek}` as ContestId,
-        rules,
         participantIds: collective.members.map((person) => person.id),
       });
       runState = settled.runState;
@@ -198,7 +197,7 @@ describe("headless season contest", () => {
       walk.openingMoney + walk.encounters.reduce((sum, { reward }) => sum + reward, 0) - 24 * 5,
       8,
     );
-    const fieldMember = walk.season.field?.[0];
+    const fieldMember = walk.season.field?.members[0];
     if (fieldMember === undefined) throw new Error("completed season lost its opponent field");
     expect(fieldMember.collective.members.map((person) => person.state.energy)).toEqual(
       walk.initialOpponentEnergy,

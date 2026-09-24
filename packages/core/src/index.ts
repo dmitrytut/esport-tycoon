@@ -161,7 +161,6 @@ export {
   type AdvanceSeasonOptions,
   type CompletedSeason,
   type MinimumContestWinsGoal,
-  recordSeasonContestFact,
   sameEntryId,
   type Season,
   type SeasonAdvanceResult,

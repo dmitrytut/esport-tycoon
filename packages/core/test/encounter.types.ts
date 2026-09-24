@@ -42,14 +42,17 @@ const definition: EncounterDefinition = {
   reward: { win: 12, loss: 2, draw: 5 },
 };
 const entryId = { kind: "season-entry" as const, season: 1, relativeWeek: 0 };
-const field: EncounterField = [
-  {
-    definitionId: definition.id,
-    disciplineId: definition.disciplineId,
-    reward: definition.reward,
-    collective: runState.collective,
-  },
-];
+const field: EncounterField = {
+  disciplineId: definition.disciplineId,
+  rules,
+  members: [
+    {
+      definitionId: definition.id,
+      reward: definition.reward,
+      collective: runState.collective,
+    },
+  ],
+};
 const pending: PendingEncounter = { kind: "pending", entryId, definitionId: definition.id };
 const settled: SettledEncounter = {
   ...pending,
@@ -77,7 +80,6 @@ const settledTransition: SettleEncounterResult = settleEncounter({
   season,
   entryId,
   contestId,
-  rules,
   participantIds: runState.collective.members.map(({ id }) => id),
 });
 

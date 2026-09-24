@@ -1,0 +1,13 @@
+# Week-room comparison for #37
+
+These are **desktop Chromium layout captures, not physical-device results**. The browser CSS viewport was 390×844, DPR 1.25; PNGs are 488×1055 physical pixels. Both variants pinned `?seed=week-shell-38-5` (also the default after the accepted startup amendment), the shipped `standard` calendar and identical input. The earlier seed `week-shell-38` marks week 0 as a contest and correctly blocks Continue until a contest surface exists; it remains an explicit query option for inspecting that boundary.
+
+| State | Front | Isometric |
+|---|---|---|
+| Collapsed, fresh | [front](front-collapsed-390x844.png) | [isometric](isometric-collapsed-390x844.png) |
+| Expanded, planned Mechanics Drills for moped in week 0 | [front](front-expanded-390x844.png) | [isometric](isometric-expanded-390x844.png) |
+| Collapsed after Mechanics Drills in week 0 and Rest in week 2 | [front](front-committed-390x844.png) | [isometric](isometric-committed-390x844.png) |
+
+The geometric canvas is 320×180 CSS pixels, centered in a 390-pixel-wide scene rectangle. The expanded-sheet preview is 390×220; all 15 figures (five roster people and ten background guests) are visible there. The front arrangement separates the five named figures cleanly. The isometric arrangement shifts each row and reduces the gap between first-row labels and second-row heads; labels remain small in both and overlap more readily in the isometric probe. The DOM roster stays legible and names every represented member. Amber highlights a *planned* person without changing balance or morale; teal only appears after the returned committed result. The core returned week 4 next, stopped at week 3 with both `contest-ahead` and `block-ran-out`, balance 9824.4 and collective morale 75, identically in both layouts; the collapsed sheet displays both reasons and values above Continue.
+
+Automated pointer editing in each layout required expanding, selecting Mechanics Drills, adding it, choosing moped, selecting Rest in week 2, adding it and pressing Continue. All seven control activations in each variant succeeded without retries in desktop automation. This **does not measure physical touch mis-taps** or prove character-name legibility on a real phone; those remain part of the physical iOS/Android profile. The 320×568 narrow emulation clips lower decorative labels while expanded but leaves the five roster figures, reason, last scroll row and 44×44-or-larger controls accessible. Wide (1024×768) and landscape (844×390) layouts keep the sheet beside the scene and the action bar outside the scrolling plan. No probe is a final sprite, grid, camera or production layout decision.

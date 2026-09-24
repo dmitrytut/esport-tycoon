@@ -542,6 +542,25 @@ describe("Contest Moment generation and continuation", () => {
     }
   });
 
+  it("treats prototype-looking metric ids as ordinary numeric data", () => {
+    const input = malformed((value) => {
+      value.rules.metrics = [{ id: "constructor", label: "Constructor" }];
+      for (const type of value.rules.momentTypes) {
+        type.participantMetricDeltas = { constructor: 1 };
+      }
+    });
+    const result = resolveContest(input);
+    let total = 0;
+    for (const participant of result.participantResults) {
+      if (!Object.hasOwn(participant.metricTotals, "constructor")) continue;
+      const value = participant.metricTotals["constructor"];
+      expect(typeof value).toBe("number");
+      total += value ?? 0;
+    }
+
+    expect(total).toBe(result.moments.length);
+  });
+
   it("consumes exactly three raw draws per Moment, including singletons and early stop", () => {
     const input = malformed((value) => {
       value.rng.state = [0, 0, 0, 0];
@@ -755,6 +774,6 @@ describe("Contest participant consequences", () => {
     const installedEnergy = consequence.energyAfter;
 
     expect(installedEnergy).toBe(53);
-    expect(installedEnergy - consequence.nominalEnergyCost).not.toBe(consequence.energyAfter);
+    expect(consequence.energyBefore + consequence.energyDelta).toBe(installedEnergy);
   });
 });

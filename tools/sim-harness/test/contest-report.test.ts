@@ -86,25 +86,41 @@ describe("contest-only reports", () => {
     const maximumGap = report.comparisons.find((entry) => entry.id === "maximum-gap");
     if (mechanical === undefined || maximumGap === undefined) throw new Error("comparison missing");
 
+    const {
+      minimumStrongerWinBps,
+      minimumAdvantageBps,
+      minimumWeakerWinBps: mechanicalWeakerFloor,
+    } = mechanical.thresholds;
+    if (
+      minimumStrongerWinBps === undefined ||
+      minimumAdvantageBps === undefined ||
+      mechanicalWeakerFloor === undefined
+    ) {
+      throw new Error("mechanical thresholds missing");
+    }
     for (const orientation of mechanical.orientations) {
-      expect(orientation.ratesBps.strongerWins).toBeGreaterThanOrEqual(5500);
+      expect(orientation.ratesBps.strongerWins).toBeGreaterThanOrEqual(minimumStrongerWinBps);
       expect(
         orientation.ratesBps.strongerWins - orientation.ratesBps.weakerWins,
-      ).toBeGreaterThanOrEqual(1000);
-      expect(orientation.ratesBps.weakerWins).toBeGreaterThanOrEqual(2000);
+      ).toBeGreaterThanOrEqual(minimumAdvantageBps);
+      expect(orientation.ratesBps.weakerWins).toBeGreaterThanOrEqual(mechanicalWeakerFloor);
     }
 
+    const { minimumWeakerWinBps, maximumOrientationGapBps } = maximumGap.thresholds;
+    if (minimumWeakerWinBps === undefined || maximumOrientationGapBps === undefined) {
+      throw new Error("maximum-gap thresholds missing");
+    }
     for (const orientation of maximumGap.orientations) {
-      expect(orientation.ratesBps.weakerWins).toBeGreaterThanOrEqual(500);
+      expect(orientation.ratesBps.weakerWins).toBeGreaterThanOrEqual(minimumWeakerWinBps);
     }
     const [strongerFirst, weakerFirst] = maximumGap.orientations;
     if (strongerFirst === undefined || weakerFirst === undefined)
       throw new Error("orientation missing");
     expect(
       Math.abs(strongerFirst.ratesBps.strongerWins - weakerFirst.ratesBps.strongerWins),
-    ).toBeLessThanOrEqual(300);
+    ).toBeLessThanOrEqual(maximumOrientationGapBps);
     expect(
       Math.abs(strongerFirst.ratesBps.weakerWins - weakerFirst.ratesBps.weakerWins),
-    ).toBeLessThanOrEqual(300);
+    ).toBeLessThanOrEqual(maximumOrientationGapBps);
   });
 });

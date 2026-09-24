@@ -156,17 +156,17 @@ const contestInputArb: fc.Arbitrary<ContestInput> = fc
           maxLength: participantCount,
         }),
       })
-      .map(({ rules, seed, firstStates, secondStates }): ContestInput => ({
-        contestId: `property-${seed}` as ContestInput["contestId"],
-        disciplineId: "generated-discipline",
-        rules: { ...rules, participantCount },
-        first: { collectiveId: "first", participants: participants("first", firstStates) },
-        second: { collectiveId: "second", participants: participants("second", secondStates) },
-        rng: {
-          seed,
-          state: createRng(seed).stream(CONTEST_STREAM_NAME).state(),
-        },
-      })),
+      .map(({ rules, seed, firstStates, secondStates }): ContestInput => {
+        const stream = createRng(seed).stream(CONTEST_STREAM_NAME);
+        return {
+          contestId: `property-${seed}` as ContestInput["contestId"],
+          disciplineId: "generated-discipline",
+          rules: { ...rules, participantCount },
+          first: { collectiveId: "first", participants: participants("first", firstStates) },
+          second: { collectiveId: "second", participants: participants("second", secondStates) },
+          rng: { seed: stream.seed, state: stream.state() },
+        };
+      }),
   );
 
 function aggregateMetrics(input: ContestInput, moments: readonly ContestMoment[]) {

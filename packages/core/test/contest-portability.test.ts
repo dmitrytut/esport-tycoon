@@ -95,6 +95,7 @@ function inputFromFixture(fixture: DisciplineFixture): ContestInput {
     metrics: fixture.contest.metrics,
     momentTypes: fixture.contest.momentTypes,
   };
+  const stream = createRng(1).stream(CONTEST_STREAM_NAME);
 
   return {
     contestId: "portable-1" as ContestInput["contestId"],
@@ -117,8 +118,8 @@ function inputFromFixture(fixture: DisciplineFixture): ContestInput {
       ],
     },
     rng: {
-      seed: 1,
-      state: createRng(1).stream(CONTEST_STREAM_NAME).state(),
+      seed: stream.seed,
+      state: stream.state(),
     },
   };
 }

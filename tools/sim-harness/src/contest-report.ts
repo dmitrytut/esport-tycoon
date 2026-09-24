@@ -157,7 +157,7 @@ function measureOrientation(
       rules: scenario.rules,
       first,
       second,
-      rng: { seed, state: continuation.state() },
+      rng: { seed: continuation.seed, state: continuation.state() },
     });
     if (result.outcome.kind === "draw") draws += 1;
     else if (result.outcome.winnerId === comparison.stronger.collectiveId) strongerWins += 1;

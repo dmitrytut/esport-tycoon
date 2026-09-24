@@ -41,6 +41,15 @@ describe("contest-only scenario loading", () => {
       "mechanical-edge",
       "maximum-gap",
     ]);
+    expect(scenario.comparisons[0]?.thresholds).toEqual({
+      minimumStrongerWinBps: 5500,
+      minimumAdvantageBps: 1000,
+      minimumWeakerWinBps: 2000,
+    });
+    expect(scenario.comparisons[1]?.thresholds).toEqual({
+      minimumWeakerWinBps: 500,
+      maximumOrientationGapBps: 300,
+    });
     expect(scenario.comparisons.every((entry) => entry.stronger.participantCount === 5)).toBe(true);
     expect(scenario.comparisons.every((entry) => entry.weaker.participantCount === 5)).toBe(true);
     expect(scenario.rules.participantCount).toBe(5);
@@ -81,6 +90,7 @@ describe("contest-only scenario loading", () => {
 
   it("rejects a rules id absent from loaded content", () => {
     const path = changedScenario((value) => {
+      value["disciplineId"] = "unknown-rules";
       value["rulesId"] = "unknown-rules";
     });
 

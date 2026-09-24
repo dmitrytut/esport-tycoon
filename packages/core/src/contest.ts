@@ -681,7 +681,8 @@ function addMetricDeltas(
   const totals = totalsByPerformer.get(performerId);
   if (totals === undefined) throw new RangeError(`missing metric totals for "${performerId}"`);
   for (const [metric, delta] of Object.entries(deltas)) {
-    totals[metric] = (totals[metric] ?? 0) + delta;
+    const previous = Object.hasOwn(totals, metric) ? (totals[metric] ?? 0) : 0;
+    totals[metric] = previous + delta;
   }
 }
 

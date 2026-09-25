@@ -5,7 +5,7 @@ Keep it under 300 lines: this file itself spends context.
 
 ## What this project is
 
-**ESport Tycoon** (repository `esport-tycoon`). An esports organization manager. Mobile first, PC follows. Pixel art.
+**ESport Tycoon** (repository `esport-tycoon`). An esports organization manager. Mobile first, PC follows. Hand-drawn 2D, skeletal animation.
 Comedic delivery on top of honest management mechanics: humor in the text, decisions the player
 takes seriously.
 

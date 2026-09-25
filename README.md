@@ -1,6 +1,6 @@
 # ESport Tycoon
 
-Esports organization manager: pixel art, mobile-first, comedic take on honest mechanics.
+Esports organization manager: hand-drawn 2D, mobile-first, comedic take on honest mechanics.
 Stage — design documents and specs.
 
 The game ships **in English**: interface and dialogue. Multi-language support is planned,

@@ -1,8 +1,8 @@
 # Open questions
 
 **Design**
-- The week screen: exact layout, what goes where, what you tap. All the gaps found so far
-  live exactly there, and you can't see them at the level of general words
+- The week screen: the layout is decided in `design/ui.md`; still open is the plan editor
+  down to the last tap
 - The contest formula: exactly how stat weights turn into the probability of a moment,
   where the spread comes from
 - The full list of traits and how they intersect (pair chemistry/conflict)
@@ -12,17 +12,19 @@
   language by chance, lineup chemistry penalty without a shared language). Still open are
   the balance numbers and whether language affects events and morale — the list is in the
   spec itself
+- Ladder numbers: invite thresholds, relegation spots beyond the MVP league, the price of a
+  broken monitor (`design/ladder.md`, `design/match.md`)
 
 **Production**
-- A lawyer on image rights — before likenesses make it into the build
-- One discipline in the prototype or all three at once? (Architecturally — a config from
-  day one, content-wise — start with one)
+- A lawyer on image rights — before likenesses make it into the build; the same review
+  covers AI-generated assets and model licences (`adr/0015`)
 - Composer or music licensing
-- Volume of pixel art: base, player portraits, contest-moment animations
+- Art volume in numbers: texture resolution, texture memory budget, the act-3 on-screen
+  maximum — the ADR for #37, after the #38 device measurement
 - Localization: when we start, which languages, and what mechanism. The mechanism hinges
   on the engine (`adr/0000`), the timing on text stabilizing (`adr/0007`)
 - How strictly to keep the core subject-neutral in the prototype (section 13) — full
   abstraction slows down the start
 
-**Next design step:** work through one full week down to the last button. Not the concept —
-literally the screens and taps.
+**Next design step:** take the week screen from `design/ui.md` down to the last button. Not
+the concept — literally the screens and taps.

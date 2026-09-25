@@ -3,6 +3,8 @@
 **Status:** accepted
 **Date:** 2026-09-11
 **Supersedes:** `adr/0000` (engine not chosen)
+**Amended:** `adr/0016` — the scene is hand-drawn 2D with Spine skeletons and smooth scaling;
+"sprite atlases, integer scaling" in the scene row no longer holds. Everything else stands.
 
 ## Context
 

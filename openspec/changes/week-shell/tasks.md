@@ -20,9 +20,9 @@
 
 ## 4. Layout evidence
 
-- [ ] 4.1 Capture 390×844 screenshots of the placeholder room for collapsed observation and expanded editing with the same seeded run. Record scene area, visible/occluded and recognizable people, draft vs committed cues, activity-edit difficulty/mis-taps and returned-consequence legibility in PR-2 review evidence; an illegible scene or unusable editor fails the check. Open the production build on at least one real phone and report touch editing and legibility as observation. Verify no Spine runtime, device profile or final-art contract entered #38 (those are #84).
+- [x] 4.1 Capture 390×844 screenshots of the placeholder room for collapsed observation and expanded editing with the same seeded run. Record scene area, visible/occluded and recognizable people, draft vs committed cues, activity-edit difficulty/mis-taps and returned-consequence legibility in PR-2 review evidence; an illegible scene or unusable editor fails the check. Open the production build on at least one real phone and report touch editing and legibility as observation. Verify no Spine runtime, device profile or final-art contract entered #38 (those are #84).
 
 ## 5. Gate and archive on PR-2 only
 
-- [ ] 5.1 Run focused shell unit/integration tests and browser smoke through the real page; run `pnpm verify` including the new production build. Verify no shell imports core internals or duplicates energy/morale/money/advancement formulas, and no core or golden/baseline path changed.
+- [x] 5.1 Run focused shell unit/integration tests and browser smoke through the real page; run `pnpm verify` including the new production build. Verify no shell imports core internals or duplicates energy/morale/money/advancement formulas, and no core or golden/baseline path changed.
 - [ ] 5.2 Only on the implementation branch after PR-1 has merged, run `pnpm exec openspec archive week-shell -y`, check `openspec validate --all` and review the resulting `openspec/specs/game-shell/spec.md` diff; open PR-2 for human review without merging it.

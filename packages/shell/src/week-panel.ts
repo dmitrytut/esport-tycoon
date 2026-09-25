@@ -153,7 +153,7 @@ export class WeekPanel {
     const legend = element(
       "p",
       "legend",
-      `Amber rings = planned member; teal rings = committed participation. ${view.runState.collective.members.length} roster members + ${Math.max(0, 15 - view.runState.collective.members.length)} background guests in the scene. No resources are projected.`,
+      "Amber ring = planned, not played yet. Teal badge = what the week actually did. Figures are placeholders; no resources are projected.",
     );
     body.append(legend);
     const roster = element("section", "roster");

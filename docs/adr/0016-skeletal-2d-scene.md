@@ -3,6 +3,8 @@
 **Status:** accepted
 **Date:** 2026-09-25
 **Amends:** `adr/0008` — the scene row's "sprite atlases, integer scaling"
+**Amended:** `adr/0017` — the room is a diagonal cutaway over a prerendered background, not
+a frontal 3/4 view; decision 4's "no isometry" no longer holds. Everything else stands.
 
 ## Context
 

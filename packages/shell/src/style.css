@@ -63,7 +63,6 @@ select {
 }
 .scene-host canvas {
   flex: none;
-  image-rendering: pixelated;
   pointer-events: none;
 }
 .week-sheet {

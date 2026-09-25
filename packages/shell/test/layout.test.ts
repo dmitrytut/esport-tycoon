@@ -1,27 +1,45 @@
 import { describe, expect, it } from "vitest";
 
-import { figurePositions, sceneScale } from "../src/layout.ts";
+import { fitRoom, floorSpots, ROOM_HEIGHT, ROOM_WIDTH, WALL_HEIGHT } from "../src/layout.ts";
 
-describe("temporary scene probes", () => {
-  it.each(["front", "isometric"] as const)(
-    "keeps fifteen distinct figures in the logical %s room",
-    (layout) => {
-      const positions = figurePositions(layout);
-      expect(positions).toHaveLength(15);
-      expect(new Set(positions.map(({ x, y }) => `${x}:${y}`)).size).toBe(15);
-      for (const { x, y } of positions) {
-        expect(x).toBeGreaterThanOrEqual(16);
-        expect(x).toBeLessThanOrEqual(304);
-        expect(y).toBeGreaterThanOrEqual(24);
-        expect(y).toBeLessThanOrEqual(156);
-      }
-    },
-  );
+describe("3/4 room layout", () => {
+  it.each([
+    [390, 380],
+    [390, 220],
+    [1024, 768],
+    [844, 390],
+    [320, 200],
+  ])("fits the whole room inside a %i×%i scene without whole-number rounding", (width, height) => {
+    const fit = fitRoom(width, height);
+    const drawnWidth = ROOM_WIDTH * fit.scale;
+    const drawnHeight = ROOM_HEIGHT * fit.scale;
+    expect(drawnWidth).toBeLessThanOrEqual(width + 1e-9);
+    expect(drawnHeight).toBeLessThanOrEqual(height + 1e-9);
+    expect(Math.max(drawnWidth / width, drawnHeight / height)).toBeCloseTo(1, 9);
+    expect(fit.offsetX).toBeCloseTo((width - drawnWidth) / 2, 9);
+    expect(fit.offsetY).toBeCloseTo((height - drawnHeight) / 2, 9);
+  });
 
-  it("uses whole-number scaling and clips rather than shrinking figures on narrow screens", () => {
-    expect(sceneScale(390, 190)).toBe(1);
-    expect(sceneScale(800, 420)).toBe(2);
-    expect(sceneScale(250, 140)).toBe(1);
-    expect(figurePositions("front")).not.toEqual(figurePositions("isometric"));
+  it("keeps a fractional scale on a phone-sized scene", () => {
+    expect(Number.isInteger(fitRoom(390, 380).scale)).toBe(false);
+  });
+
+  it.each([1, 3, 5, 6, 7])("stands %i members on distinct floor spots inside the room", (count) => {
+    const spots = floorSpots(count);
+    expect(spots).toHaveLength(count);
+    expect(new Set(spots.map(({ x, y }) => `${x}:${y}`)).size).toBe(count);
+    for (const { x, y, depth } of spots) {
+      expect(x).toBeGreaterThan(30);
+      expect(x).toBeLessThan(ROOM_WIDTH - 30);
+      expect(y).toBeGreaterThan(WALL_HEIGHT);
+      expect(y).toBeLessThan(ROOM_HEIGHT);
+      expect(depth).toBeGreaterThan(0);
+    }
+  });
+
+  it("puts later rows further back and smaller", () => {
+    const [front, , , back] = floorSpots(5);
+    expect(back?.y).toBeLessThan(front?.y ?? 0);
+    expect(back?.depth).toBeLessThan(front?.depth ?? 0);
   });
 });

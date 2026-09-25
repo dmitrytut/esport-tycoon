@@ -1,7 +1,6 @@
 import "./style.css";
 
 import { loadContent } from "./content.ts";
-import type { LayoutProbe } from "./layout.ts";
 import { createRun, DEFAULT_RUN_SEED } from "./run.ts";
 import { WeekScene } from "./scene.ts";
 import { WeekSession } from "./session.ts";
@@ -11,7 +10,6 @@ const app = document.getElementById("app");
 if (!app) throw new Error("Missing browser app root");
 const params = new URLSearchParams(location.search);
 const seed = params.get("seed") ?? DEFAULT_RUN_SEED;
-const layout: LayoutProbe = params.get("layout") === "isometric" ? "isometric" : "front";
 
 try {
   if (import.meta.env.DEV && params.get("failContent") === "1") {
@@ -23,7 +21,7 @@ try {
   new WeekPanel(app, session, catalog, (view) => scene?.render(view));
   const host = app.querySelector<HTMLElement>("#scene-host");
   if (!host) throw new Error("Scene mount is missing");
-  void WeekScene.create(host, layout, (message) => {
+  void WeekScene.create(host, catalog, (message) => {
     let error = document.querySelector<HTMLElement>(".scene-error");
     if (!error) {
       error = document.createElement("div");

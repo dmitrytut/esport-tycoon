@@ -1,0 +1,19 @@
+{
+  "name": "@et/shell",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -w validate:content && vite --host 0.0.0.0",
+    "build": "pnpm -w validate:content && vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@et/core": "workspace:*",
+    "ajv": "^8.17.1",
+    "pixi.js": "^8.14.3"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
+}

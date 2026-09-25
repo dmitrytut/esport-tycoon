@@ -7,10 +7,12 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm --filter @et/shell typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
+    "dev": "pnpm --filter @et/shell dev",
+    "build:shell": "pnpm --filter @et/shell build",
     "test": "vitest run",
     "sim": "node tools/sim-harness/src/index.ts",
     "validate:content": "node tools/validate-content/src/index.ts",
@@ -19,7 +21,7 @@
     "check:language": "node tools/check-language/src/index.ts",
     "labels:check": "node tools/sync-labels/src/index.ts",
     "labels:apply": "node tools/sync-labels/src/index.ts --apply",
-    "verify": "pnpm run check:lockfile && pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run validate:spec && pnpm run check:language",
+    "verify": "pnpm run check:lockfile && pnpm run typecheck && pnpm run format:check && pnpm run lint && pnpm run test && pnpm run validate:content && pnpm run build:shell && pnpm run validate:spec && pnpm run check:language",
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {

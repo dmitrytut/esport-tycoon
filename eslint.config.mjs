@@ -339,6 +339,27 @@ export default tseslint.config(
     },
   },
   {
+    // Browser-only shell consumes core through its public package entry and never reads Node files.
+    files: ["packages/shell/src/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@et/core/*", "**/packages/core/**"],
+              message: "use the public @et/core entry",
+            },
+            {
+              group: ["node:*", "fs", "path", "**/tools/**"],
+              message: "browser code cannot use Node I/O",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Core tests check domain-neutrality from the outside, they need file system access.
     files: ["packages/core/test/**/*.ts"],
     rules: { "no-restricted-imports": "off", "et/no-domain-words": "off" },

@@ -119,7 +119,7 @@ The shell SHALL refuse to start a run when required content is invalid or missin
 
 ### Requirement: Mobile presentation keeps command access separate from the scene
 
-The week screen SHALL use a portrait-first scene with a collapsible DOM planning sheet. In its collapsed position the scene and a compact current-state and stop-reason summary SHALL remain visible; expanding the sheet SHALL expose the editable block while retaining a visible scene preview. Planning, numbers, reasons, controls and their accessible labels SHALL remain in the DOM; the scene SHALL not be the only place to read a game state or trigger a command. Opening or closing the sheet SHALL NOT submit a command, discard an unexecuted assignment or change core state. The same single Continue action and stop reason SHALL stay accessible in either position; safe areas, narrow screens, scrolling plan content and touch activation SHALL not hide or overlap them. Scene geometry SHALL scale by whole-number steps rather than blur via fractional scaling (ADR 0008).
+The week screen SHALL use a portrait-first scene with a collapsible DOM planning sheet. In its collapsed position the scene and a compact current-state and stop-reason summary SHALL remain visible; expanding the sheet SHALL expose the editable block while retaining a visible scene preview. Planning, numbers, reasons, controls and their accessible labels SHALL remain in the DOM; the scene SHALL not be the only place to read a game state or trigger a command. Opening or closing the sheet SHALL NOT submit a command, discard an unexecuted assignment or change core state. The same single Continue action and stop reason SHALL stay accessible in either position; safe areas, narrow screens, scrolling plan content and touch activation SHALL not hide or overlap them. The scene SHALL fit its visible rectangle by a uniform fractional scale rendered at the device pixel ratio; whole-number stepping SHALL NOT be applied (ADR 0016).
 
 #### Scenario: Portrait touch planning
 
@@ -141,14 +141,19 @@ The week screen SHALL use a portrait-first scene with a collapsible DOM planning
 - **WHEN** the viewport becomes wider than the portrait reference
 - **THEN** the same DOM actions and exact core values remain available, while the visual scene resizes without changing the run state
 
-### Requirement: Layout probes and device profile do not define final art
+### Requirement: The scene probe and device profile do not define final art
 
-The shell SHALL provide front-facing and isometric geometric arrangements with the same characters, actions and collapsible DOM sheet for comparison in both sheet positions. Neither arrangement SHALL be treated as the final art grid or a commitment to isometric production. The act-three performance profile SHALL use at least 15 geometric figures and the real DOM sheet on named physical iOS and Android devices, record environment and viewport, the same open/edit/close/advance sequence, frame timing, FPS and available peak memory, and distinguish unavailable memory counters from measured values.
+The shell SHALL render one fixed 3/4 top-down room populated by a shared stand-in Spine skeleton that plays a body track and a head track at once, under the same collapsible DOM sheet in both sheet positions. A draft assignment SHALL only highlight its named figure; a figure's body track SHALL change only after a committed result. Neither the stand-in skeleton, its placeholder atlas nor the room arrangement SHALL be treated as final art, a texture resolution or a memory budget. The act-three performance profile SHALL use at least 15 stand-in skeleton figures and the real DOM sheet on named physical iOS and Android devices for each declared atlas variant, record environment, viewport, atlas page size and count, the same open/edit/close/advance sequence, frame timing, FPS and available peak memory, and distinguish unavailable memory counters from measured values.
 
-#### Scenario: Comparing two probes
+#### Scenario: Comparing atlas variants
 
-- **WHEN** the same roster and reference viewport are shown in each probe
-- **THEN** the sheet controls, data and figure count match in both collapsed and expanded positions; scene visibility, figure/state legibility, future-week touch editing, occlusion, pointer conflicts and frame timing can be compared for #37 without selecting final sprites
+- **WHEN** the same roster and reference viewport are shown with each declared atlas variant
+- **THEN** the sheet controls, data, figure count, rig and animation tracks match in both collapsed and expanded positions and only the atlas page size differs; scene visibility, figure/state legibility, future-week touch editing, occlusion, pointer conflicts, frame timing and memory can be compared for #37 without selecting final art
+
+#### Scenario: A draft does not animate as done
+
+- **WHEN** a user assigns a future activity to a member and has not advanced
+- **THEN** that member's figure shows only a draft highlight and keeps its body track; the track changes only after the core returns a result for that week
 
 #### Scenario: Device metric unavailable
 

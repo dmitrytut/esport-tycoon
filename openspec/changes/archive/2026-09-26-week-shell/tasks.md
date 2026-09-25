@@ -25,4 +25,4 @@
 ## 5. Gate and archive on PR-2 only
 
 - [x] 5.1 Run focused shell unit/integration tests and browser smoke through the real page; run `pnpm verify` including the new production build. Verify no shell imports core internals or duplicates energy/morale/money/advancement formulas, and no core or golden/baseline path changed.
-- [ ] 5.2 Only on the implementation branch after PR-1 has merged, run `pnpm exec openspec archive week-shell -y`, check `openspec validate --all` and review the resulting `openspec/specs/game-shell/spec.md` diff; open PR-2 for human review without merging it.
+- [x] 5.2 Only on the implementation branch after PR-1 has merged, run `pnpm exec openspec archive week-shell -y`, check `openspec validate --all` and review the resulting `openspec/specs/game-shell/spec.md` diff; open PR-2 for human review without merging it.

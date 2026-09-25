@@ -119,7 +119,7 @@ The shell SHALL refuse to start a run when required content is invalid or missin
 
 ### Requirement: Mobile presentation keeps command access separate from the scene
 
-The week screen SHALL use a portrait-first scene with a collapsible DOM planning sheet. In its collapsed position the scene and a compact current-state and stop-reason summary SHALL remain visible; expanding the sheet SHALL expose the editable block while retaining a visible scene preview. Planning, numbers, reasons, controls and their accessible labels SHALL remain in the DOM; the scene SHALL not be the only place to read a game state or trigger a command. Opening or closing the sheet SHALL NOT submit a command, discard an unexecuted assignment or change core state. The same single Continue action and stop reason SHALL stay accessible in either position; safe areas, narrow screens, scrolling plan content and touch activation SHALL not hide or overlap them. Scene geometry SHALL scale by whole-number steps rather than blur via fractional scaling (ADR 0008).
+The week screen SHALL use a portrait-first scene with a collapsible DOM planning sheet. In its collapsed position the scene and a compact current-state and stop-reason summary SHALL remain visible; expanding the sheet SHALL expose the editable block while retaining a visible scene preview. Planning, numbers, reasons, controls and their accessible labels SHALL remain in the DOM; the scene SHALL not be the only place to read a game state or trigger a command. Opening or closing the sheet SHALL NOT submit a command, discard an unexecuted assignment or change core state. The same single Continue action and stop reason SHALL stay accessible in either position; safe areas, narrow screens, scrolling plan content and touch activation SHALL not hide or overlap them. The scene SHALL fit its visible rectangle by a uniform fractional scale rendered at the device pixel ratio; whole-number stepping SHALL NOT be applied (ADR 0016).
 
 #### Scenario: Portrait touch planning
 
@@ -141,16 +141,16 @@ The week screen SHALL use a portrait-first scene with a collapsible DOM planning
 - **WHEN** the viewport becomes wider than the portrait reference
 - **THEN** the same DOM actions and exact core values remain available, while the visual scene resizes without changing the run state
 
-### Requirement: Layout probes and device profile do not define final art
+### Requirement: Placeholder figures do not define final art
 
-The shell SHALL provide front-facing and isometric geometric arrangements with the same characters, actions and collapsible DOM sheet for comparison in both sheet positions. Neither arrangement SHALL be treated as the final art grid or a commitment to isometric production. The act-three performance profile SHALL use at least 15 geometric figures and the real DOM sheet on named physical iOS and Android devices, record environment and viewport, the same open/edit/close/advance sequence, frame timing, FPS and available peak memory, and distinguish unavailable memory counters from measured values.
+The shell SHALL render one fixed 3/4 top-down room with one labeled static placeholder figure per roster member, under the same collapsible DOM sheet in both sheet positions. Roster member *i* SHALL take placeholder *i mod 5* in roster order, so one seed always shows the same figures. A draft assignment SHALL only highlight its named figure; an activity badge SHALL appear on a figure only after a committed result names that member. Neither the placeholders nor the room arrangement SHALL be treated as final art, animation, a texture resolution or a memory budget, and placeholders SHALL NOT be loaded as game content.
 
-#### Scenario: Comparing two probes
+#### Scenario: Every member has a figure
 
-- **WHEN** the same roster and reference viewport are shown in each probe
-- **THEN** the sheet controls, data and figure count match in both collapsed and expanded positions; scene visibility, figure/state legibility, future-week touch editing, occlusion, pointer conflicts and frame timing can be compared for #37 without selecting final sprites
+- **WHEN** a run starts with the discipline's roster
+- **THEN** each member stands in the room as a labeled placeholder in roster order, and reloading the same seed shows the same placeholder for each member
 
-#### Scenario: Device metric unavailable
+#### Scenario: A draft does not look done
 
-- **WHEN** a physical device exposes no reliable process peak-memory counter
-- **THEN** the profile names the unavailable metric and capture method; it does not substitute an emulator measurement or invent a peak
+- **WHEN** a user assigns a future activity to a member and has not advanced
+- **THEN** that member's figure shows only a draft highlight and no activity badge; the badge appears only after the core returns a result for that week

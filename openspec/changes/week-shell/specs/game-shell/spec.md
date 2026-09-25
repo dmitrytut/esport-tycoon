@@ -141,21 +141,16 @@ The week screen SHALL use a portrait-first scene with a collapsible DOM planning
 - **WHEN** the viewport becomes wider than the portrait reference
 - **THEN** the same DOM actions and exact core values remain available, while the visual scene resizes without changing the run state
 
-### Requirement: The scene probe and device profile do not define final art
+### Requirement: Placeholder figures do not define final art
 
-The shell SHALL render one fixed 3/4 top-down room populated by a shared stand-in Spine skeleton that plays a body track and a head track at once, under the same collapsible DOM sheet in both sheet positions. A draft assignment SHALL only highlight its named figure; a figure's body track SHALL change only after a committed result. Neither the stand-in skeleton, its placeholder atlas nor the room arrangement SHALL be treated as final art, a texture resolution or a memory budget. The act-three performance profile SHALL use at least 15 stand-in skeleton figures and the real DOM sheet on named physical iOS and Android devices for each declared atlas variant, record environment, viewport, atlas page size and count, the same open/edit/close/advance sequence, frame timing, FPS and available peak memory, and distinguish unavailable memory counters from measured values.
+The shell SHALL render one fixed 3/4 top-down room with one labeled static placeholder figure per roster member, under the same collapsible DOM sheet in both sheet positions. Roster member *i* SHALL take placeholder *i mod 5* in roster order, so one seed always shows the same figures. A draft assignment SHALL only highlight its named figure; an activity badge SHALL appear on a figure only after a committed result names that member. Neither the placeholders nor the room arrangement SHALL be treated as final art, animation, a texture resolution or a memory budget, and placeholders SHALL NOT be loaded as game content.
 
-#### Scenario: Comparing atlas variants
+#### Scenario: Every member has a figure
 
-- **WHEN** the same roster and reference viewport are shown with each declared atlas variant
-- **THEN** the sheet controls, data, figure count, rig and animation tracks match in both collapsed and expanded positions and only the atlas page size differs; scene visibility, figure/state legibility, future-week touch editing, occlusion, pointer conflicts, frame timing and memory can be compared for #37 without selecting final art
+- **WHEN** a run starts with the discipline's roster
+- **THEN** each member stands in the room as a labeled placeholder in roster order, and reloading the same seed shows the same placeholder for each member
 
-#### Scenario: A draft does not animate as done
+#### Scenario: A draft does not look done
 
 - **WHEN** a user assigns a future activity to a member and has not advanced
-- **THEN** that member's figure shows only a draft highlight and keeps its body track; the track changes only after the core returns a result for that week
-
-#### Scenario: Device metric unavailable
-
-- **WHEN** a physical device exposes no reliable process peak-memory counter
-- **THEN** the profile names the unavailable metric and capture method; it does not substitute an emulator measurement or invent a peak
+- **THEN** that member's figure shows only a draft highlight and no activity badge; the badge appears only after the core returns a result for that week

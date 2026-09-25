@@ -23,6 +23,9 @@ matching file: they give a short digest and an ADR number, not a retelling of th
 | Touch core code (`packages/core/src/`) | `adr/0001`, `adr/0002`, `adr/0004`, `adr/0010` | design docs |
 | Onboarding and the first session | `design/onboarding.md`, `design/tone.md` | — |
 | Touch the interface: the scene, panels, contest screen | `design/ui.md`, `design/match.md` (layers), `design/week.md` | core, content |
+| Produce art, animation or sound | `design/art-pipeline.md`, `design/ui.md` (animations, sound), `adr/0015`, `adr/0016`, `adr/0005` | core, economy |
+| Work on leagues, promotion, relegation | `design/ladder.md`, `design/loops.md`, `design/failure.md`, `openspec/specs/season-calendar/` | onboarding |
+| Work on retention, notifications, sharing, ads | `design/retention.md`, `design/ui.md` (chat, events), `adr/0002` | contest internals |
 | Understand what's not there yet | `design/roadmap.md`, `open-questions.md` | — |
 | Start any work on a mechanic | `adr/0009` (spec loop), then `openspec/specs/` on the topic; the layer fills in from the first archive | — |
 
@@ -53,7 +56,11 @@ matching file: they give a short digest and an ADR number, not a retelling of th
 - `player.md` — six parameters, traits, state, age, stars
 - `week.md` — slots, activities, energy, morale, fighting the routine
 - `match.md` — the contest engine, three layers of coverage, intervention windows
-- `ui.md` — scene and panels: what the scene draws, what the interface draws
+- `ui.md` — scene and panels: view, style, who is on screen, animations, week and contest
+  screen layout, chat, sound
+- `ladder.md` — the league ladder from garage to world: promotion, invites, relegation, MVP
+- `retention.md` — why players come back, what we deliberately don't do, monetization
+- `art-pipeline.md` — producing art without an artist: Blender, generation, layers, Spine
 - `world.md` — regions, visas, languages, meta and patches
 - `failure.md` — three ways to lose, season goals
 - `onboarding.md` — the first five minutes

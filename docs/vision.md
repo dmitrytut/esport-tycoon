@@ -2,7 +2,7 @@
 
 <!-- source: concept v0.1, section 1 "What kind of game this is" -->
 
-An esports organization manager. Pixel art. A comedic take on honest management mechanics —
+An esports organization manager. Hand-drawn 2D with skeletal animation. A comedic take on honest management mechanics —
 absurdity lives in the event text, while the player makes decisions in earnest.
 
 Mechanical references: Football Manager (depth, the "find → develop → sell" loop), Game Dev
@@ -22,5 +22,10 @@ what their charges got up to this time.
 `[DECIDED]` A global world: regions with character.
 `[DECIDED]` Interface and dialogue language — English. A second language is planned, but the
 localization mechanism is chosen alongside the engine (`adr/0007`).
+`[DECIDED]` Art: hand-drawn 2D with outline and volume, skeletal animation — not pixel art.
+There is no artist, and weak pixel art reads worse than honest 2D (`design/art-pipeline.md`).
+`[DECIDED]` Portrait, one hand: a phone on the metro is the target session.
+`[DECIDED]` Free for now; later ads only at natural pauses plus a paid "no ads" option
+(`design/retention.md`).
 
 ---
